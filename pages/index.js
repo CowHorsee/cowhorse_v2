@@ -7,7 +7,7 @@ const Home = () => (
   <div className="home">
     <h1>What Can I Deploy to Static Apps?</h1>
     <div className="card-grid">
-    <p>hello world test2</p>
+      <p>hello world test2</p>
     </div>
   </div>
 );

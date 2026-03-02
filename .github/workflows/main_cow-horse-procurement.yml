@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: './api' # set this to the path to your web app project, defaults to the repository root
+  FUNCTION_APP_PROJECT_PATH: './api' # path to Azure Functions project in this monorepo
   PYTHON_VERSION: '3.12' # set this to the python version to use (supports 3.6, 3.7, 3.8)
 
 jobs:
@@ -36,14 +36,14 @@ jobs:
 
       - name: Install dependencies
         run: | 
-          cd api
+          cd "${{ env.FUNCTION_APP_PROJECT_PATH }}"
           pip install -r requirements.txt
 
       # Optional: Add step to run tests here
 
       - name: Zip artifact for deployment
         run: |
-          cd api
+          cd "${{ env.FUNCTION_APP_PROJECT_PATH }}"
           zip -r ../release.zip .
 
       - name: Upload artifact for deployment job
@@ -75,5 +75,5 @@ jobs:
         with:
           app-name: 'cow-horse-procurement'
           slot-name: 'Production'
-          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          package: '.'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1BB182F19E954D519C66521590189A96 }}

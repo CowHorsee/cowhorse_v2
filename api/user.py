@@ -8,7 +8,9 @@ from azure.data.tables import TableServiceClient
 import azure.functions as func
 from azure_functions_openapi.decorator import openapi
 
-bp = func.Blueprint()
+app = func.FunctionApp()
+app.register_blueprint(func.Blueprint(name="user", url_prefix="/api/user"))
+
 
 @bp.route(route="user/register", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
 @openapi(

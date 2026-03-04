@@ -9,6 +9,13 @@ import azure.functions as func
 from azure_functions_openapi.decorator import openapi
 
 bp = func.Blueprint(name='user', url_prefix='/api/user')
+USERS_TABLE_NAME = "Users"
+
+
+def _get_users_table_client():
+    conn_str = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
+    table_service = TableServiceClient.from_connection_string(conn_str)
+    return table_service.get_table_client(USERS_TABLE_NAME)
 
 
 @bp.route(route="register", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
@@ -84,24 +91,19 @@ def register_user(req: func.HttpRequest) -> func.HttpResponse:
     # -------------------------
     # 3. LOAD
     # -------------------------
-    table_client = None
     try:
-        conn_str = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
-        table_service = TableServiceClient.from_connection_string(conn_str)
-        table_client = table_service.get_table_client("Users")
-        table_client.create_table_if_not_exists()
+        table_client = _get_users_table_client()
     except KeyError:
         return func.HttpResponse("Storage connection is not configured", status_code=500)
     except Exception as e:
         logging.error(str(e))
         return func.HttpResponse("Failed to initialize storage client", status_code=500)
 
-    if table_client is None:
-        return func.HttpResponse("Failed to initialize storage client", status_code=500)
-
     try:
         table_client.create_entity(entity=entity)
     except Exception as e:
+        if getattr(e, "status_code", None) == 409:
+            return func.HttpResponse("User already exists", status_code=409)
         logging.error(str(e))
         return func.HttpResponse("Failed to register user", status_code=500)
 

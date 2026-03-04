@@ -4,7 +4,6 @@ from azure.functions.openapi import OpenApiOperation, OpenApiParameter, OpenApiR
 
 app = FunctionApp()
 
-# Example: register_user endpoint
 @app.function_name(name="register_user")
 @app.route(route="auth/register", methods=["POST"])
 @OpenApiOperation(

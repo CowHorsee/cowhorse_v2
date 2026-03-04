@@ -1,90 +1,55 @@
 import os
-import json
+
 from openai import AzureOpenAI
 
-client = AzureOpenAI(
-    api_key=os.environ["AZURE_OPENAI_API_KEY"],
-    azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-    api_version="2024-02-01"
-)
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
 
-# Tool definitions
-tools = [
-    {"type": "web_search"},  # built-in
-    {
-        "type": "function",
-        "function": {
-            "name": "getInventoryStatus",
-            "description": "Fetch inventory details for items",
-            "parameters": {
-                "type": "object",
-                "properties": {"item_id": {"type": "string"}},
-                "required": ["item_id"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "createPurchaseRequest",
-            "description": "Create PR for items flagged by agent",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "item_id": {"type": "string"},
-                    "quantity": {"type": "integer"}
-                },
-                "required": ["item_id", "quantity"]
-            }
-        }
-    }
-]
 
-# Agent instruction / prompt
-system_instruction = """
-You are an autonomous procurement agent.
-1. Check inventory for all items.
-2. If stock is below reorder threshold, assess market/supplier risk.
-3. Use web search if needed.
-4. If risk acceptable, create a purchase request using createPurchaseRequest.
-5. Return structured output including action_taken, items_checked, and market_risk_summary.
-"""
+def run_connectivity_check() -> int:
+    if load_dotenv is not None:
+        load_dotenv()
 
-# Single run execution
-response = client.responses.create(
-    model="gpt-4.1",
-    tools=tools,
-    input=system_instruction,
-    response_format={
-        "type": "json_schema",
-        "json_schema": {
-            "name": "procurement_agent_output",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "action_taken": {"type": "string"},
-                    "items_checked": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "item_id": {"type": "string"},
-                                "current_stock": {"type": "integer"},
-                                "reorder_threshold": {"type": "integer"},
-                                "below_threshold": {"type": "boolean"}
-                            },
-                            "required": ["item_id", "current_stock", "reorder_threshold", "below_threshold"]
-                        }
-                    },
-                    "market_risk_summary": {"type": "string"}
-                },
-                "required": ["action_taken", "items_checked", "market_risk_summary"]
-            }
-        }
-    }
-)
+    endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
+    api_key = os.getenv('AZURE_OPENAI_API_KEY')
+    if not endpoint or not api_key:
+        print('Missing required environment variables: AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_API_KEY')
+        return 1
 
-# Get structured JSON output
-agent_output = response.output[0].content[0].text
-result = json.loads(agent_output)
-print(result)
+    deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT', 'gpt-4.1')
+    api_version = os.getenv('AZURE_OPENAI_API_VERSION', '2024-06-01')
+
+    print('Endpoint:', endpoint)
+    print('Deployment:', deployment)
+    print('API Version:', api_version)
+
+    client = AzureOpenAI(
+        api_key=api_key,
+        azure_endpoint=endpoint,
+        api_version=api_version,
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model=deployment,
+            messages=[{'role': 'user', 'content': 'Reply with: CONNECTION_SUCCESS'}],
+            max_tokens=24,
+        )
+    except Exception as err:
+        print(f'Deployment {deployment} failed: {err}')
+        print('Set AZURE_OPENAI_DEPLOYMENT only if your confirmed deployment name is different.')
+        return 2
+
+    content = response.choices[0].message.content if response.choices else None
+    if content:
+        print(content)
+        return 0
+
+    print('Request succeeded but empty content was returned.')
+    return 3
+
+
+if __name__ == '__main__':
+    raise SystemExit(run_connectivity_check())

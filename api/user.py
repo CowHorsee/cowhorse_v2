@@ -133,7 +133,7 @@ def register_user(req: func.HttpRequest) -> func.HttpResponse:
 def list_users(req: func.HttpRequest) -> func.HttpResponse:
     try:
         table_client = _get_users_table_client()
-        entities = table_client.list_entities(query_filter="PartitionKey eq 'USER'")
+        entities = table_client.query_entities("PartitionKey eq 'USER'")
 
         users = []
         for entity in entities:

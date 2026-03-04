@@ -24,7 +24,7 @@ def _get_users_table_client():
     description="Create a user record and persist hashed password in Azure Table Storage.",
     tags=["User"],
     operation_id="registerUser",
-    route="/api/user/register",
+    route="/api/register",
     method="post",
     request_body={
         "type": "object",
@@ -115,3 +115,44 @@ def register_user(req: func.HttpRequest) -> func.HttpResponse:
         status_code=201,
         mimetype="application/json"
     )
+
+
+@bp.route(route="users", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+@openapi(
+    summary="List users",
+    description="Read all user records from Azure Table Storage.",
+    tags=["User"],
+    operation_id="listUsers",
+    route="/api/users",
+    method="get",
+    response={
+        200: {"description": "Users returned successfully"},
+        500: {"description": "Failed to read users"},
+    },
+)
+def list_users(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        table_client = _get_users_table_client()
+        entities = table_client.list_entities(query_filter="PartitionKey eq 'USER'")
+
+        users = []
+        for entity in entities:
+            users.append(
+                {
+                    "user_id": entity.get("RowKey"),
+                    "name": entity.get("name"),
+                    "role": entity.get("role"),
+                    "created_at": entity.get("created_at"),
+                }
+            )
+
+        return func.HttpResponse(
+            json.dumps({"count": len(users), "users": users}),
+            status_code=200,
+            mimetype="application/json",
+        )
+    except KeyError:
+        return func.HttpResponse("Storage connection is not configured", status_code=500)
+    except Exception as e:
+        logging.error(str(e))
+        return func.HttpResponse("Failed to read users", status_code=500)

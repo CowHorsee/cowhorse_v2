@@ -8,11 +8,10 @@ from azure.data.tables import TableServiceClient
 import azure.functions as func
 from azure_functions_openapi.decorator import openapi
 
-app = func.FunctionApp()
-app.register_blueprint(func.Blueprint(name="user", url_prefix="/api/user"))
+bp = func.Blueprint(name='user', url_prefix='/api/user')
 
 
-@bp.route(route="user/register", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
+@bp.route(route="register", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
 @openapi(
     summary="Register user",
     description="Create a user record and persist hashed password in Azure Table Storage.",

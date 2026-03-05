@@ -1,0 +1,42 @@
+export default function ProfilePage() {
+  return (
+    <div className="mx-auto w-full max-w-6xl rounded-2xl bg-brand-white p-6 shadow-surface md:p-8">
+      <section className="mb-6">
+        <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-brand-red">
+          User profile
+        </p>
+        <h1 className="font-heading text-3xl font-semibold text-brand-blue md:text-4xl">
+          My Profile
+        </h1>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
+          Manage account details and approval workflow preferences.
+        </p>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2">
+        <article className="rounded-xl border border-slate-200 bg-white p-5">
+          <h3 className="font-heading text-lg font-semibold text-brand-blue">
+            Account
+          </h3>
+          <p className="mt-3 text-sm text-slate-700">Name: Ashwin Kumar</p>
+          <p className="mt-2 text-sm text-slate-700">
+            Email: ashwin.kumar@cowhorse.dev
+          </p>
+          <p className="mt-2 text-sm text-slate-700">Role: Senior Engineer</p>
+        </article>
+        <article className="rounded-xl border border-slate-200 bg-white p-5">
+          <h3 className="font-heading text-lg font-semibold text-brand-blue">
+            Approval settings
+          </h3>
+          <p className="mt-3 text-sm text-slate-700">
+            Preferred category: IT Procurement
+          </p>
+          <p className="mt-2 text-sm text-slate-700">Notification: Instant</p>
+          <p className="mt-2 text-sm text-slate-700">
+            Timezone: Asia/Kuala_Lumpur
+          </p>
+        </article>
+      </section>
+    </div>
+  );
+}

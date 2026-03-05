@@ -116,6 +116,79 @@ def register_user(req: func.HttpRequest) -> func.HttpResponse:
         mimetype="application/json"
     )
 
+@bp.route(route="login", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
+@openapi(
+    summary="Login user",
+    description="",
+    tags=["User"],
+    operation_id="loginUser",
+    route="/api/login",
+    method="post",
+    request_body={
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+            "email": {"type": "string"},
+            "password": {"type": "string", "minLength": 8},
+        },
+    },
+    response={
+        201: {"description": "User registered successfully"},
+        400: {"description": "Invalid request body or role"},
+        409: {"description": "User already exists"},
+        500: {"description": "Failed to register user"},
+    },
+)
+def login_user(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info("Processing user login request.")
+
+    # -------------------------
+    # 1. EXTRACT
+    # -------------------------
+    try:
+        body = req.get_json()
+        email = body.get("email")
+        password = body.get("password")
+    except Exception:
+        return func.HttpResponse("Invalid JSON body", status_code=400)
+
+    if not all([email, password]):
+        return func.HttpResponse("Missing required fields", status_code=400)
+
+    # -------------------------
+    # 2. TRANSFORM
+    # -------------------------
+
+    try:
+        table_client = _get_users_table_client()
+    except KeyError:
+        return func.HttpResponse("Storage connection is not configured", status_code=500)
+    except Exception as e:
+        logging.error(str(e))
+        return func.HttpResponse("Failed to initialize storage client", status_code=500)
+
+    try:
+        entities = table_client.query_entities("email eq '{email}'")
+        if not entities:
+            return func.HttpResponse("User not found", status_code=404)
+        entity = entities[0]
+
+        # Verify password
+        if not bcrypt.checkpw(password.encode("utf-8"), entity.get("password_hash").encode("utf-8")):
+            return func.HttpResponse("Invalid password", status_code=401)
+
+        return func.HttpResponse(
+            json.dumps({
+                "message": "User logged in successfully",
+                "user_id": entity.get("RowKey"),
+                "role": entity.get("role")
+            }),
+            status_code=200,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        logging.error(str(e))
+        return func.HttpResponse("Failed to login user", status_code=500)
 
 @bp.route(route="users", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 @openapi(

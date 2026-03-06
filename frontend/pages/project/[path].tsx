@@ -1,27 +1,32 @@
+import type {
+  GetStaticPaths,
+  GetStaticProps,
+  InferGetStaticPropsType,
+} from 'next';
 import Link from 'next/link';
-import { GetStaticPaths, GetStaticProps } from 'next';
 import {
   BugIcon,
   GithubIcon,
-  projectIcons,
   StarIcon,
   WatchIcon,
+  projectIcons,
 } from '../../components/Icons';
-import { projects, ProjectData } from '../../utils/projectsData';
-
-type ProjectPageData = ProjectData & {
-  description: string;
-  html_url: string;
-  open_issues: number;
-  subscribers_count: number;
-  stargazers_count: number;
-};
+import {
+  projects,
+  type ProjectGithubFields,
+  type ProjectStats,
+  type ProjectWithStats,
+} from '../../utils/projectsData';
 
 type ProjectPageProps = {
-  project: ProjectPageData;
+  project: ProjectWithStats;
 };
 
-function Project({ project }: ProjectPageProps) {
+type GithubRepoResponse = ProjectStats & ProjectGithubFields;
+
+function ProjectPage({
+  project,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
   const Icon = projectIcons[project.id];
 
   return (
@@ -29,10 +34,10 @@ function Project({ project }: ProjectPageProps) {
       <aside>
         <h3>You can deploy...</h3>
         <ul>
-          {projects.map((item) => {
+          {projects.map((projectItem) => {
             return (
-              <li key={item.id}>
-                <a href={`/project/${item.slug}`}>{item.name}</a>
+              <li key={projectItem.id}>
+                <a href={`/project/${projectItem.slug}`}>{projectItem.name}</a>
               </li>
             );
           })}
@@ -70,7 +75,9 @@ function Project({ project }: ProjectPageProps) {
               <p>issues</p>
             </div>
           </div>
-          <p className="description">{project.description}</p>
+          <p className="description">
+            {project.description ?? 'No description available.'}
+          </p>
           <div className="cta">
             <a
               className="button-github"
@@ -89,8 +96,8 @@ function Project({ project }: ProjectPageProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const paths = projects.map((item) => ({
-    params: { path: item.slug },
+  const paths = projects.map((project) => ({
+    params: { path: project.slug },
   }));
 
   return { paths, fallback: false };
@@ -99,34 +106,31 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const getStaticProps: GetStaticProps<ProjectPageProps> = async ({
   params,
 }) => {
-  const path = typeof params?.path === 'string' ? params.path : '';
-  const project = projects.find((item) => item.slug === path);
+  const pathParam = params?.path;
+  const pathValue = Array.isArray(pathParam) ? pathParam[0] : pathParam;
+  const project = projects.find(
+    (projectItem) => projectItem.slug === pathValue
+  );
 
   if (!project) {
-    return {
-      notFound: true,
-    };
+    return { notFound: true };
   }
 
   const res = await fetch(`https://api.github.com/repos/${project.path}`);
-  const data = (await res.json()) as {
-    open_issues?: number;
-    subscribers_count?: number;
-    stargazers_count?: number;
-    description?: string;
-    html_url?: string;
-  };
+  const data = (await res.json()) as GithubRepoResponse;
 
-  const enrichedProject: ProjectPageData = {
-    ...project,
-    open_issues: data.open_issues ?? 0,
-    subscribers_count: data.subscribers_count ?? 0,
-    stargazers_count: data.stargazers_count ?? 0,
-    description: data.description ?? '',
-    html_url: data.html_url ?? '',
+  return {
+    props: {
+      project: {
+        ...project,
+        description: data.description,
+        html_url: data.html_url,
+        open_issues: data.open_issues,
+        subscribers_count: data.subscribers_count,
+        stargazers_count: data.stargazers_count,
+      },
+    },
   };
-
-  return { props: { project: enrichedProject } };
 };
 
-export default Project;
+export default ProjectPage;

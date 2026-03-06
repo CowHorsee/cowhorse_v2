@@ -1,7 +1,7 @@
 import { ComponentType } from 'react';
 
 type SmallCardProps = {
-  Icon: ComponentType<{ w: number; h: number }>;
+  Icon: ComponentType<{ w?: number | string; h?: number | string }>;
   title: string;
   slug: string;
 };

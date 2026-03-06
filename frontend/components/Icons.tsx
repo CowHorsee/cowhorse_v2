@@ -1,17 +1,17 @@
 import { ComponentType, ReactNode } from 'react';
-import { ProjectKey } from '../utils/projectsData';
+import type { ProjectIconId } from '../utils/projectsData';
 
 type IconProps = {
-  w: number;
-  h: number;
+  w?: number | string;
+  h?: number | string;
 };
 
 function BaseIcon({ w, h, children }: IconProps & { children: ReactNode }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width={w}
-      height={h}
+      width={w ?? 64}
+      height={h ?? 64}
       viewBox="0 0 64 64"
       fill="none"
     >
@@ -104,7 +104,7 @@ export function GatsbyIcon({ w, h }: IconProps) {
   );
 }
 
-export function StarIcon({ w, h }: IconProps) {
+export function StarIcon({ w = 24, h = 24 }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -121,7 +121,7 @@ export function StarIcon({ w, h }: IconProps) {
   );
 }
 
-export function WatchIcon({ w, h }: IconProps) {
+export function WatchIcon({ w = 24, h = 24 }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -138,7 +138,7 @@ export function WatchIcon({ w, h }: IconProps) {
   );
 }
 
-export function BugIcon({ w, h }: IconProps) {
+export function BugIcon({ w = 24, h = 24 }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -155,24 +155,41 @@ export function BugIcon({ w, h }: IconProps) {
   );
 }
 
-export function GithubIcon({ w, h }: IconProps) {
+export function AzureIcon({ w = 24, h = 20 }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={w}
       height={h}
-      viewBox="0 0 24 24"
       fill="none"
+      viewBox="0 0 24 20"
     >
       <path
-        d="M12 2a10 10 0 00-3.16 19.5c.5.1.68-.22.68-.49v-1.9c-2.78.6-3.37-1.34-3.37-1.34-.45-1.17-1.12-1.48-1.12-1.48-.91-.62.07-.61.07-.61 1.01.08 1.55 1.06 1.55 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.12.63-1.37-2.22-.26-4.56-1.13-4.56-5.02 0-1.11.39-2.01 1.03-2.72-.1-.26-.45-1.31.1-2.74 0 0 .84-.27 2.75 1.04A9.34 9.34 0 0112 6.8c.85 0 1.71.11 2.51.34 1.91-1.31 2.74-1.04 2.74-1.04.56 1.43.21 2.48.11 2.74.64.71 1.03 1.61 1.03 2.72 0 3.9-2.35 4.76-4.59 5.01.36.32.68.95.68 1.92v2.85c0 .27.18.6.69.49A10 10 0 0012 2z"
-        fill="#FFFFFF"
+        fill="#fff"
+        d="M13.113 0L6.037 6.15 0 17.016h5.444L13.113 0zm.94 1.44L11.035 9.97l5.79 7.292-11.232 1.935H24L14.054 1.44z"
       />
     </svg>
   );
 }
 
-export const projectIcons: Record<ProjectKey, ComponentType<IconProps>> = {
+export function GithubIcon({ w = 24, h = 24 }: IconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={w}
+      height={h}
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <path
+        fill="#fff"
+        d="M24 12c0-3.313-1.172-6.14-3.516-8.484C18.141 1.172 15.312 0 12 0 8.688 0 5.86 1.172 3.516 3.516 1.172 5.859 0 8.687 0 12c0 3.313 1.172 6.14 3.516 8.484C5.859 22.828 8.687 24 12 24c3.313 0 6.14-1.172 8.484-3.516C22.828 18.141 24 15.312 24 12z"
+      />
+    </svg>
+  );
+}
+
+export const projectIcons: Record<ProjectIconId, ComponentType<IconProps>> = {
   react: ReactIcon,
   vue: VueIcon,
   svelte: SvelteIcon,

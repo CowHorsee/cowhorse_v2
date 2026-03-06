@@ -1,18 +1,32 @@
-export type ProjectKey = 'react' | 'vue' | 'svelte' | 'next' | 'nuxt' | 'gatsby';
+export type ProjectIconId =
+  | 'react'
+  | 'vue'
+  | 'svelte'
+  | 'next'
+  | 'nuxt'
+  | 'gatsby';
 
-export type ProjectData = {
-  id: ProjectKey;
+export type Project = {
+  id: ProjectIconId;
   name: string;
   path: string;
   slug: string;
-  open_issues?: number;
-  subscribers_count?: number;
-  stargazers_count?: number;
-  description?: string;
-  html_url?: string;
 };
 
-export const projects: ProjectData[] = [
+export type ProjectStats = {
+  open_issues: number;
+  subscribers_count: number;
+  stargazers_count: number;
+};
+
+export type ProjectGithubFields = {
+  description: string | null;
+  html_url: string;
+};
+
+export type ProjectWithStats = Project & ProjectStats & ProjectGithubFields;
+
+export const projects: Project[] = [
   {
     id: 'react',
     name: 'React',

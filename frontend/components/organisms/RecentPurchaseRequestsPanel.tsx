@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Card from './atoms/Card';
 import type { PurchaseRequest } from '../utils/purchaseRequestsData';
 
 type RecentPurchaseRequestsPanelProps = {
@@ -9,7 +10,7 @@ export default function RecentPurchaseRequestsPanel({
   requests,
 }: RecentPurchaseRequestsPanelProps) {
   return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+    <Card variant="surface" padding="md" className="md:p-5">
       <div className="mb-4 flex items-center justify-between gap-2">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-brand-red">
@@ -27,9 +28,12 @@ export default function RecentPurchaseRequestsPanel({
       </div>
       <ul className="space-y-3">
         {requests.map((item) => (
-          <li
+          <Card
+            as="li"
             key={item.id}
-            className="flex flex-col justify-between gap-3 rounded-[20px] border border-slate-200 p-4 md:flex-row md:items-center"
+            variant="base"
+            padding="md"
+            className="flex flex-col justify-between gap-3 md:flex-row md:items-center"
           >
             <div>
               <p className="font-semibold text-slate-900">{item.title}</p>
@@ -45,9 +49,9 @@ export default function RecentPurchaseRequestsPanel({
                 Details
               </a>
             </Link>
-          </li>
+          </Card>
         ))}
       </ul>
-    </div>
+    </Card>
   );
 }

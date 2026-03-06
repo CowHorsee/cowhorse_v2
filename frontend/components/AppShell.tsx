@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { ReactNode, useState } from 'react';
+import Card from './atoms/Card';
 
 type AppShellProps = {
   children: ReactNode;
@@ -43,11 +43,11 @@ export default function AppShell({ children }: AppShellProps) {
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-pressed={isCollapsed}
           >
-            <Image
+            <img
               src="/sidebar-chevron.svg"
               alt="Toggle sidebar"
-              width={20}
-              height={20}
+              width="20"
+              height="20"
               className={`invert transition-transform duration-300 ${
                 isCollapsed ? '' : 'rotate-180'
               }`}
@@ -73,11 +73,11 @@ export default function AppShell({ children }: AppShellProps) {
                       title={isCollapsed ? item.label : undefined}
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/10">
-                        <Image
+                        <img
                           src={item.iconPath}
                           alt={`${item.label} icon`}
-                          width={20}
-                          height={20}
+                          width="20"
+                          height="20"
                           className="invert"
                         />
                       </span>
@@ -99,30 +99,32 @@ export default function AppShell({ children }: AppShellProps) {
         </nav>
 
         <Link href="/profile">
-          <a className="mt-6 block rounded-[26px] border border-white/10 bg-white/10 p-4 backdrop-blur transition hover:bg-white/15">
-            <div
-              className={`flex items-center ${
-                isCollapsed ? 'justify-center' : 'gap-3'
-              }`}
-            >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-base font-bold text-white">
-                AC
-              </div>
+          <a className="mt-6 block transition hover:opacity-95">
+            <Card variant="glass" padding="md">
               <div
-                className={`min-w-0 transition-all duration-300 ${
-                  isCollapsed
-                    ? 'md:max-w-0 md:overflow-hidden md:opacity-0'
-                    : ''
+                className={`flex items-center ${
+                  isCollapsed ? 'justify-center' : 'gap-3'
                 }`}
               >
-                <p className="truncate text-sm font-semibold text-white">
-                  Ashley Chan
-                </p>
-                <p className="mt-1 truncate text-xs uppercase tracking-[0.18em] text-sky-100/70">
-                  Procurement Admin
-                </p>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-base font-bold text-white">
+                  AC
+                </div>
+                <div
+                  className={`min-w-0 transition-all duration-300 ${
+                    isCollapsed
+                      ? 'md:max-w-0 md:overflow-hidden md:opacity-0'
+                      : ''
+                  }`}
+                >
+                  <p className="truncate text-sm font-semibold text-white">
+                    Ashley Chan
+                  </p>
+                  <p className="mt-1 truncate text-xs uppercase tracking-[0.18em] text-sky-100/70">
+                    Procurement Admin
+                  </p>
+                </div>
               </div>
-            </div>
+            </Card>
           </a>
         </Link>
       </aside>

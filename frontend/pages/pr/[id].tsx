@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Card from '../../components/atoms/Card';
 import {
   purchaseRequests,
   PurchaseRequest,
@@ -21,7 +22,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
         <p className="mt-2 text-sm text-slate-600">{purchaseRequest.id}</p>
       </section>
 
-      <section className="mb-5 rounded-xl border border-slate-200 bg-white p-5">
+      <Card as="section" variant="base" padding="lg" className="mb-5">
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-slate-600">Department</p>
           <strong className="font-semibold text-brand-blue">
@@ -61,7 +62,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
         <p className="mt-4 text-sm leading-7 text-slate-700 md:text-base">
           {purchaseRequest.description}
         </p>
-      </section>
+      </Card>
 
       <Link href="/pr">
         <a className="inline-flex items-center rounded-lg border border-brand-blue px-4 py-2 text-sm font-bold text-brand-blue transition hover:bg-brand-blue hover:text-brand-white">

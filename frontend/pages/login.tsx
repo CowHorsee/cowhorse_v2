@@ -1,9 +1,14 @@
 import Link from 'next/link';
+import Card from '../components/atoms/Card';
 
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-brand-blue p-6">
-      <div className="w-full max-w-md rounded-2xl bg-brand-white p-8 shadow-surface">
+      <Card
+        variant="surface"
+        padding="lg"
+        className="w-full max-w-md bg-brand-white shadow-surface"
+      >
         <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-brand-red">
           Welcome back
         </p>
@@ -49,7 +54,7 @@ export default function LoginPage() {
             </a>
           </Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

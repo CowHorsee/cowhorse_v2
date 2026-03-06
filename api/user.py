@@ -1,21 +1,36 @@
-import logging
 import json
+import logging
 import os
-import bcrypt
 import uuid
 from datetime import datetime
-from azure.data.tables import TableServiceClient
+
 import azure.functions as func
+import bcrypt
+from azure.core.exceptions import ResourceNotFoundError
+from azure.data.tables import TableServiceClient
 from azure_functions_openapi.decorator import openapi
 
 bp = func.Blueprint(name='user', url_prefix='/api/user')
-USERS_TABLE_NAME = "Users"
+USERS_TABLE_NAME = 'Users'
+ALLOWED_ROLES = ['ADMIN', 'EMPLOYEE', 'MANAGER']
 
 
 def _get_users_table_client():
-    conn_str = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
+    conn_str = os.environ['AZURE_STORAGE_CONNECTION_STRING']
     table_service = TableServiceClient.from_connection_string(conn_str)
     return table_service.get_table_client(USERS_TABLE_NAME)
+
+
+def _normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
+def _json_response(payload: dict, status_code: int) -> func.HttpResponse:
+    return func.HttpResponse(
+        json.dumps(payload),
+        status_code=status_code,
+        mimetype='application/json',
+    )
 
 
 @bp.route(route="register", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
@@ -28,9 +43,10 @@ def _get_users_table_client():
     method="post",
     request_body={
         "type": "object",
-        "required": ["name", "role", "password"],
+        "required": ["name", "email", "role", "password"],
         "properties": {
             "name": {"type": "string"},
+            "email": {"type": "string", "format": "email"},
             "role": {"type": "string", "enum": ["ADMIN", "EMPLOYEE", "MANAGER"]},
             "password": {"type": "string", "minLength": 8},
         },
@@ -45,73 +61,153 @@ def _get_users_table_client():
 def register_user(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Processing user registration request.")
 
-    # -------------------------
-    # 1. EXTRACT
-    # -------------------------
     try:
         body = req.get_json()
-        name = body.get("name")
-        role = body.get("role")
-        password = body.get("password")
+        name = body.get('name')
+        email = body.get('email')
+        role = body.get('role')
+        password = body.get('password')
     except Exception:
-        return func.HttpResponse("Invalid JSON body", status_code=400)
+        return func.HttpResponse('Invalid JSON body', status_code=400)
 
-    if not all([name, role, password]):
-        return func.HttpResponse("Missing required fields", status_code=400)
+    if not all([name, email, role, password]):
+        return func.HttpResponse('Missing required fields', status_code=400)
 
-    # -------------------------
-    # 2. TRANSFORM
-    # -------------------------
-
-    # Normalize
     user_id = str(uuid.uuid4())
-    name = name.strip().title()
-    role = role.strip().upper()
+    normalized_name = name.strip().title()
+    normalized_email = _normalize_email(email)
+    normalized_role = role.strip().upper()
 
-    # Validate role
-    allowed_roles = ["ADMIN", "EMPLOYEE", "MANAGER"]
-    if role not in allowed_roles:
-        return func.HttpResponse("Invalid role", status_code=400)
+    if not normalized_email:
+        return func.HttpResponse('Invalid email', status_code=400)
 
-    # Hash password
-    hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-    hashed_pw_str = hashed_pw.decode("utf-8")
+    if normalized_role not in ALLOWED_ROLES:
+        return func.HttpResponse('Invalid role', status_code=400)
+
+    hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    hashed_pw_str = hashed_pw.decode('utf-8')
 
     created_at = datetime.utcnow().isoformat()
 
     entity = {
-        "PartitionKey": "USER",
-        "RowKey": user_id,
-        "name": name,
-        "role": role,
-        "password_hash": hashed_pw_str,
-        "created_at": created_at
+        'PartitionKey': 'USER',
+        'RowKey': normalized_email,
+        'user_id': user_id,
+        'name': normalized_name,
+        'email': normalized_email,
+        'role': normalized_role,
+        'password_hash': hashed_pw_str,
+        'created_at': created_at,
     }
 
-    # -------------------------
-    # 3. LOAD
-    # -------------------------
     try:
         table_client = _get_users_table_client()
     except KeyError:
-        return func.HttpResponse("Storage connection is not configured", status_code=500)
+        return func.HttpResponse(
+            'Storage connection is not configured',
+            status_code=500,
+        )
     except Exception as e:
         logging.error(str(e))
-        return func.HttpResponse("Failed to initialize storage client", status_code=500)
+        return func.HttpResponse('Failed to initialize storage client', status_code=500)
 
     try:
         table_client.create_entity(entity=entity)
     except Exception as e:
-        if getattr(e, "status_code", None) == 409:
-            return func.HttpResponse("User already exists", status_code=409)
+        if getattr(e, 'status_code', None) == 409:
+            return func.HttpResponse('User already exists', status_code=409)
         logging.error(str(e))
-        return func.HttpResponse("Failed to register user", status_code=500)
+        return func.HttpResponse('Failed to register user', status_code=500)
 
-    return func.HttpResponse(
-        json.dumps({
-            "message": "User registered successfully",
-            "user_id": user_id
-        }),
+    return _json_response(
+        {
+            'message': 'User registered successfully',
+            'user': {
+                'user_id': user_id,
+                'name': normalized_name,
+                'email': normalized_email,
+                'role': normalized_role,
+                'created_at': created_at,
+            },
+        },
         status_code=201,
-        mimetype="application/json"
+    )
+
+
+@bp.route(route='login', methods=['POST'], auth_level=func.AuthLevel.ANONYMOUS)
+@openapi(
+    summary='Login user',
+    description='Verify user credentials against Azure Table Storage.',
+    tags=['User'],
+    operation_id='loginUser',
+    route='/api/user/login',
+    method='post',
+    request_body={
+        'type': 'object',
+        'required': ['email', 'password'],
+        'properties': {
+            'email': {'type': 'string', 'format': 'email'},
+            'password': {'type': 'string', 'minLength': 8},
+        },
+    },
+    response={
+        200: {'description': 'User login successful'},
+        400: {'description': 'Invalid request body'},
+        401: {'description': 'Invalid credentials'},
+        500: {'description': 'Failed to login user'},
+    },
+)
+def login_user(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Processing user login request.')
+
+    try:
+        body = req.get_json()
+        email = body.get('email')
+        password = body.get('password')
+    except Exception:
+        return func.HttpResponse('Invalid JSON body', status_code=400)
+
+    if not all([email, password]):
+        return func.HttpResponse('Missing required fields', status_code=400)
+
+    normalized_email = _normalize_email(email)
+
+    try:
+        table_client = _get_users_table_client()
+    except KeyError:
+        return func.HttpResponse(
+            'Storage connection is not configured',
+            status_code=500,
+        )
+    except Exception as e:
+        logging.error(str(e))
+        return func.HttpResponse('Failed to initialize storage client', status_code=500)
+
+    try:
+        user = table_client.get_entity(partition_key='USER', row_key=normalized_email)
+    except ResourceNotFoundError:
+        return func.HttpResponse('Invalid email or password', status_code=401)
+    except Exception as e:
+        logging.error(str(e))
+        return func.HttpResponse('Failed to login user', status_code=500)
+
+    stored_password_hash = user.get('password_hash', '')
+    if not bcrypt.checkpw(
+        password.encode('utf-8'),
+        stored_password_hash.encode('utf-8'),
+    ):
+        return func.HttpResponse('Invalid email or password', status_code=401)
+
+    return _json_response(
+        {
+            'message': 'Login successful',
+            'user': {
+                'user_id': user.get('user_id'),
+                'name': user.get('name'),
+                'email': user.get('email'),
+                'role': user.get('role'),
+                'created_at': user.get('created_at'),
+            },
+        },
+        status_code=200,
     )

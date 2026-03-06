@@ -45,12 +45,7 @@ const chartWidth = 760;
 const chartHeight = 250;
 const padding = { top: 24, right: 20, bottom: 28, left: 20 };
 
-function buildPath(
-  values: number[],
-  active: boolean,
-  maxValue: number,
-  pointCount: number
-) {
+function buildPath(values: number[], maxValue: number, pointCount: number) {
   if (!values.length || maxValue === 0) {
     return '';
   }
@@ -226,12 +221,7 @@ export default function InventoryOverviewChart({
               }
 
               const values = data.map((point) => point[series.key]);
-              const path = buildPath(
-                values,
-                visibleSeries[series.key],
-                maxValue,
-                data.length
-              );
+              const path = buildPath(values, maxValue, data.length);
 
               return (
                 <g key={series.key}>

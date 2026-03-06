@@ -1,3 +1,5 @@
+import Card from '../atoms/Card';
+
 type DashboardMetricCardProps = {
   label: string;
   value: string | number;
@@ -10,7 +12,7 @@ export default function DashboardMetricCard({
   description,
 }: DashboardMetricCardProps) {
   return (
-    <article className="rounded-[20px] bg-slate-50 p-4">
+    <Card as="article" variant="soft" padding="md">
       <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
         {label}
       </p>
@@ -20,6 +22,6 @@ export default function DashboardMetricCard({
       {description ? (
         <p className="mt-2 text-sm text-slate-600">{description}</p>
       ) : null}
-    </article>
+    </Card>
   );
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Card from '../../components/atoms/Card';
 import { purchaseRequests } from '../../utils/purchaseRequestsData';
 
 export default function PrPage() {
@@ -17,12 +18,15 @@ export default function PrPage() {
         </p>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
+      <Card as="section" variant="base" padding="lg">
         <ul className="space-y-3">
           {purchaseRequests.map((item) => (
-            <li
+            <Card
+              as="li"
               key={item.id}
-              className="grid gap-2 rounded-lg border border-slate-200 p-4 md:grid-cols-[minmax(280px,1fr)_130px_130px_140px_80px] md:items-center"
+              variant="base"
+              padding="md"
+              className="grid gap-2 rounded-lg md:grid-cols-[minmax(280px,1fr)_130px_130px_140px_80px] md:items-center"
             >
               <div>
                 <p className="font-semibold text-slate-900">{item.title}</p>
@@ -35,22 +39,15 @@ export default function PrPage() {
                   {item.status}
                 </span>
               </p>
-              <div className="flex items-center gap-3">
-                <Link href={`/pr/${item.id}`}>
-                  <a className="text-sm font-bold text-brand-blue hover:text-brand-red">
-                    Details
-                  </a>
-                </Link>
-                <Link href={`/pr/split/${item.id}`}>
-                  <a className="text-sm font-bold text-brand-red hover:text-brand-blue">
-                    Split to PO
-                  </a>
-                </Link>
-              </div>
-            </li>
+              <Link href={`/pr/${item.id}`}>
+                <a className="text-sm font-bold text-brand-blue hover:text-brand-red">
+                  Details
+                </a>
+              </Link>
+            </Card>
           ))}
         </ul>
-      </section>
+      </Card>
     </div>
   );
 }

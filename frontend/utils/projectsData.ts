@@ -1,4 +1,10 @@
-import type { ProjectIconId } from '../components/Icons';
+export type ProjectIconId =
+  | 'react'
+  | 'vue'
+  | 'svelte'
+  | 'next'
+  | 'nuxt'
+  | 'gatsby';
 
 export type Project = {
   id: ProjectIconId;

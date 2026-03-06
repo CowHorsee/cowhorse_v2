@@ -1,8 +1,10 @@
-import DashboardMetricCard from '../components/DashboardMetricCard';
+import Link from 'next/link';
+import Card from '../components/atoms/Card';
+import DashboardMetricCard from '../components/molecules/DashboardMetricCard';
 import InventoryOverviewChart, {
   type InventoryOverviewPoint,
-} from '../components/InventoryOverviewChart';
-import RecentPurchaseRequestsPanel from '../components/RecentPurchaseRequestsPanel';
+} from '../components/organisms/InventoryOverviewChart';
+import RecentPurchaseRequestsPanel from '../components/organisms/RecentPurchaseRequestsPanel';
 import { purchaseRequests } from '../utils/purchaseRequestsData';
 
 const inventoryOverviewData: InventoryOverviewPoint[] = [
@@ -66,10 +68,13 @@ const Home = () => {
       <InventoryOverviewChart data={inventoryOverviewData} />
 
       <section className="grid flex-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-        <RecentPurchaseRequestsPanel requests={purchaseRequests.slice(0, 3)} />
-
-        <aside className="grid gap-3 rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
-          <div className="rounded-[22px] bg-[linear-gradient(135deg,_#11183A_0%,_#172554_100%)] p-4 text-white">
+        <Card
+          as="aside"
+          variant="surface"
+          padding="md"
+          className="grid gap-3 md:p-5"
+        >
+          <Card as="div" variant="dark" padding="md" className="text-white">
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-sky-100/70">
               Forecast Pulse
             </p>
@@ -81,9 +86,9 @@ const Home = () => {
               {latestSnapshot.actualSkuInventory.toLocaleString()} live units in
               inventory.
             </p>
-          </div>
+          </Card>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
             <DashboardMetricCard
               label="Total Requests"
               value={purchaseRequests.length}
@@ -99,7 +104,30 @@ const Home = () => {
             />
             <DashboardMetricCard label="Approved" value={approvedCount} />
           </div>
-        </aside>
+        </Card>
+
+        <Card as="aside" variant="surface" padding="lg">
+          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-brand-red">
+            Executive Notes
+          </p>
+          <h3 className="mt-2 font-heading text-2xl font-semibold text-brand-blue">
+            What to watch today
+          </h3>
+          <ul className="mt-5 space-y-4 text-sm leading-6 text-slate-600">
+            <Card as="li" variant="soft" padding="md">
+              Predicted sales have moved above live inventory in the latest
+              weekly snapshot.
+            </Card>
+            <Card as="li" variant="soft" padding="md">
+              Procurement demand is concentrated in engineering and logistics,
+              making approval turnaround the main operational bottleneck.
+            </Card>
+            <Card as="li" variant="soft" padding="md">
+              Use this dashboard as the default landing surface for buyers,
+              approvers, and operations leads entering the system.
+            </Card>
+          </ul>
+        </Card>
       </section>
     </div>
   );

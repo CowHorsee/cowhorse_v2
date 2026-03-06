@@ -153,102 +153,60 @@ export default function PoSplitWorkspace({
   return (
     <div className="mx-auto min-h-[calc(100vh-4rem)] w-full max-w-[1440px]">
       <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <aside className="flex min-h-[calc(100vh-4rem)] flex-col rounded-[28px] bg-[#d9d9d9] p-6 text-slate-900 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
-          <div className="border-b border-slate-400/40 pb-5">
+        <aside className="flex min-h-[calc(100vh-4rem)] flex-col rounded-[28px] border border-slate-200 bg-white p-6 text-slate-900 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+          <div className="border-b border-slate-200 pb-5">
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-slate-600">
-              Purchase request
+              {purchaseRequest.id}
             </p>
             <h1 className="mt-3 font-heading text-3xl font-semibold text-brand-blue">
-              {purchaseRequest.id}
+              Open purchase orders
             </h1>
-            <p className="mt-3 text-sm leading-7 text-slate-700">
-              {purchaseRequest.title}
-            </p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-              <div className="rounded-[22px] bg-white/70 p-4">
-                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
-                  PR total
-                </p>
-                <p className="mt-2 font-heading text-3xl font-semibold text-brand-blue">
-                  {formatCurrency(purchaseRequest.amount)}
-                </p>
-              </div>
-              <div className="rounded-[22px] bg-white/70 p-4">
-                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
-                  Pool balance
-                </p>
-                <p className="mt-2 font-heading text-3xl font-semibold text-brand-blue">
-                  {formatCurrency(poolTotal)}
-                </p>
-              </div>
-            </div>
-            <p className="mt-4 text-sm leading-7 text-slate-700">{summary}</p>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-600">
+                {poSummaries.length} total
+            </span>
           </div>
 
-          <div className="mt-6 flex-1 overflow-hidden">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-slate-600">
-                  PO list
-                </p>
-                <h2 className="mt-2 font-heading text-2xl font-semibold text-brand-blue">
-                  Open purchase orders
-                </h2>
-              </div>
-              <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-600">
-                {poSummaries.length} total
-              </span>
-            </div>
+          <div className="mt-2 flex-1">
+            <div className="mt-5 overflow-hidden rounded-[24px] border border-slate-200 bg-slate-50">
+              <div className="divide-y divide-slate-200">
+                {poSummaries.map((purchaseOrder) => {
+                  const isActive = purchaseOrder.id === selectedPo?.id;
 
-            <div className="mt-5 max-h-[calc(100vh-29rem)] space-y-3 overflow-y-auto pr-1">
-              {poSummaries.map((purchaseOrder) => {
-                const isActive = purchaseOrder.id === selectedPo?.id;
-
-                return (
-                  <button
-                    key={purchaseOrder.id}
-                    type="button"
-                    onClick={() => setSelectedPoId(purchaseOrder.id)}
-                    className={`w-full rounded-[24px] border p-4 text-left transition ${
-                      isActive
-                        ? 'border-brand-blue bg-brand-blue text-white shadow-surface'
-                        : 'border-transparent bg-white/75 text-slate-900 hover:border-brand-blue/30'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p
-                          className={`text-xs font-extrabold uppercase tracking-[0.16em] ${
-                            isActive ? 'text-sky-100/80' : 'text-slate-500'
-                          }`}
-                        >
-                          {purchaseOrder.reference}
-                        </p>
-                        <p className="mt-2 font-heading text-xl font-semibold">
-                          {purchaseOrder.supplier ?? 'Draft supplier'}
-                        </p>
-                      </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${
-                          isActive
-                            ? 'bg-white/10 text-white'
-                            : 'bg-slate-900/5 text-slate-600'
-                        }`}
-                      >
-                        {purchaseOrder.items.length} line
-                        {purchaseOrder.items.length === 1 ? '' : 's'}
-                      </span>
-                    </div>
-                    <p
-                      className={`mt-4 text-sm ${
-                        isActive ? 'text-slate-100' : 'text-slate-600'
+                  return (
+                    <button
+                      key={purchaseOrder.id}
+                      type="button"
+                      onClick={() => setSelectedPoId(purchaseOrder.id)}
+                      className={`w-full px-4 py-4 text-left transition ${
+                        isActive
+                          ? 'bg-brand-blue/10 text-brand-blue'
+                          : 'bg-white text-slate-800 hover:bg-slate-50'
                       }`}
                     >
-                      {formatCurrency(purchaseOrder.total)}
-                    </p>
-                  </button>
-                );
-              })}
+                      <div className="flex items-center gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-bold">
+                              {purchaseOrder.reference}
+                            </p>
+                          </div>
+                          <p className="mt-1 truncate text-sm text-slate-600">
+                            {purchaseOrder.supplier ?? 'Draft supplier'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-slate-800">
+                            {formatCurrency(purchaseOrder.total)}
+                          </p>
+                          <p className="mt-1 text-xs uppercase tracking-[0.14em] text-slate-500">
+                            Click to review
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -270,11 +228,11 @@ export default function PoSplitWorkspace({
         </aside>
 
         <div className="grid min-h-[calc(100vh-4rem)] gap-6 xl:grid-rows-[minmax(0,2fr)_minmax(260px,1fr)]">
-          <section className="overflow-hidden rounded-[28px] bg-[#8fd5be] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+          <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
             <div className="flex h-full flex-col">
-              <div className="flex flex-col gap-3 border-b border-emerald-900/10 pb-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-950/55">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-slate-500">
                     PO review
                   </p>
                   <h2 className="mt-2 font-heading text-3xl font-semibold text-brand-blue">
@@ -284,7 +242,7 @@ export default function PoSplitWorkspace({
                   </h2>
                 </div>
                 {selectedPo ? (
-                  <div className="rounded-[20px] bg-white/60 px-4 py-3 text-sm font-semibold text-slate-700">
+                  <div className="rounded-[20px] bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">
                     Supplier:{' '}
                     <span className="text-brand-blue">
                       {selectedPo.supplier ?? 'Not locked yet'}
@@ -296,7 +254,7 @@ export default function PoSplitWorkspace({
               {selectedPo ? (
                 <div className="mt-5 flex h-full flex-col">
                   <div className="grid gap-3 md:grid-cols-3">
-                    <article className="rounded-[22px] bg-white/60 p-4">
+                    <article className="rounded-[22px] bg-slate-50 p-4">
                       <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
                         Assigned amount
                       </p>
@@ -307,7 +265,7 @@ export default function PoSplitWorkspace({
                         )}
                       </p>
                     </article>
-                    <article className="rounded-[22px] bg-white/60 p-4">
+                    <article className="rounded-[22px] bg-slate-50 p-4">
                       <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
                         Line items
                       </p>
@@ -315,7 +273,7 @@ export default function PoSplitWorkspace({
                         {selectedPo.itemIds.length}
                       </p>
                     </article>
-                    <article className="rounded-[22px] bg-white/60 p-4">
+                    <article className="rounded-[22px] bg-slate-50 p-4">
                       <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
                         Assigned total
                       </p>
@@ -325,7 +283,7 @@ export default function PoSplitWorkspace({
                     </article>
                   </div>
 
-                  <div className="mt-4 rounded-[24px] bg-white/55 p-4 text-sm leading-7 text-slate-700">
+                  <div className="mt-4 rounded-[24px] bg-slate-50 p-4 text-sm leading-7 text-slate-700">
                     Each purchase order can only be linked to one supplier. The
                     first assigned item locks the supplier, and moving every
                     item out sends the PO back into draft mode.
@@ -339,12 +297,12 @@ export default function PoSplitWorkspace({
                         return (
                           <article
                             key={item.id}
-                            className="rounded-[24px] bg-white/70 p-4"
+                            className="rounded-[24px] border border-slate-200 bg-slate-50 p-4"
                           >
                             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                               <div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">
+                                  <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-700">
                                     {item.category}
                                   </span>
                                   <span className="rounded-full bg-brand-blue/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-brand-blue">
@@ -377,7 +335,7 @@ export default function PoSplitWorkspace({
                         );
                       })
                     ) : (
-                      <div className="flex h-full min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-emerald-900/20 bg-white/45 p-8 text-center">
+                      <div className="flex h-full min-h-[220px] items-center justify-center rounded-[24px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
                         <div>
                           <p className="font-heading text-2xl font-semibold text-brand-blue">
                             Draft PO is empty
@@ -392,7 +350,7 @@ export default function PoSplitWorkspace({
                   </div>
                 </div>
               ) : (
-                <div className="mt-5 flex h-full min-h-[320px] items-center justify-center rounded-[24px] border border-dashed border-emerald-900/20 bg-white/45 p-8 text-center">
+                <div className="mt-5 flex h-full min-h-[320px] items-center justify-center rounded-[24px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
                   <div>
                     <p className="font-heading text-2xl font-semibold text-brand-blue">
                       No PO selected
@@ -407,11 +365,11 @@ export default function PoSplitWorkspace({
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-[28px] bg-[#df8e8e] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+          <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
             <div className="flex h-full flex-col">
-              <div className="flex flex-col gap-3 border-b border-rose-950/10 pb-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-rose-950/55">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-slate-500">
                     Pool
                   </p>
                   <h2 className="mt-2 font-heading text-3xl font-semibold text-brand-blue">
@@ -419,7 +377,7 @@ export default function PoSplitWorkspace({
                   </h2>
                 </div>
                 {selectedPo ? (
-                  <p className="rounded-full bg-white/60 px-4 py-2 text-sm font-semibold text-slate-700">
+                  <p className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
                     Move into {selectedPo.reference}
                   </p>
                 ) : null}
@@ -435,12 +393,12 @@ export default function PoSplitWorkspace({
                     return (
                       <article
                         key={item.id}
-                        className="rounded-[24px] bg-white/70 p-4"
+                        className="rounded-[24px] border border-slate-200 bg-slate-50 p-4"
                       >
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-rose-700">
+                              <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-700">
                                 {item.category}
                               </span>
                               <span className="rounded-full bg-brand-blue/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-brand-blue">
@@ -484,7 +442,7 @@ export default function PoSplitWorkspace({
                     );
                   })
                 ) : (
-                  <div className="flex h-full min-h-[180px] items-center justify-center rounded-[24px] border border-dashed border-rose-950/20 bg-white/45 p-8 text-center">
+                  <div className="flex h-full min-h-[180px] items-center justify-center rounded-[24px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
                     <div>
                       <p className="font-heading text-2xl font-semibold text-brand-blue">
                         Pool is clear

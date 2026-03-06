@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import DashboardMetricCard from '../components/DashboardMetricCard';
 import InventoryOverviewChart, {
   type InventoryOverviewPoint,
@@ -120,7 +121,7 @@ const Home = () => {
               </li>
             ))}
           </ul>
-        </div>
+        </aside>
 
         <aside className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-6">
           <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-brand-red">

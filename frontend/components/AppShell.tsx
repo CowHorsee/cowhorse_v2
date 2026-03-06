@@ -23,18 +23,6 @@ export default function AppShell({ children }: AppShellProps) {
           Procurement Workspace
         </p>
 
-        <div className="mt-8 rounded-3xl border border-white/10 bg-white/10 p-4">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-100/70">
-            System Role
-          </p>
-          <p className="mt-3 font-heading text-xl font-semibold">
-            Operations Command
-          </p>
-          <p className="mt-2 text-sm leading-6 text-slate-200">
-            Landing overview for inventory, demand, and procurement decisions.
-          </p>
-        </div>
-
         <nav className="mt-8">
           <ul className="grid gap-2">
             {navItems.map((item) => {

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import PurchaseOrderList from '../molecules/PurchaseOrderList';
 import type { PurchaseRequest } from '../../utils/purchaseRequestsData';
 import type {
   PurchaseOrderDraft,
@@ -170,47 +171,17 @@ export default function PoSplitWorkspace({
           </div>
 
           <div className="mt-2 flex-1">
-            <div className="mt-5 overflow-hidden rounded-[24px] border border-slate-200 bg-slate-50">
-              <div className="divide-y divide-slate-200">
-                {poSummaries.map((purchaseOrder) => {
-                  const isActive = purchaseOrder.id === selectedPo?.id;
-
-                  return (
-                    <button
-                      key={purchaseOrder.id}
-                      type="button"
-                      onClick={() => setSelectedPoId(purchaseOrder.id)}
-                      className={`w-full px-4 py-4 text-left transition ${
-                        isActive
-                          ? 'bg-brand-blue/10 text-brand-blue'
-                          : 'bg-white text-slate-800 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="truncate text-sm font-bold">
-                              {purchaseOrder.reference}
-                            </p>
-                          </div>
-                          <p className="mt-1 truncate text-sm text-slate-600">
-                            {purchaseOrder.supplier ?? 'Draft supplier'}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-semibold text-slate-800">
-                            {formatCurrency(purchaseOrder.total)}
-                          </p>
-                          <p className="mt-1 text-xs uppercase tracking-[0.14em] text-slate-500">
-                            Click to review
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <PurchaseOrderList
+              items={poSummaries.map((purchaseOrder) => ({
+                id: purchaseOrder.id,
+                reference: purchaseOrder.reference,
+                supplier: purchaseOrder.supplier,
+                total: purchaseOrder.total,
+                itemCount: purchaseOrder.items.length,
+              }))}
+              selectedPoId={selectedPo?.id ?? ''}
+              onSelect={setSelectedPoId}
+            />
           </div>
 
           <div className="mt-6 grid gap-3">

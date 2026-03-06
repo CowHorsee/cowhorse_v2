@@ -35,11 +35,18 @@ export default function PrPage() {
                   {item.status}
                 </span>
               </p>
-              <Link href={`/pr/${item.id}`}>
-                <a className="text-sm font-bold text-brand-blue hover:text-brand-red">
-                  Details
-                </a>
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link href={`/pr/${item.id}`}>
+                  <a className="text-sm font-bold text-brand-blue hover:text-brand-red">
+                    Details
+                  </a>
+                </Link>
+                <Link href={`/pr/split/${item.id}`}>
+                  <a className="text-sm font-bold text-brand-red hover:text-brand-blue">
+                    Split to PO
+                  </a>
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

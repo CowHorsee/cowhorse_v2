@@ -8,11 +8,8 @@ export default function ProfilePage() {
           User profile
         </p>
         <h1 className="font-heading text-3xl font-semibold text-brand-blue md:text-4xl">
-          My Profile
+          Hi Ashwin👋
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
-          Manage account details and approval workflow preferences.
-        </p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">

@@ -42,7 +42,7 @@ const chartSeries: SeriesConfig[] = [
 ];
 
 const chartWidth = 760;
-const chartHeight = 320;
+const chartHeight = 250;
 const padding = { top: 24, right: 20, bottom: 28, left: 20 };
 
 function buildPath(
@@ -97,19 +97,18 @@ export default function InventoryOverviewChart({
   const activePoint = data[activeIndex];
 
   return (
-    <div className="rounded-[28px] border border-white/10 bg-slate-950/70 p-5 text-white shadow-[0_24px_70px_rgba(15,23,42,0.4)] backdrop-blur md:p-6">
-      <div className="flex flex-col gap-4 border-b border-white/10 pb-4 md:flex-row md:items-start md:justify-between">
+    <div className="rounded-[28px] border border-white/10 bg-slate-950/70 p-4 text-white shadow-[0_24px_70px_rgba(15,23,42,0.4)] backdrop-blur md:p-5">
+      <div className="flex flex-col gap-3 border-b border-white/10 pb-3 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-sky-200/80">
             Inventory and Demand
           </p>
           <h2 className="mt-2 font-heading text-2xl font-semibold">
-            Stock pressure against live and predicted sales
+            One-screen demand overview
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-            Template series for backend inventory forecasting. Bind the chart to
-            API data with the same `label`, `actualSkuInventory`, `actualSales`,
-            and `predictedSales` fields.
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">
+            Backend-ready line chart for live inventory, actual sales, and
+            predicted sales.
           </p>
         </div>
 
@@ -148,16 +147,16 @@ export default function InventoryOverviewChart({
         </div>
       </div>
 
-      <div className="mt-5 overflow-hidden rounded-[24px] border border-white/10 bg-slate-900/70">
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 text-xs uppercase tracking-[0.2em] text-slate-400">
+      <div className="mt-4 overflow-hidden rounded-[24px] border border-white/10 bg-slate-900/70">
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-400">
           <span>Weekly range</span>
           <span>{activePoint.label}</span>
         </div>
 
-        <div className="relative px-2 pb-3 pt-4">
+        <div className="relative px-2 pb-2 pt-3">
           <svg
             viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-            className="h-[320px] w-full"
+            className="h-[250px] w-full"
             role="img"
             aria-label="Interactive inventory, actual sales, and predicted sales chart"
           >
@@ -272,11 +271,11 @@ export default function InventoryOverviewChart({
             })}
           </svg>
 
-          <div className="pointer-events-none absolute right-5 top-6 w-52 rounded-2xl border border-white/10 bg-slate-950/85 p-4 shadow-2xl">
+          <div className="pointer-events-none absolute right-4 top-4 w-48 rounded-2xl border border-white/10 bg-slate-950/85 p-3 shadow-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
               {activePoint.label}
             </p>
-            <div className="mt-3 space-y-3">
+            <div className="mt-3 space-y-2.5">
               {chartSeries.map((series) => (
                 <div
                   key={series.key}

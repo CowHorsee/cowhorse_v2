@@ -1,4 +1,4 @@
-import PoSplitWorkspace from '../../../components/PoSplitWorkspace';
+import PoSplitWorkspace from '../../../components/organisms/PoSplitWorkspace';
 import { purchaseRequests } from '../../../utils/purchaseRequestsData';
 import { buildPoSplitScenario } from '../../../utils/poSplitData';
 

@@ -96,15 +96,11 @@ export default function InventoryOverviewChart({
       <div className="flex flex-col gap-3 border-b border-white/10 pb-3 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-sky-200/80">
-            Inventory and Demand
+            Procurement Planning Intelligence System
           </p>
           <h2 className="mt-2 font-heading text-2xl font-semibold">
-            One-screen demand overview
+            Demand & SKU overview
           </h2>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">
-            Backend-ready line chart for live inventory, actual sales, and
-            predicted sales.
-          </p>
         </div>
 
         <div className="grid gap-2 sm:grid-cols-3">

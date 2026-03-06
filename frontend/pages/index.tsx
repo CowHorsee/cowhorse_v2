@@ -74,19 +74,6 @@ const Home = () => {
           padding="md"
           className="grid gap-3 md:p-5"
         >
-          <Card as="div" variant="dark" padding="md" className="text-white">
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-sky-100/70">
-              Forecast Pulse
-            </p>
-            <p className="mt-3 font-heading text-4xl font-semibold">
-              {latestSnapshot.predictedSales.toLocaleString()}
-            </p>
-            <p className="mt-2 text-sm text-slate-200">
-              Predicted sales versus{' '}
-              {latestSnapshot.actualSkuInventory.toLocaleString()} live units in
-              inventory.
-            </p>
-          </Card>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
             <DashboardMetricCard

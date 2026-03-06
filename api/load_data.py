@@ -1,4 +1,4 @@
-from azure.data.tables import TableClient
+from azure.data.tables import TableClient, TableServiceClient
 import json, os
 import azure.functions as func
 from azure_functions_openapi.decorator import openapi
@@ -52,7 +52,7 @@ def bulk_insert_users(req: func.HttpRequest) -> func.HttpResponse:
     ]
     entities = json_data
 
-    table = TableClient.from_connection_string(
+    table = TableServiceClient.from_connection_string(
         conn_str=os.environ["AZURE_STORAGE_CONNECTION_STRING"],
         table_name="user"
     )

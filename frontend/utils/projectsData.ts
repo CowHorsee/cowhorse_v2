@@ -1,4 +1,26 @@
-const projects = [
+import type { ProjectIconId } from '../components/Icons';
+
+export type Project = {
+  id: ProjectIconId;
+  name: string;
+  path: string;
+  slug: string;
+};
+
+export type ProjectStats = {
+  open_issues: number;
+  subscribers_count: number;
+  stargazers_count: number;
+};
+
+export type ProjectGithubFields = {
+  description: string | null;
+  html_url: string;
+};
+
+export type ProjectWithStats = Project & ProjectStats & ProjectGithubFields;
+
+export const projects: Project[] = [
   {
     id: 'react',
     name: 'React',
@@ -21,5 +43,3 @@ const projects = [
     slug: 'gatsbyjs-gatsby',
   },
 ];
-
-module.exports = { projects };

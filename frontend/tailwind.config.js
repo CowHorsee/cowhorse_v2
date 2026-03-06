@@ -20,9 +20,6 @@ module.exports = {
       boxShadow: {
         surface: '0 24px 36px rgba(18, 17, 36, 0.28)',
       },
-      backgroundImage: {
-        app: 'radial-gradient(circle at 0 0, #3b3874 0, transparent 38%), linear-gradient(165deg, #27245c 0%, #1e1c46 40%, #161436 100%)',
-      },
     },
   },
   plugins: [],

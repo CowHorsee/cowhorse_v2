@@ -1,24 +1,38 @@
+import Link from 'next/link';
+import { GetStaticPaths, GetStaticProps } from 'next';
 import {
-  StarIcon,
-  WatchIcon,
   BugIcon,
   GithubIcon,
   projectIcons,
+  StarIcon,
+  WatchIcon,
 } from '../../components/Icons';
-import Link from 'next/link';
-import { projects } from '../../utils/projectsData';
+import { projects, ProjectData } from '../../utils/projectsData';
 
-function Project({ project }) {
+type ProjectPageData = ProjectData & {
+  description: string;
+  html_url: string;
+  open_issues: number;
+  subscribers_count: number;
+  stargazers_count: number;
+};
+
+type ProjectPageProps = {
+  project: ProjectPageData;
+};
+
+function Project({ project }: ProjectPageProps) {
   const Icon = projectIcons[project.id];
+
   return (
     <div className="project">
       <aside>
         <h3>You can deploy...</h3>
         <ul>
-          {projects.map((project) => {
+          {projects.map((item) => {
             return (
-              <li key={project.id}>
-                <a href={`/project/${project.slug}`}>{project.name}</a>
+              <li key={item.id}>
+                <a href={`/project/${item.slug}`}>{item.name}</a>
               </li>
             );
           })}
@@ -74,22 +88,45 @@ function Project({ project }) {
   );
 }
 
-export async function getStaticPaths() {
-  const paths = projects.map((project) => ({
-    params: { path: project.slug },
+export const getStaticPaths: GetStaticPaths = async () => {
+  const paths = projects.map((item) => ({
+    params: { path: item.slug },
   }));
 
   return { paths, fallback: false };
-}
+};
 
-export async function getStaticProps({ params }) {
-  const project = projects.find((proj) => proj.slug === params.path);
+export const getStaticProps: GetStaticProps<ProjectPageProps> = async ({
+  params,
+}) => {
+  const path = typeof params?.path === 'string' ? params.path : '';
+  const project = projects.find((item) => item.slug === path);
+
+  if (!project) {
+    return {
+      notFound: true,
+    };
+  }
+
   const res = await fetch(`https://api.github.com/repos/${project.path}`);
-  const data = await res.json();
-  project.open_issues = data.open_issues;
-  project.subscribers_count = data.subscribers_count;
-  project.stargazers_count = data.stargazers_count;
-  return { props: { project } };
-}
+  const data = (await res.json()) as {
+    open_issues?: number;
+    subscribers_count?: number;
+    stargazers_count?: number;
+    description?: string;
+    html_url?: string;
+  };
+
+  const enrichedProject: ProjectPageData = {
+    ...project,
+    open_issues: data.open_issues ?? 0,
+    subscribers_count: data.subscribers_count ?? 0,
+    stargazers_count: data.stargazers_count ?? 0,
+    description: data.description ?? '',
+    html_url: data.html_url ?? '',
+  };
+
+  return { props: { project: enrichedProject } };
+};
 
 export default Project;

@@ -1,4 +1,18 @@
-const projects = [
+export type ProjectKey = 'react' | 'vue' | 'svelte' | 'next' | 'nuxt' | 'gatsby';
+
+export type ProjectData = {
+  id: ProjectKey;
+  name: string;
+  path: string;
+  slug: string;
+  open_issues?: number;
+  subscribers_count?: number;
+  stargazers_count?: number;
+  description?: string;
+  html_url?: string;
+};
+
+export const projects: ProjectData[] = [
   {
     id: 'react',
     name: 'React',
@@ -21,5 +35,3 @@ const projects = [
     slug: 'gatsbyjs-gatsby',
   },
 ];
-
-module.exports = { projects };

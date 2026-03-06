@@ -16,8 +16,8 @@ export default function AppShell({ children }: AppShellProps) {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-app md:flex">
-      <aside className="w-full border-b border-brand-white/20 bg-gradient-to-b from-[#201E4A] to-[#171536] p-6 text-brand-white md:min-h-screen md:w-72 md:border-b-0 md:border-r">
+    <div className="min-h-screen bg-brand-blue md:flex">
+      <aside className="w-full border-b border-brand-white/20 bg-brand-blue p-6 text-brand-white md:min-h-screen md:w-72 md:border-b-0 md:border-r">
         <p className="font-heading text-3xl font-bold">Cowhorse</p>
         <p className="mt-2 text-sm text-brand-white/75">
           Procurement Workspace

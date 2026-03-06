@@ -25,19 +25,19 @@ const Home = () => {
       </section>
 
       <section className="mb-5 grid gap-3 md:grid-cols-3">
-        <article className="rounded-xl bg-gradient-to-br from-brand-blue to-indigo-700 p-4 text-brand-white">
+        <article className="rounded-xl bg-brand-blue p-4 text-brand-white">
           <p className="text-sm text-brand-white/80">Total Requests</p>
           <h2 className="mt-2 font-heading text-3xl font-semibold">
             {purchaseRequests.length}
           </h2>
         </article>
-        <article className="rounded-xl bg-gradient-to-br from-brand-blue to-indigo-700 p-4 text-brand-white">
+        <article className="rounded-xl bg-brand-blue p-4 text-brand-white">
           <p className="text-sm text-brand-white/80">Pending Approval</p>
           <h2 className="mt-2 font-heading text-3xl font-semibold">
             {pendingCount}
           </h2>
         </article>
-        <article className="rounded-xl bg-gradient-to-br from-brand-blue to-indigo-700 p-4 text-brand-white">
+        <article className="rounded-xl bg-brand-blue p-4 text-brand-white">
           <p className="text-sm text-brand-white/80">In Review</p>
           <h2 className="mt-2 font-heading text-3xl font-semibold">
             {inReviewCount}

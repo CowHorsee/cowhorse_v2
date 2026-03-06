@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-app p-6">
+    <div className="flex min-h-screen items-center justify-center bg-brand-blue p-6">
       <div className="w-full max-w-md rounded-2xl bg-brand-white p-8 shadow-surface">
         <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-brand-red">
           Welcome back

@@ -67,8 +67,6 @@ const Home = () => {
       <InventoryOverviewChart data={inventoryOverviewData} />
 
       <section className="grid flex-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-        <RecentPurchaseRequestsPanel requests={purchaseRequests.slice(0, 3)} />
-
         <aside className="grid gap-3 rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
           <div className="rounded-[22px] bg-[linear-gradient(135deg,_#11183A_0%,_#172554_100%)] p-4 text-white">
             <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-sky-100/70">
@@ -84,7 +82,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
             <DashboardMetricCard
               label="Total Requests"
               value={purchaseRequests.length}
@@ -100,27 +98,6 @@ const Home = () => {
             />
             <DashboardMetricCard label="Approved" value={approvedCount} />
           </div>
-
-          <ul className="space-y-3">
-            {purchaseRequests.slice(0, 3).map((item) => (
-              <li
-                key={item.id}
-                className="flex flex-col justify-between gap-3 rounded-[22px] border border-slate-200 p-4 md:flex-row md:items-center"
-              >
-                <div>
-                  <p className="font-semibold text-slate-900">{item.title}</p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {item.department} - {item.requester}
-                  </p>
-                </div>
-                <Link href={`/pr/${item.id}`}>
-                  <a className="inline-flex items-center rounded-full border border-brand-blue px-4 py-2 text-sm font-bold text-brand-blue transition hover:bg-brand-blue hover:text-brand-white">
-                    Details
-                  </a>
-                </Link>
-              </li>
-            ))}
-          </ul>
         </aside>
 
         <aside className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-6">

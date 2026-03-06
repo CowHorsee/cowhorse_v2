@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Card from '../../components/atoms/Card';
+import Card, { CardHeader } from '../../components/atoms/Card';
 import {
   purchaseRequests,
   PurchaseRequest,
@@ -23,6 +23,12 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
       </section>
 
       <Card as="section" variant="base" padding="lg" className="mb-5">
+        <CardHeader
+          subtitle="Request Summary"
+          title={purchaseRequest.title}
+          className="mb-1"
+          titleClassName="text-lg"
+        />
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-slate-600">Department</p>
           <strong className="font-semibold text-brand-blue">

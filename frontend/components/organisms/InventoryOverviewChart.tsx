@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import Card from '../atoms/Card';
 
 export type InventoryOverviewPoint = {
   label: string;

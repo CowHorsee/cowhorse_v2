@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Card from '../components/atoms/Card';
+import Card, { CardHeader } from '../components/atoms/Card';
 import DashboardMetricCard from '../components/molecules/DashboardMetricCard';
 import InventoryOverviewChart, {
   type InventoryOverviewPoint,
@@ -74,7 +74,6 @@ const Home = () => {
           padding="md"
           className="grid gap-3 md:p-5"
         >
-
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
             <DashboardMetricCard
               label="Total Requests"
@@ -94,12 +93,7 @@ const Home = () => {
         </Card>
 
         <Card as="aside" variant="surface" padding="lg">
-          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-brand-red">
-            Executive Notes
-          </p>
-          <h3 className="mt-2 font-heading text-2xl font-semibold text-brand-blue">
-            What to watch today
-          </h3>
+          <CardHeader subtitle="Executive Notes" title="What to watch today" />
           <ul className="mt-5 space-y-4 text-sm leading-6 text-slate-600">
             <Card as="li" variant="soft" padding="md">
               Predicted sales have moved above live inventory in the latest

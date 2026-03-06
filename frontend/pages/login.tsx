@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Card from '../components/atoms/Card';
+import Card, { CardHeader } from '../components/atoms/Card';
 
 export default function LoginPage() {
   return (
@@ -9,12 +9,12 @@ export default function LoginPage() {
         padding="lg"
         className="w-full max-w-md bg-brand-white shadow-surface"
       >
-        <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-brand-red">
-          Welcome back
-        </p>
-        <h1 className="font-heading text-3xl font-semibold text-brand-blue">
-          Sign in
-        </h1>
+        <CardHeader
+          subtitle="Welcome back"
+          title="Sign in"
+          className="mb-0"
+          titleClassName="text-3xl"
+        />
         <form className="mt-5 flex flex-col gap-2">
           <label htmlFor="email" className="text-sm font-bold text-brand-blue">
             Email

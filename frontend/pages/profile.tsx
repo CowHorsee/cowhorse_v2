@@ -1,4 +1,4 @@
-import Card from '../components/atoms/Card';
+import Card, { CardHeader } from '../components/atoms/Card';
 
 export default function ProfilePage() {
   return (
@@ -14,9 +14,11 @@ export default function ProfilePage() {
 
       <section className="grid gap-4 md:grid-cols-2">
         <Card as="article" variant="base" padding="lg">
-          <h3 className="font-heading text-lg font-semibold text-brand-blue">
-            Account
-          </h3>
+          <CardHeader
+            title="Account"
+            className="mb-0"
+            titleClassName="text-lg"
+          />
           <p className="mt-3 text-sm text-slate-700">Name: Ashwin Kumar</p>
           <p className="mt-2 text-sm text-slate-700">
             Email: ashwin.kumar@cowhorse.dev
@@ -24,9 +26,11 @@ export default function ProfilePage() {
           <p className="mt-2 text-sm text-slate-700">Role: Senior Engineer</p>
         </Card>
         <Card as="article" variant="base" padding="lg">
-          <h3 className="font-heading text-lg font-semibold text-brand-blue">
-            Approval settings
-          </h3>
+          <CardHeader
+            title="Approval settings"
+            className="mb-0"
+            titleClassName="text-lg"
+          />
           <p className="mt-3 text-sm text-slate-700">
             Preferred category: IT Procurement
           </p>

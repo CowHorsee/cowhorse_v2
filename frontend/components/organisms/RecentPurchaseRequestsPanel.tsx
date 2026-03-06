@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import Card from './atoms/Card';
-import type { PurchaseRequest } from '../utils/purchaseRequestsData';
+import Card, { CardHeader } from '../atoms/Card';
+import type { PurchaseRequest } from '../../utils/purchaseRequestsData';
 
 type RecentPurchaseRequestsPanelProps = {
   requests: PurchaseRequest[];
@@ -11,21 +11,17 @@ export default function RecentPurchaseRequestsPanel({
 }: RecentPurchaseRequestsPanelProps) {
   return (
     <Card variant="surface" padding="md" className="md:p-5">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-brand-red">
-            Work Queue
-          </p>
-          <h3 className="mt-2 font-heading text-2xl font-semibold text-brand-blue">
-            Recent Purchase Requests
-          </h3>
-        </div>
-        <Link href="/pr">
-          <a className="text-sm font-bold text-brand-blue hover:text-brand-red">
-            View all
-          </a>
-        </Link>
-      </div>
+      <CardHeader
+        subtitle="Work Queue"
+        title="Recent Purchase Requests"
+        action={
+          <Link href="/pr">
+            <a className="text-sm font-bold text-brand-blue hover:text-brand-red">
+              View all
+            </a>
+          </Link>
+        }
+      />
       <ul className="space-y-3">
         {requests.map((item) => (
           <Card

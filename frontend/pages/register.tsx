@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Card from '../components/atoms/Card';
+import Card, { CardHeader } from '../components/atoms/Card';
 
 export default function RegisterPage() {
   return (
@@ -9,12 +9,12 @@ export default function RegisterPage() {
         padding="lg"
         className="w-full max-w-md bg-brand-white shadow-surface"
       >
-        <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-brand-red">
-          Create account
-        </p>
-        <h1 className="font-heading text-3xl font-semibold text-brand-blue">
-          Register
-        </h1>
+        <CardHeader
+          subtitle="Create account"
+          title="Register"
+          className="mb-0"
+          titleClassName="text-3xl"
+        />
         <form className="mt-5 flex flex-col gap-2">
           <label htmlFor="name" className="text-sm font-bold text-brand-blue">
             Full name

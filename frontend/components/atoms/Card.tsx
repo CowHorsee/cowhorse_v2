@@ -12,6 +12,15 @@ type CardProps = {
   children: ReactNode;
 };
 
+type CardHeaderProps = {
+  subtitle?: ReactNode;
+  title: ReactNode;
+  action?: ReactNode;
+  className?: string;
+  subtitleClassName?: string;
+  titleClassName?: string;
+};
+
 const variantClasses: Record<CardVariant, string> = {
   base: 'rounded-xl border border-slate-200 bg-white',
   surface:
@@ -31,6 +40,46 @@ const paddingClasses: Record<CardPadding, string> = {
 
 function joinClasses(...values: Array<string | undefined>) {
   return values.filter(Boolean).join(' ');
+}
+
+export function CardHeader({
+  subtitle,
+  title,
+  action,
+  className,
+  subtitleClassName,
+  titleClassName,
+}: CardHeaderProps) {
+  return (
+    <div
+      className={joinClasses(
+        'mb-4 flex items-start justify-between gap-3',
+        className
+      )}
+    >
+      <div>
+        {subtitle ? (
+          <p
+            className={joinClasses(
+              'text-xs font-extrabold uppercase tracking-[0.14em] text-brand-red',
+              subtitleClassName
+            )}
+          >
+            {subtitle}
+          </p>
+        ) : null}
+        <h3
+          className={joinClasses(
+            'mt-1 font-heading text-2xl font-semibold text-brand-blue',
+            titleClassName
+          )}
+        >
+          {title}
+        </h3>
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
+    </div>
+  );
 }
 
 export default function Card({

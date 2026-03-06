@@ -17,11 +17,22 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-app md:flex">
-      <aside className="w-full border-b border-brand-white/20 bg-gradient-to-b from-[#201E4A] to-[#171536] p-6 text-brand-white md:min-h-screen md:w-72 md:border-b-0 md:border-r">
+      <aside className="w-full border-b border-brand-white/20 bg-gradient-to-b from-[#11183A] via-[#172554] to-[#0F172A] p-6 text-brand-white md:min-h-screen md:w-72 md:border-b-0 md:border-r">
         <p className="font-heading text-3xl font-bold">Cowhorse</p>
         <p className="mt-2 text-sm text-brand-white/75">
           Procurement Workspace
         </p>
+        <div className="mt-8 rounded-[24px] border border-white/10 bg-white/10 p-4 backdrop-blur">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-100/70">
+            System Role
+          </p>
+          <p className="mt-3 font-heading text-xl font-semibold">
+            Operations Command
+          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-200">
+            Landing overview for inventory, demand, and procurement decisions.
+          </p>
+        </div>
 
         <nav className="mt-8">
           <ul className="grid gap-2">

@@ -1,7 +1,7 @@
 import pandas as pd
 import datetime
-from .sharedlib.db_helper.db_ops import DBHelper, get_now
-from .sharedlib.rbac_helper.role_permissions_check import RBACGatekeeper
+from ..sharedlib.db_helper.db_ops import DBHelper, get_now
+from ..sharedlib.rbac_helper.role_permissions_check import RBACGatekeeper
 
 db = DBHelper()
 gatekeeper = RBACGatekeeper()

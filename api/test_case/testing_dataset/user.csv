@@ -1,10 +1,9 @@
-user_id,name,email,password_hash,role_id,created_at
-111e4567-e89b-12d3-a456-426614174000,Ahmad,ahmad@fiamma.com.my,2a12$R9h/c...,1,2026-03-07T00:00:00.000000
-222e4567-e89b-12d3-a456-426614174000,Siti,siti@fiamma.com.my,2a12$K8j/b...,2,2026-03-07T00:00:00.000000
-333e4567-e89b-12d3-a456-426614174000,Raju,raju@fiamma.com.my,2a12$M1n/a...,3,2026-03-07T00:00:00.000000
-444e4567-e89b-12d3-a456-426614174000,Wei,wei@fiamma.com.my,2a12$P5q/z...,4,2026-03-07T00:00:00.000000
-888e4567-e89b-12d3-a456-426614174001,John,john@fiamma.com.my,2a12$S2x/y...,5,2026-03-07T00:00:00.000000
-8c68ee45-ea7b-4125-92ad-9f5ad85c1f94,Wallace,wallace@company.com,$2b$12$kUY7US5ELQR6.DeMK2uCpeEMfpzYVzdd0I0FMox0eZXHNRi1nGgr.,2,2026-03-08T02:47:59.449325
-641daaf8-ea65-4662-937f-056dd69e907e,John Doe,johndoe@company.com,$2b$12$P07wSeufEP.yOoABqgKSde9Lp2Q1d1Kh4UBFb6KWQEx9XMS8u7jNS,3,2026-03-08T02:47:59.840703
-b42006cd-06de-4707-8ab8-eb64ed01d583,Supplier Test,supplier_test@company.com,$2b$12$Uvd9pdMTgiMMcl6uDCeKA.8pwaEpgcfk3jT1A64FwexyVbITNRVta,5,2026-03-08T02:48:00.223650
-4b269235-c2eb-4cb4-b77a-cda28221afb9,Warehouse Test,warehouse_test@company.com,$2b$12$zQu0DCNBmJCa3GLemjJ15ORj2VLh4yWm1PHLJUb3wtHxP8IIzOUxq,4,2026-03-08T02:48:00.612587
+user_id,name,email,password_hash,raw_password,role_id,created_at
+111e4567-e89b-12d3-a456-426614174000,Ahmad,ahmad@fiamma.com.my,$2b$12$gxgSsHtYzo3E13io1oSMUee309gERjl0Gco1BDF3PuxHCdK4DDiLm,,1,2026-03-07T00:00:00.000000
+222e4567-e89b-12d3-a456-426614174000,Siti,siti@fiamma.com.my,$2b$12$gxgSsHtYzo3E13io1oSMUee309gERjl0Gco1BDF3PuxHCdK4DDiLm,,2,2026-03-07T00:00:00.000000
+333e4567-e89b-12d3-a456-426614174000,Raju,raju@fiamma.com.my,$2b$12$gxgSsHtYzo3E13io1oSMUee309gERjl0Gco1BDF3PuxHCdK4DDiLm,,3,2026-03-07T00:00:00.000000
+444e4567-e89b-12d3-a456-426614174000,Wei,wei@fiamma.com.my,$2b$12$gxgSsHtYzo3E13io1oSMUee309gERjl0Gco1BDF3PuxHCdK4DDiLm,,4,2026-03-07T00:00:00.000000
+e9136634-2232-4f6b-a9cd-c42ad23406d1,Wallace,wallace@company.com,$2b$12$3p1NV4IQuO6QEts6IvPSZ.5qlXHEUZs0chqRnE.Q2O6yIkJP/.nBC,fea8f413,2,2026-03-08T03:50:18.334212
+125059f2-bb98-493a-8a55-423c6da1c40f,John Doe,johndoe@company.com,$2b$12$NE4tokgi9KhFMLDVeK.1zOgUFcxfSPzmVZ2wB8oT8wW8U///BLfT.,9434c0de,3,2026-03-08T03:50:18.729411
+5a297fee-2ea7-4fb7-b298-aa655f0fd280,Supplier Test,supplier_test@company.com,$2b$12$dK.mX/A35i4C8nHeExIK6umRml0n7mRt/KzTeZy4JUC7VoMEP1wLq,7e9c388e,5,2026-03-08T03:50:19.111236
+19f9c2bb-88d6-41d8-ae1c-77c8ebf009a6,Warehouse Test,warehouse_test@company.com,$2b$12$Yz20FBd1/k6n0Y4HmLYxRe5jyIofuOwPiOTjNIe.brbv94bfD3AdO,7eec9b48,4,2026-03-08T03:50:19.498961

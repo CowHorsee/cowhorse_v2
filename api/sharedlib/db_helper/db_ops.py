@@ -9,7 +9,11 @@ def get_now():
 class DBHelper:
     def __init__(self, data_dir="data/"):
         base_path = os.path.dirname(os.path.abspath(__file__))
-        self.data_dir = os.path.join(base_path, "..", "dataset")
+        
+        if os.getenv("TESTING") == "true":
+            self.data_dir = os.path.join(base_path, "..", "..", "test_case", "testing_dataset")
+        else:
+            self.data_dir = os.path.join(base_path, "..", "..", "dataset")
 
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
@@ -53,6 +57,16 @@ class DBHelper:
         else:
             # Append mode
             header = not os.path.exists(path)
+            
+            # Ensure file ends with a newline before appending
+            if not header:
+                with open(path, 'r+b') as f:
+                    f.seek(0, os.SEEK_END)
+                    if f.tell() > 0:
+                        f.seek(-1, os.SEEK_END)
+                        if f.read(1) != b'\n':
+                            f.write(b'\n')
+            
             dataframe.to_csv(path, mode='a', index=False, header=header)
 
     def modify(self, table, update_values, conditions):

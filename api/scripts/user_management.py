@@ -91,6 +91,22 @@ def modify_role(admin_id, user_id, new_role_name):
     db.modify("user", {"role_id": int(new_role_id)}, {"user_id": user_id})
     return "Success: User role updated."
 
+def change_password(user_id, old_password, new_password):
+    """Verifies old password and updates to new password."""
+    user_df = db.extract("user", conditions={"user_id": user_id})
+    if user_df.empty:
+        return "Error: User not found."
+    
+    user_data = user_df.iloc[0]
+    stored_hash = str(user_data['password_hash']).encode('utf-8')
+    
+    if bcrypt.checkpw(old_password.encode('utf-8'), stored_hash):
+        new_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        db.modify("user", {"password_hash": new_hash}, {"user_id": user_id})
+        return "Success: Password has been changed."
+    else:
+        return "Error: Incorrect old password."
+
 def search_user(email=None, name=None, role_name=None):
     """Searches user database with optional filters."""
     df = db.extract("user")

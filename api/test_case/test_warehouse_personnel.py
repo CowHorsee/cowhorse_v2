@@ -16,11 +16,11 @@ WAREHOUSE_EMAIL = "wei@fiamma.com.my"
 TEST_PO_ID = "PO_202603_00001"
 # Supplier ID (needed for get_po_ticket as per currently implemented script)
 SUPPLIER_ID_DUMMY = "888e4567-e89b-12d3-a456-426614174001"
-INCOMING_CSV = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'dataset', 'incoming_stock.csv'))
+INCOMING_CSV = os.path.abspath(os.path.join(os.path.dirname(__file__), 'testing_dataset', 'incoming_stock.csv'))
 
 def run_tests():
     print("--- 1. Login Account ---")
-    role, user_id, msg = login(WAREHOUSE_EMAIL, "password123")
+    role, user_id, msg = login(WAREHOUSE_EMAIL, "2b3049bf")
     print(f"Login Result: {msg}, Role: {role}, User ID: {user_id}")
 
     print("\n--- 2. Get PO Ticket ---")

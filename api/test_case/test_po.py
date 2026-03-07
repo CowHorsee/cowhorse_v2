@@ -10,13 +10,13 @@ from api.scripts.user_management import login
 from api.scripts.puchase_order import create_po
 
 # Officer ID (Raju from user.csv)
-OFFICER_ID = "333e4567-e89b-12d3-a456-426614174000"
-OFFICER_EMAIL = "raju@fiamma.com.my"
+OFFICER_ID = "dd4f18d8-3859-490f-88fd-330203e15be2"
+OFFICER_EMAIL = "johndoe@company.com"
 TEST_PR_ID = "PR_202603_00001" # Approved PR
 
 def run_tests():
     print("--- 1. Login Account ---")
-    role, user_id, msg = login(OFFICER_EMAIL, "password123")
+    role, user_id, msg = login(OFFICER_EMAIL, "newpassword456")
     print(f"Login Result: {msg}, Role: {role}, User ID: {user_id}")
 
     print("\n--- 2. Create PO ---")

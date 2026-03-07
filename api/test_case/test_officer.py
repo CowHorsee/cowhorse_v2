@@ -6,24 +6,28 @@ os.environ["TESTING"] = "true"
 # Add the project root to sys.path to allow imports from api
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from api.scripts.user_management import login, forget_password
+from api.scripts.user_management import login, forget_password, change_password
 from api.scripts.purchase_request import create_pr, modify_pr, get_pr_ticket, get_pr_details
 
 # Officer ID (Raju from user.csv)
-OFFICER_ID = "333e4567-e89b-12d3-a456-426614174000"
-OFFICER_EMAIL = "raju@fiamma.com.my"
+OFFICER_ID = "dd4f18d8-3859-490f-88fd-330203e15be2"
+OFFICER_EMAIL = "johndoe@company.com"
 
 def run_tests():
     print("--- 1. Login Account ---")
-    role, user_id, msg = login(OFFICER_EMAIL, "password123")
+    role, user_id, msg = login(OFFICER_EMAIL, "9434c0de")
     print(f"Login Result: {msg}, Role: {role}, User ID: {user_id}")
 
-    print("\n--- 2. Forget Password ---")
-    print(forget_password(OFFICER_ID))
+    print("\n--- 2. Change Password ---")
+    # Change from 'password123' to 'newpassword456'
+    print(change_password(OFFICER_ID, "9434c0de", "newpassword456"))
 
-    # Note: change_password is not implemented in user_management.py
-    print("\n--- 3. Change Password ---")
-    print("Skipping: change_password not implemented in scripts/user_management.py")
+    # Verify by logging in with new password
+    role, user_id, msg = login(OFFICER_EMAIL, "9434c0de")
+    print(f"Login with NEW password: {msg}")
+
+    print("\n--- 3. Forget Password ---")
+    print(forget_password(OFFICER_ID))
 
     print("\n--- 4. Create PR ---")
     proc_item = {"Air Filter": 10, "Brake Pad": 5}

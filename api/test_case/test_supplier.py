@@ -16,7 +16,7 @@ TEST_PO_ID = "PO_202603_00001"
 
 def run_tests():
     print("--- 1. Login Account ---")
-    role, user_id, msg = login(SUPPLIER_EMAIL, "password123")
+    role, user_id, msg = login(SUPPLIER_EMAIL, "80290066")
     print(f"Login Result: {msg}, Role: {role}, User ID: {user_id}")
 
     print("\n--- 2. Get PO Ticket ---")

@@ -25,8 +25,8 @@ def run_tests():
     print("\nSearch by role (Procurement Manager):")
     print(search_user(role_name="Procurement Manager"))
     
-    print("\nSearch by email (johndoe@company.com):")
-    print(search_user(email="johndoe@company.com"))
+    print("\nSearch by email (raju@fiamma.com.my):")
+    print(search_user(email="raju@fiamma.com.my"))
 
     print("\n--- 3. Modify Role ---")
     # Get John Doe's ID

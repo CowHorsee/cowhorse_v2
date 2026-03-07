@@ -10,13 +10,13 @@ from api.scripts.user_management import login
 from api.scripts.purchase_request import modify_pr, review_pr, get_pr_ticket, get_pr_details
 
 # Manager ID (Siti from user.csv)
-MANAGER_ID = "222e4567-e89b-12d3-a456-426614174000"
-MANAGER_EMAIL = "siti@fiamma.com.my"
+MANAGER_ID = "194b1bd8-e13c-461a-8afb-04da92440a8b"
+MANAGER_EMAIL = "wallace@company.com"
 TEST_PR_ID = "PR_202603_00002"
 
 def run_tests():
     print("--- 1. Login Account ---")
-    role, user_id, msg = login(MANAGER_EMAIL, "password123") # Assuming password123 for existing users
+    role, user_id, msg = login(MANAGER_EMAIL, "c860c329") # Assuming password123 for existing users
     print(f"Login Result: {msg}, Role: {role}, User ID: {user_id}")
 
     print("\n--- 2. Modify PR ---")

@@ -1,0 +1,10 @@
+status_id,status,ingestion_timestamp
+1,Suggestion,2026-03-07T00:00:00.000000
+2,Pending for Approval,2026-03-07T00:00:00.000000
+3,Rejected,2026-03-07T00:00:00.000000
+4,Approved,2026-03-07T00:00:00.000000
+5,Awaiting Supplier Acceptance,2026-03-07T00:00:00.000000
+6,Order Accepted,2026-03-07T00:00:00.000000
+7,Order Shipped,2026-03-07T00:00:00.000000
+8,Order Arrived,2026-03-07T00:00:00.000000
+9,Order Received,2026-03-07T00:00:00.000000

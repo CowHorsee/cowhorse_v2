@@ -1,0 +1,3 @@
+supplier_id,supplier_name,company,email,phone,address,ingestion_timestamp
+888e4567-e89b-12d3-a456-426614174001,John Tan,TechLogistics MY,john@techlog.com.my,60123456789,"No. 12, Jalan Ipoh, KL",2026-03-07T00:00:00.000000
+999e4567-e89b-12d3-a456-426614174002,Sarah Lee,Appliance Parts Ltd,sarah@aparts.com,60198765432,"5, Industrial Zone, Shah Alam",2026-03-07T00:00:00.000000

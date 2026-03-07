@@ -1,6 +1,6 @@
-user_id,name,email,password_hash,role_id,created_at
-111e4567-e89b-12d3-a456-426614174000,Ahmad,ahmad@fiamma.com.my,2a12$R9h/c...,1,2026-03-07T00:00:00.000000
-222e4567-e89b-12d3-a456-426614174000,Siti,siti@fiamma.com.my,2a12$K8j/b...,2,2026-03-07T00:00:00.000000
-333e4567-e89b-12d3-a456-426614174000,Raju,raju@fiamma.com.my,2a12$M1n/a...,3,2026-03-07T00:00:00.000000
-444e4567-e89b-12d3-a456-426614174000,Wei,wei@fiamma.com.my,2a12$P5q/z...,4,2026-03-07T00:00:00.000000
-888e4567-e89b-12d3-a456-426614174001,John,john@fiamma.com.my,2a12$S2x/y...,5,2026-03-07T00:00:00.000000
+user_id,name,email,password_hash,raw_password,role_id,created_at
+111e4567-e89b-12d3-a456-426614174000,Ahmad,ahmad@fiamma.com.my,2a12$R9h/c...,,1,2026-03-07T00:00:00.000000
+222e4567-e89b-12d3-a456-426614174000,Siti,siti@fiamma.com.my,2a12$K8j/b...,,2,2026-03-07T00:00:00.000000
+333e4567-e89b-12d3-a456-426614174000,Raju,raju@fiamma.com.my,2a12$M1n/a...,,3,2026-03-07T00:00:00.000000
+444e4567-e89b-12d3-a456-426614174000,Wei,wei@fiamma.com.my,2a12$P5q/z...,,4,2026-03-07T00:00:00.000000
+888e4567-e89b-12d3-a456-426614174001,John,john@fiamma.com.my,2a12$S2x/y...,,5,2026-03-07T00:00:00.000000

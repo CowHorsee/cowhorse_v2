@@ -1,0 +1,169 @@
+import pandas as pd
+from datetime import datetime
+from sharedlib.rbac_helper.role_permissions_check import gatekeeper
+from .sharedlib.db_helper.db_ops import db, get_now
+
+# --- Constants ---
+THRESHOLD_PERCENTAGE = 0.8  # 80%
+
+def generate_next_pr_id():
+    """Generates next PR ID in PR_YYYYMM_XXXXX format."""
+    pr_df = db.extract("purchase_request")
+    now = datetime.now()
+    prefix = f"PR_{now.strftime('%Y%m')}_"
+    
+    if pr_df.empty:
+        return f"{prefix}00001"
+    
+    # Filter by current month prefix to reset counter monthly
+    current_month_prs = pr_df[pr_df['pr_id'].str.startswith(prefix)]
+    if current_month_prs.empty:
+        return f"{prefix}00001"
+    
+    # Get max ID, slice last 5, and increment
+    last_id = current_month_prs['pr_id'].max()
+    last_num = int(last_id[-5:])
+    return f"{prefix}{ (last_num + 1):05d}"
+
+# --- Core Functions ---
+
+def procurement_alert(item_name, predicted_demand, justification):
+    """AI Trigger: Automatically creates a PR if stock is below threshold."""
+    # 1. Get current stock
+    from uat_warehouse_management import count_current_stock
+    current_stock = count_current_stock(item_name)
+    
+    # 2. Check threshold
+    if (predicted_demand * THRESHOLD_PERCENTAGE) > current_stock:
+        proc_item = {item_name: int(predicted_demand - current_stock)}
+        return create_pr(user_id=None, proc_item=proc_item, justification=justification)
+    
+    return "Stock level sufficient. No PR triggered."
+
+def create_pr(user_id, proc_item, justification):
+    """Creates a PR header and bridge entries. Status 1 for AI, 2 for Officer."""
+    new_pr_id = generate_next_pr_id()
+    status_id = 2 if user_id else 1
+    now_ts = get_now()
+
+    # A. Create PR Header
+    new_pr_header = pd.DataFrame([{
+        "pr_id": new_pr_id,
+        "status_id": status_id,
+        "created_at": now_ts,
+        "created_by": user_id,
+        "last_modified_at": now_ts,
+        "last_modified_by": user_id,
+        "reviewed_at": None,
+        "reviewed_by": None,
+        "justification": justification
+    }])
+    db.load("purchase_request", new_pr_header, mode='append')
+
+    # B. Create Bridge Entries
+    item_master = db.extract("item", fields=["item_id", "item_name"])
+    bridge_data = []
+    
+    for name, qty in proc_item.items():
+        # Lookup item_id from name
+        match = item_master[item_master['item_name'] == name]
+        if not match.empty:
+            bridge_data.append({
+                "doc_id": new_pr_id,
+                "item_id": match.iloc[0]['item_id'],
+                "quantity": qty
+            })
+    
+    if bridge_data:
+        db.load("purchase_item_bridge", pd.DataFrame(bridge_data), mode='append')
+
+    return {"pr_id": new_pr_id, "status": status_id, "items": bridge_data}
+
+def accept_pr_suggestion(pr_id, officer_id):
+    """Officer accepts an AI suggestion (Status 1 -> 2)."""
+    pr = db.extract("purchase_request", conditions={"pr_id": pr_id})
+    
+    if pr.empty: return "Error: PR does not exist."
+    if int(pr.iloc[0]['status_id']) != 1: return "Error: Only AI suggestions can be accepted."
+
+    now_ts = get_now()
+    updates = {
+        "status_id": 2,
+        "created_at": now_ts,
+        "created_by": officer_id,
+        "last_modified_at": now_ts,
+        "last_modified_by": officer_id
+    }
+    db.modify("purchase_request", updates, {"pr_id": pr_id})
+    return f"PR {pr_id} successfully accepted by Officer."
+
+def modify_pr(user_id, pr_id, proc_item, justification):
+    """Allows Officers to modify AI suggestions, or Managers to modify Officer requests."""
+    pr = db.extract("purchase_request", conditions={"pr_id": pr_id})
+    if pr.empty: return "Error: PR not found."
+    
+    role = gatekeeper.get_user_role(user_id)
+    current_status = int(pr.iloc[0]['status_id'])
+    
+    # Validation Logic
+    if role == "Procurement Officer" and current_status != 1:
+        return "Error: Officers can only modify AI suggestions (Status 1)."
+    if role == "Procurement Manager" and current_status != 2:
+        return "Error: Managers can only modify submitted requests (Status 2)."
+
+    # 1. Update Header
+    updates = {
+        "justification": justification,
+        "last_modified_at": get_now(),
+        "last_modified_by": user_id
+    }
+    if role == "Procurement Officer": updates["status_id"] = 2
+    
+    db.modify("purchase_request", updates, {"pr_id": pr_id})
+
+    # 2. Update Items (Delete old bridge records and insert new ones)
+    db.delete("purchase_item_bridge", {"doc_id": pr_id})
+    
+    item_master = db.extract("item", fields=["item_id", "item_name"])
+    new_bridge = []
+    for name, qty in proc_item.items():
+        match = item_master[item_master['item_name'] == name]
+        if not match.empty:
+            new_bridge.append({"doc_id": pr_id, "item_id": match.iloc[0]['item_id'], "quantity": qty})
+    
+    db.load("purchase_item_bridge", pd.DataFrame(new_bridge), mode='append')
+    return f"PR {pr_id} updated successfully."
+
+def get_pr_ticket(officer_id, pr_id=None, status=None):
+    """Retrieves PR tickets based on filters."""
+    conditions = {"created_by": officer_id}
+    if pr_id: conditions["pr_id"] = pr_id
+    if status: conditions["status_id"] = status
+    
+    return db.extract("purchase_request", conditions=conditions).to_dict(orient='records')
+
+def get_pr_details(officer_id, pr_id):
+    """Retrieves full PR details including items."""
+    header = db.extract("purchase_request", conditions={"pr_id": pr_id, "created_by": officer_id})
+    if header.empty: return "Error: PR not found or unauthorized access."
+
+    items = db.extract("purchase_item_bridge", conditions={"doc_id": pr_id})
+    return {"header": header.iloc[0].to_dict(), "items": items.to_dict(orient='records')}
+
+def review_pr(pr_id, decision, manager_id):
+    """Manager approves (4) or rejects (3) a PR."""
+    if not gatekeeper.is_authorized(manager_id, "review_pr"):
+        return "Error: Access Denied."
+
+    pr = db.extract("purchase_request", conditions={"pr_id": pr_id})
+    if pr.empty: return "Error: PR not found."
+    if int(pr.iloc[0]['status_id']) != 2: return "Error: PR is not in a 'Pending Review' state."
+
+    status_code = 4 if decision.lower() == "approve" else 3
+    updates = {
+        "status_id": status_code,
+        "reviewed_at": get_now(),
+        "reviewed_by": manager_id
+    }
+    db.modify("purchase_request", updates, {"pr_id": pr_id})
+    return f"PR {pr_id} has been {decision}ed."

@@ -4,10 +4,9 @@ roles:
     - "modify_role"
   Procurement Manager:
     - "review_pr"
-  Warehouse:
+  Warehouse Personnel:
     - "update_inventory"
     - "count_inventory"
+    - "update_po_status"
   Supplier:
-    - "get_po_ticket"
-    - "get_po_details"
     - "update_po_status"

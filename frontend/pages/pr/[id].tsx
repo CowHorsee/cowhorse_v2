@@ -14,7 +14,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
     <div className="mx-auto w-full max-w-6xl rounded-2xl bg-brand-white p-6 shadow-surface md:p-8">
       <section className="mb-6">
         <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-brand-red">
-          (Created Date: {purchaseRequest.createdAt})
+          (Created Date: {purchaseRequest.description})
         </p>
         <h1 className="font-heading text-3xl font-semibold text-brand-blue md:text-4xl">
           {purchaseRequest.id}

@@ -63,83 +63,45 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
         </div>
 
         <CardHeader
-          subtitle="Purchase request details"
-          title={purchaseRequest.id}
-          action={
-            <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
-              {currentRequest.status}
-            </span>
-          }
-          subtitleClassName="text-brand-red"
-          titleClassName="text-brand-blue"
+          title={purchaseRequest.description}
+          className="mb-1"
+          titleClassName="text-lg"
         />
-        <div className="overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">Field</th>
-                <th className="px-4 py-3">Value</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Title
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.title}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Department
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.department}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Requester
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.requester}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Vendor
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.vendor}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Amount
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  RM {currentRequest.amount.toLocaleString()}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Last Update
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.updatedAt}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Description
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.description}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-slate-600">Department</p>
+          <strong className="font-semibold text-brand-blue">
+            {purchaseRequest.department}
+          </strong>
+        </div>
+        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-slate-600">Requester</p>
+          <strong className="font-semibold text-brand-blue">
+            {purchaseRequest.requester}
+          </strong>
+        </div>
+        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-slate-600">Status</p>
+          <strong className="font-semibold text-brand-blue">
+            {purchaseRequest.status}
+          </strong>
+        </div>
+        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-slate-600">Vendor</p>
+          <strong className="font-semibold text-brand-blue">
+            {purchaseRequest.vendor}
+          </strong>
+        </div>
+        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-slate-600">Amount</p>
+          <strong className="font-semibold text-brand-blue">
+            RM {purchaseRequest.amount.toLocaleString()}
+          </strong>
+        </div>
+        <div className="flex flex-col py-3 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-slate-600">Last update</p>
+          <strong className="font-semibold text-brand-blue">
+            {purchaseRequest.updatedAt}
+          </strong>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-3">

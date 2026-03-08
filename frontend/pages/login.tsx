@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useToast } from '../components/ToastProvider';
 import { saveUserSession } from '../utils/localStorage';
+import { prototypeUsers } from '../utils/prototypeUsers';
 
 const heroPhrases = [
   'Maximize procurement visibility.',
@@ -98,12 +99,8 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      saveUserSession({
-        user_id: 'local-dev-user',
-        name: 'Ashley Chan',
-        email: 'ashley.chan@cowhorse.dev',
-        role: 'ADMIN',
-      });
+      const defaultPrototypeUser = prototypeUsers[0];
+      saveUserSession(defaultPrototypeUser);
       showToast({
         title: 'Signed in',
         description: 'Opening the PPIS dashboard.',
@@ -131,10 +128,7 @@ export default function LoginPage() {
             <div className="inline-flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
               <div>
                 <p className="font-heading text-2xl font-bold tracking-[0.24em] text-white">
-                  PPIS
-                </p>
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/60">
-                  Procurement Platform
+                  Procurement Planning Intelligence System
                 </p>
               </div>
             </div>
@@ -239,9 +233,13 @@ export default function LoginPage() {
                     Local prototype sign-in enabled
                   </p>
                 </div>
-                <span className="rounded-full bg-brand-red/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-red">
-                  Demo
-                </span>
+                <button
+                  type="button"
+                  onClick={() => router.push('/prototype-users')}
+                  className="rounded-full bg-brand-red/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-red transition hover:bg-brand-red/20"
+                >
+                  View Users
+                </button>
               </div>
             </div>
           </div>

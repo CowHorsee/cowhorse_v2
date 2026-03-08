@@ -12,8 +12,9 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isSessionReady, setIsSessionReady] = useState(false);
-  const isAuthPage =
-    router.pathname === '/login' || router.pathname === '/register';
+  const isAuthPage = ['/login', '/register', '/prototype-users'].includes(
+    router.pathname
+  );
 
   useEffect(() => {
     setCurrentUser(getUserSession());

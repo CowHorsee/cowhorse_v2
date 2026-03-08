@@ -1,10 +1,17 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
-import type { UserRole } from '../utils/authApi';
+import { ApiError } from '../utils/apiClient';
+import { registerUser, type UserRole } from '../utils/authApi';
+import { getUserSession } from '../utils/localStorage';
 import {
   managedUsers as initialManagedUsers,
   type ManagedUser,
 } from '../utils/mockdata/usersData';
+import {
+  mapSearchUserRowToUserRecord,
+  modifyUserRole,
+  searchUsers,
+} from '../utils/userManagementApi';
 
 const roleOptions: UserRole[] = ['ADMIN', 'MANAGER', 'EMPLOYEE'];
 
@@ -82,6 +89,7 @@ function RoleDropdown({ value, onChange, compact = false }: RoleDropdownProps) {
 
 export default function UsersPage() {
   const [users, setUsers] = useState<ManagedUser[]>(initialManagedUsers);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
@@ -110,6 +118,31 @@ export default function UsersPage() {
     });
   }, [users, searchTerm]);
 
+  useEffect(() => {
+    async function loadUsers() {
+      setIsLoadingUsers(true);
+
+      try {
+        const response = await searchUsers();
+        const mapped = response.map((row, index) =>
+          mapSearchUserRowToUserRecord(row, index)
+        );
+
+        if (mapped.length) {
+          setUsers(mapped);
+        }
+      } catch {
+        setFeedbackMessage(
+          'Live user API is unavailable. Showing cached prototype users.'
+        );
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    }
+
+    loadUsers();
+  }, []);
+
   function startEditingRow(user: ManagedUser) {
     setEditingUserId(user.user_id);
     setEditDraft({
@@ -119,7 +152,7 @@ export default function UsersPage() {
     });
   }
 
-  function confirmEditingRow() {
+  async function confirmEditingRow() {
     if (!editingUserId || !editDraft) {
       return;
     }
@@ -137,25 +170,47 @@ export default function UsersPage() {
       return;
     }
 
-    setUsers((currentUsers) =>
-      currentUsers.map((user) =>
-        user.user_id === editingUserId
-          ? {
-              ...user,
-              name: normalizedName,
-              email: normalizedEmail,
-              role: editDraft.role,
-            }
-          : user
-      )
-    );
+    const sessionUser = getUserSession();
 
-    setFeedbackMessage(`User ${editingUserId} updated.`);
-    setEditingUserId(null);
-    setEditDraft(null);
+    if (!sessionUser?.user_id) {
+      setFeedbackMessage('Admin session is required to update roles.');
+      return;
+    }
+
+    try {
+      await modifyUserRole({
+        admin_id: sessionUser.user_id,
+        user_id: editingUserId,
+        new_role_name: editDraft.role,
+      });
+
+      setUsers((currentUsers) =>
+        currentUsers.map((user) =>
+          user.user_id === editingUserId
+            ? {
+                ...user,
+                name: normalizedName,
+                email: normalizedEmail,
+                role: editDraft.role,
+              }
+            : user
+        )
+      );
+
+      setFeedbackMessage(`User ${editingUserId} updated.`);
+      setEditingUserId(null);
+      setEditDraft(null);
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to update user role right now.';
+
+      setFeedbackMessage(message);
+    }
   }
 
-  function handleAddUser(event: FormEvent<HTMLFormElement>) {
+  async function handleAddUser(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFeedbackMessage('');
 
@@ -172,19 +227,42 @@ export default function UsersPage() {
       return;
     }
 
-    const nextId = `USR-${String(users.length + 1).padStart(3, '0')}`;
-    const nextUser: ManagedUser = {
-      user_id: nextId,
-      name: normalizedName,
-      email: normalizedEmail,
-      role: newUserRole,
-    };
+    const sessionUser = getUserSession();
 
-    setUsers((currentUsers) => [nextUser, ...currentUsers]);
-    setNewUserName('');
-    setNewUserEmail('');
-    setNewUserRole('EMPLOYEE');
-    setFeedbackMessage(`User ${normalizedName} added as ${newUserRole}.`);
+    if (!sessionUser?.user_id) {
+      setFeedbackMessage('Admin session is required to add users.');
+      return;
+    }
+
+    try {
+      const response = await registerUser({
+        admin_id: sessionUser.user_id,
+        email: normalizedEmail,
+        name: normalizedName,
+        role_name: newUserRole,
+      });
+
+      const refreshed = await searchUsers();
+      const mapped = refreshed.map((row, index) =>
+        mapSearchUserRowToUserRecord(row, index)
+      );
+
+      if (mapped.length) {
+        setUsers(mapped);
+      }
+
+      setNewUserName('');
+      setNewUserEmail('');
+      setNewUserRole('EMPLOYEE');
+      setFeedbackMessage(response || `User ${normalizedName} added.`);
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to add user right now.';
+
+      setFeedbackMessage(message);
+    }
   }
 
   return (
@@ -203,7 +281,7 @@ export default function UsersPage() {
               Total Users
             </p>
             <p className="mt-2 text-3xl font-semibold text-brand-blue">
-              {users.length}
+              {isLoadingUsers ? '...' : users.length}
             </p>
           </Card>
 

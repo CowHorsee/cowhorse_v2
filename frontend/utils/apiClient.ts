@@ -85,5 +85,13 @@ export async function apiRequest<T>(
     throw new ApiError(errorMessage, response.status, payload);
   }
 
-  return (payload as T) ?? ({} as T);
+  if (payload !== null) {
+    return payload as T;
+  }
+
+  if (text) {
+    return text as unknown as T;
+  }
+
+  return {} as T;
 }

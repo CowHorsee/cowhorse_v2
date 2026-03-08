@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+<<<<<<< HEAD
 import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { getUserSession } from '../../utils/localStorage';
@@ -7,6 +8,11 @@ import {
   getPrDetails,
   mergeDetailsIntoPurchaseRequest,
 } from '../../utils/prApi';
+=======
+import { useEffect } from 'react';
+import Card, { CardHeader } from '../../components/atoms/Card';
+import { getUserSession } from '../../utils/localStorage';
+>>>>>>> 3b6e34cc11df805a2fd1bf4eea223fe8a5c8a3f3
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -18,7 +24,10 @@ type PrDetailsPageProps = {
 
 export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
   const router = useRouter();
+<<<<<<< HEAD
   const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
+=======
+>>>>>>> 3b6e34cc11df805a2fd1bf4eea223fe8a5c8a3f3
 
   useEffect(() => {
     const user = getUserSession();
@@ -63,45 +72,83 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
         </div>
 
         <CardHeader
-          title={purchaseRequest.description}
-          className="mb-1"
-          titleClassName="text-lg"
+          subtitle="Purchase request details"
+          title={purchaseRequest.id}
+          action={
+            <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
+              {purchaseRequest.status}
+            </span>
+          }
+          subtitleClassName="text-brand-red"
+          titleClassName="text-brand-blue"
         />
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Department</p>
-          <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.department}
-          </strong>
-        </div>
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Requester</p>
-          <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.requester}
-          </strong>
-        </div>
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Status</p>
-          <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.status}
-          </strong>
-        </div>
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Vendor</p>
-          <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.vendor}
-          </strong>
-        </div>
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Amount</p>
-          <strong className="font-semibold text-brand-blue">
-            RM {purchaseRequest.amount.toLocaleString()}
-          </strong>
-        </div>
-        <div className="flex flex-col py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Last update</p>
-          <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.updatedAt}
-          </strong>
+        <div className="overflow-x-auto rounded-2xl border border-slate-200">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50">
+              <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
+                <th className="px-4 py-3">Field</th>
+                <th className="px-4 py-3">Value</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              <tr>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Title
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {purchaseRequest.title}
+                </td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Department
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {purchaseRequest.department}
+                </td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Requester
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {purchaseRequest.requester}
+                </td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Vendor
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {purchaseRequest.vendor}
+                </td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Amount
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  RM {purchaseRequest.amount.toLocaleString()}
+                </td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Last Update
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {purchaseRequest.updatedAt}
+                </td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Description
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {purchaseRequest.description}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-3">
@@ -111,6 +158,17 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
             </a>
           </Link>
         </div>
+<<<<<<< HEAD
+
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link href={`/pr/split/${purchaseRequest.id}`}>
+            <a className="inline-flex items-center rounded-lg bg-brand-red px-4 py-2 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]">
+              Split into POs
+            </a>
+          </Link>
+        </div>
+=======
+>>>>>>> 3b6e34cc11df805a2fd1bf4eea223fe8a5c8a3f3
       </Card>
     </div>
   );

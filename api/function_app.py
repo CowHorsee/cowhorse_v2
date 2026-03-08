@@ -3,12 +3,19 @@ import logging
 from azure_functions_openapi.openapi import get_openapi_json
 from azure_functions_openapi.swagger_ui import render_swagger_ui
 
-from pr import bp as pr_blueprint
-from user import bp as user_blueprint
+
+from api_data_loader import bp as loader_blueprint
+from api_user_management import bp as user_v2_blueprint
+from api_purchase_request import bp as pr_api_blueprint
+from api_purchase_order import bp as po_api_blueprint
+from api_warehouse import bp as warehouse_api_blueprint
 
 app = func.FunctionApp()
-app.register_blueprint(user_blueprint)
-app.register_blueprint(pr_blueprint)
+app.register_blueprint(loader_blueprint)
+app.register_blueprint(user_v2_blueprint)
+app.register_blueprint(pr_api_blueprint)
+app.register_blueprint(po_api_blueprint)
+app.register_blueprint(warehouse_api_blueprint)
 
 
 @app.route(route="openapi.json", auth_level=func.AuthLevel.ANONYMOUS)

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
@@ -10,12 +11,20 @@ import { getUserSession } from '../../../utils/localStorage';
 import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
 import { getPrTickets, mapTicketToPurchaseRequest } from '../../../utils/prApi';
 >>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
+=======
+import { useMemo, useState } from 'react';
+import Card, { CardHeader } from '../../../components/atoms/Card';
+import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
+>>>>>>> 3b6e34cc11df805a2fd1bf4eea223fe8a5c8a3f3
 
 const approvableStatuses = new Set(['Pending Approval', 'In Review']);
 
 export default function PrApprovalListPage() {
   const [searchTerm, setSearchTerm] = useState('');
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 3b6e34cc11df805a2fd1bf4eea223fe8a5c8a3f3
 
   const approvals = useMemo(
     () =>
@@ -23,6 +32,7 @@ export default function PrApprovalListPage() {
         approvableStatuses.has(request.status)
       ),
     []
+<<<<<<< HEAD
 =======
   const [requests, setRequests] = useState(purchaseRequests);
 
@@ -54,6 +64,8 @@ export default function PrApprovalListPage() {
     () => requests.filter((request) => approvableStatuses.has(request.status)),
     [requests]
 >>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
+=======
+>>>>>>> 3b6e34cc11df805a2fd1bf4eea223fe8a5c8a3f3
   );
 
   const filteredApprovals = useMemo(() => {

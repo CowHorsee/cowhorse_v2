@@ -1,0 +1,32 @@
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .header { color: #004a99; border-bottom: 2px solid #004a99; }
+        .item-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .item-table th, .item-table td { border: 1px solid #ddd; padding: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PURCHASE ORDER: {{ po_id }}</h1>
+    </div>
+    <p><strong>Supplier:</strong> {{ supplier_name }}</p>
+    <p><strong>Date:</strong> {{ date }}</p>
+
+    <table class="item-table">
+        <thead>
+            <tr><th>Item</th><th>Qty</th><th>Price</th></tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.unit_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

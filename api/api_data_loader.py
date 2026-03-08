@@ -15,10 +15,22 @@ def _get_table_service_client():
         raise ValueError("AZURE_STORAGE_CONNECTION_STRING is not set.")
     return TableServiceClient.from_connection_string(conn_str)
 
+def sanitize_key(key):
+    """Sanitizes PartitionKey and RowKey for Azure Table Storage."""
+    if not key:
+        return "unknown"
+    key = str(key)
+    # PartitionKey and RowKey cannot contain: / \ # ? or control characters
+    forbidden = ['/', '\\', '#', '?']
+    for char in forbidden:
+        key = key.replace(char, '_')
+    # Remove control characters
+    return "".join(c for c in key if 31 < ord(c) < 127)
+
 @bp.route(route="run", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
 @openapi(
     summary="Migrate CSV datasets to Azure Table Storage",
-    description="Iterates through all CSV files in api/dataset/ and uploads them to Azure Storage Tables.",
+    description="Iterates through all CSV files in api/dataset/ and uploads them to Azure Storage Tables using batch transactions.",
     tags=["Maintenance"],
     operation_id="runDataLoader",
     response={
@@ -27,7 +39,7 @@ def _get_table_service_client():
     },
 )
 def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info("Starting data loading process.")
+    logging.info("Starting data loading process with batching.")
     
     dataset_dir = os.path.join(os.path.dirname(__file__), 'dataset')
     if not os.path.exists(dataset_dir):
@@ -40,14 +52,11 @@ def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:
         for filename in os.listdir(dataset_dir):
             if filename.endswith(".csv"):
                 logical_name = filename.replace(".csv", "")
-                # Azure Table names must be alphanumeric
                 table_name = logical_name.replace("_", "")
                 csv_path = os.path.join(dataset_dir, filename)
                 
-                # Load CSV
                 df = pd.read_csv(csv_path)
                 
-                # Identify ID column for RowKey
                 id_col = None
                 for col in df.columns:
                     if col.endswith("_id") or col == "id":
@@ -58,30 +67,42 @@ def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:
                 try:
                     table_client.create_table()
                 except Exception:
-                    # Table might already exist
                     pass
 
                 rows_loaded = 0
+                batch = []
+                
                 for index, row in df.iterrows():
                     entity = row.to_dict()
-                    
-                    # Azure Table Storage Requirements
                     entity["PartitionKey"] = "DATA"
+                    
                     if id_col and pd.notna(row[id_col]):
-                        entity["RowKey"] = str(row[id_col])
+                        entity["RowKey"] = sanitize_key(row[id_col])
                     else:
                         entity["RowKey"] = f"row_{index}"
                     
-                    # Convert any non-serializable types (like NaN) to None for Azure
                     for key, val in entity.items():
                         if pd.isna(val):
                             entity[key] = None
                         elif isinstance(val, (int, float)) and not isinstance(val, bool):
-                            # Ensure numeric values are preserved, but pandas sometimes uses numpy types
-                            entity[key] = val
+                            if (isinstance(val, int) or (isinstance(val, float) and val.is_integer())) and \
+                               (val > 2147483647 or val < -2147483648):
+                                entity[key] = str(int(val))
+                            else:
+                                entity[key] = val
 
-                    table_client.upsert_entity(entity=entity)
-                    rows_loaded += 1
+                    # Batch logic (Azure limits batch to 100 operations)
+                    batch.append(("upsert", entity))
+                    
+                    if len(batch) >= 100:
+                        table_client.submit_transaction(batch)
+                        rows_loaded += len(batch)
+                        batch = []
+                
+                # Final batch
+                if batch:
+                    table_client.submit_transaction(batch)
+                    rows_loaded += len(batch)
                 
                 results[table_name] = f"Loaded {rows_loaded} rows."
 

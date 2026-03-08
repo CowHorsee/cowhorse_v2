@@ -104,6 +104,8 @@ function parseInventoryCsv(content: string): CsvParseResult {
 
     const sku = getValueByAliases(row, ['sku', 'itemsku']);
     const itemName = getValueByAliases(row, ['itemname', 'item', 'name']);
+    const location =
+      getValueByAliases(row, ['location', 'warehouse', 'zone']) || 'Unassigned';
     const unit = getValueByAliases(row, ['unit', 'uom']) || 'pcs';
     const lastUpdated =
       getValueByAliases(row, ['lastupdated', 'updatedat', 'updated']) ||
@@ -121,6 +123,7 @@ function parseInventoryCsv(content: string): CsvParseResult {
     rows.push({
       sku,
       itemName,
+      location,
       currentStock,
       unit,
       lastUpdated,
@@ -199,13 +202,7 @@ export default function InventoryPage() {
   }
 
   function handleCsvExport() {
-    const headers = [
-      'sku',
-      'itemName',
-      'currentStock',
-      'unit',
-      'lastUpdated',
-    ];
+    const headers = ['sku', 'itemName', 'currentStock', 'unit', 'lastUpdated'];
     const csvBody = items.map((item) =>
       toCsvRow([
         item.sku,

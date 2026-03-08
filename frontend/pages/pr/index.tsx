@@ -10,12 +10,8 @@ export default function PrPage() {
           Purchase requests
         </p>
         <h1 className="font-heading text-3xl font-semibold text-brand-blue md:text-4xl">
-          PR Board
+          PR Overview
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
-          Monitor purchase request status, owner, department, and latest
-          updates.
-        </p>
       </section>
 
       <Card as="section" variant="base" padding="lg">

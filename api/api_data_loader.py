@@ -39,7 +39,9 @@ def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:
         
         for filename in os.listdir(dataset_dir):
             if filename.endswith(".csv"):
-                table_name = filename.replace(".csv", "")
+                logical_name = filename.replace(".csv", "")
+                # Azure Table names must be alphanumeric
+                table_name = logical_name.replace("_", "")
                 csv_path = os.path.join(dataset_dir, filename)
                 
                 # Load CSV

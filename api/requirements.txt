@@ -9,3 +9,5 @@ bcrypt
 pandas
 playwright
 jinja2
+pydantic
+pydantic-settings

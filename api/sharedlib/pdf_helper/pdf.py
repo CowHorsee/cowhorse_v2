@@ -21,7 +21,12 @@ async def generate_pdf(data, output_path=None):
 
     async with async_playwright() as p:
         # Launch browser (Ensure 'playwright install chromium' has been run)
-        browser = await p.chromium.launch(headless=True)
+        try:
+            browser = await p.chromium.launch(headless=True)
+        except Exception as e:
+            logging.error(f"Failed to launch Playwright browser. This is expected on some Azure Functions plans. Error: {e}")
+            raise RuntimeError("PDF generation requires a server environment with Playwright browsers installed. If this is on Azure, consider a Linux Premium Plan with a Custom Container.") from e
+        
         page = await browser.new_page()
         
         # Set content and wait for it to be ready

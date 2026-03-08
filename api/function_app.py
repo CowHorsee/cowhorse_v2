@@ -28,4 +28,4 @@ def openapi_json(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="docs", auth_level=func.AuthLevel.ANONYMOUS)
 def docs(req: func.HttpRequest) -> func.HttpResponse:
-    return render_swagger_ui(title="CowHorse API Docs",openapi_url="/api/openapi.json")
+    return render_swagger_ui(title="CowHorse API Docs", openapi_url="openapi.json")

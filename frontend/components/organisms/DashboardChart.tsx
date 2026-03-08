@@ -166,7 +166,7 @@ export default function InventoryOverviewChart({
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
         <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-            <span>Weekly range</span>
+            <span>Monthly range</span>
             <span>{activePoint.label}</span>
           </div>
 

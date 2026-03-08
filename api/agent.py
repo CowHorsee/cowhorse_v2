@@ -174,9 +174,16 @@ def mock_create_pr(req: func.HttpRequest) -> func.HttpResponse:
             'prompt': {'type': 'string'},
         },
     },
-    response={
-        200: {'description': 'AI connectivity test succeeded'},
-        500: {'description': 'AI connectivity test failed'},
+    responses={
+        200: {
+            "description": "AI connectivity test succeeded",
+            "content": {"application/json": {"schema": {"type": "object", "properties": {
+                "ok": {"type": "boolean"},
+                "deployment": {"type": "string"},
+                "response": {"type": "string"}
+            }}}}
+        },
+        500: {"description": "AI connectivity test failed"}
     },
 )
 def test_ai(req: func.HttpRequest) -> func.HttpResponse:
@@ -229,9 +236,17 @@ def test_ai(req: func.HttpRequest) -> func.HttpResponse:
             'base_url': {'type': 'string'},
         },
     },
-    response={
-        200: {'description': 'Tool test completed'},
-        500: {'description': 'Tool test failed'},
+    responses={
+        200: {
+            "description": "Tool test completed",
+            "content": {"application/json": {"schema": {"type": "object", "properties": {
+                "ok": {"type": "boolean"},
+                "item_id": {"type": "string"},
+                "base_url": {"type": "string"},
+                "result": {"type": "string", "description": "LLM's final response after tool execution"}
+            }}}}
+        },
+        500: {"description": "Tool test failed due to LLM or backend error"}
     },
 )
 def test_tools(req: func.HttpRequest) -> func.HttpResponse:

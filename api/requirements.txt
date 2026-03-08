@@ -6,3 +6,4 @@ azure-functions
 azure-functions-openapi
 azure-data-tables
 bcrypt
+pandas

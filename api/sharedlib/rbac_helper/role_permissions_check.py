@@ -1,7 +1,7 @@
 import yaml
 import os
 import pandas as pd
-from ..db_helper.db_ops import DBHelper
+from sharedlib.db_helper.db_ops import DBHelper
 
 db = DBHelper()
 

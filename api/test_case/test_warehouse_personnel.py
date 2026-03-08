@@ -7,7 +7,7 @@ os.environ["TESTING"] = "true"
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from api.scripts.user_management import login
-from api.scripts.puchase_order import get_po_ticket, get_po_details, update_po_status
+from cowhorse_v2.api.scripts.purchase_order import get_po_ticket, get_po_details, update_po_status
 from api.scripts.uat_warehouse_management import count_inventory, update_inventory
 
 # Warehouse Personnel ID (Wei from user.csv)

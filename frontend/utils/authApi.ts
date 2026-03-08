@@ -27,6 +27,7 @@ export type LoginPayload = {
   password: string;
 };
 
+/** Calls the backend registration endpoint and returns the created user payload. */
 export function registerUser(payload: RegisterPayload) {
   return apiRequest<AuthResponse>('/api/user/register', {
     method: 'POST',
@@ -34,6 +35,7 @@ export function registerUser(payload: RegisterPayload) {
   });
 }
 
+/** Calls the backend login endpoint and returns the authenticated user payload. */
 export function loginUser(payload: LoginPayload) {
   return apiRequest<AuthResponse>('/api/user/login', {
     method: 'POST',

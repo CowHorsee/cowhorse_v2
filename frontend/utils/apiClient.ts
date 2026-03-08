@@ -14,6 +14,7 @@ export class ApiError extends Error {
   status: number;
   payload: JsonValue | null;
 
+  /** Carries API status and parsed response payload for failed requests. */
   constructor(message: string, status: number, payload: JsonValue | null) {
     super(message);
     this.name = 'ApiError';
@@ -28,15 +29,18 @@ type ApiRequestOptions = {
   headers?: Record<string, string>;
 };
 
+/** Returns the configured API host and leaves same-origin calls relative by default. */
 function getApiBaseUrl() {
   return (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
 }
 
+/** Builds an absolute or same-origin URL for a frontend API request. */
 function buildUrl(path: string) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${getApiBaseUrl()}${normalizedPath}`;
 }
 
+/** Parses JSON responses safely and falls back to null for non-JSON bodies. */
 function tryParseJson(text: string): JsonValue | null {
   if (!text) {
     return null;
@@ -49,6 +53,9 @@ function tryParseJson(text: string): JsonValue | null {
   }
 }
 
+/**
+ * Sends a JSON request to the backend API and throws ApiError on non-2xx responses.
+ */
 export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {}

@@ -32,8 +32,6 @@ export default function PrPage() {
                 <p className="font-semibold text-slate-900">{item.title}</p>
                 <p className="mt-1 text-sm text-slate-600">{item.id}</p>
               </div>
-              <p className="text-sm text-slate-700">{item.department}</p>
-              <p className="text-sm text-slate-700">{item.requester}</p>
               <p className="text-sm">
                 <span className="inline-block rounded-full bg-brand-red/10 px-3 py-1 text-xs font-bold text-brand-red">
                   {item.status}

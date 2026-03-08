@@ -1,15 +1,42 @@
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
+import { getUserSession } from '../../utils/localStorage';
 import { purchaseRequests } from '../../utils/mockdata/purchaseRequestsData';
+import { getPrTickets, mapTicketToPurchaseRequest } from '../../utils/prApi';
 
 export default function PrPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [requests, setRequests] = useState(purchaseRequests);
+
+  useEffect(() => {
+    async function loadRequests() {
+      const sessionUser = getUserSession();
+
+      try {
+        const rows = await getPrTickets({ user_id: sessionUser?.user_id });
+        if (rows.length) {
+          setRequests(
+            rows.map((row) =>
+              mapTicketToPurchaseRequest(
+                row,
+                purchaseRequests.find((item) => item.id === row.pr_id)
+              )
+            )
+          );
+        }
+      } catch {
+        setRequests(purchaseRequests);
+      }
+    }
+
+    loadRequests();
+  }, []);
 
   const filteredRequests = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return purchaseRequests.filter((request) => {
+    return requests.filter((request) => {
       if (!normalizedSearch) {
         return true;
       }
@@ -23,7 +50,7 @@ export default function PrPage() {
     });
   }, [searchTerm]);
 
-  const pendingCount = purchaseRequests.filter(
+  const pendingCount = requests.filter(
     (request) => request.status === 'Pending Approval'
   ).length;
 
@@ -43,7 +70,7 @@ export default function PrPage() {
               Total Requests
             </p>
             <p className="mt-2 text-3xl font-semibold text-brand-blue">
-              {purchaseRequests.length}
+              {requests.length}
             </p>
           </Card>
           <Card variant="soft" padding="md">
@@ -79,8 +106,8 @@ export default function PrPage() {
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50">
               <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">PR ID</th>
-                <th className="px-4 py-3">Amount</th>
+              <th className="px-4 py-3">PR ID</th>
+                <th className="px-4 py-3">Title / Justification</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Details</th>
               </tr>
@@ -112,7 +139,7 @@ export default function PrPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={4}
                     className="px-4 py-8 text-center text-slate-500"
                   >
                     No purchase requests match the current search.

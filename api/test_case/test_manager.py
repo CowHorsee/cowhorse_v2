@@ -3,11 +3,11 @@ import os
 
 os.environ["TESTING"] = "true"
 
-# Add the project root to sys.path to allow imports from api
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+# Add the api directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from api.scripts.user_management import login
-from api.scripts.purchase_request import modify_pr, review_pr, get_pr_ticket, get_pr_details
+from scripts.user_management import login
+from scripts.purchase_request import modify_pr, review_pr, get_pr_ticket, get_pr_details
 
 # Manager ID (Siti from user.csv)
 MANAGER_ID = "194b1bd8-e13c-461a-8afb-04da92440a8b"

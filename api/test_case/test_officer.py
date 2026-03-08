@@ -3,11 +3,11 @@ import os
 
 os.environ["TESTING"] = "true"
 
-# Add the project root to sys.path to allow imports from api
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+# Add the api directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from api.scripts.user_management import login, forget_password, change_password
-from api.scripts.purchase_request import create_pr, modify_pr, get_pr_ticket, get_pr_details
+from scripts.user_management import login, forget_password, change_password
+from scripts.purchase_request import create_pr, modify_pr, get_pr_ticket, get_pr_details
 
 # Officer ID (Raju from user.csv)
 OFFICER_ID = "dd4f18d8-3859-490f-88fd-330203e15be2"

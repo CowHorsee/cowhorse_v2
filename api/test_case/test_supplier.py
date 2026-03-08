@@ -3,11 +3,11 @@ import os
 
 os.environ["TESTING"] = "true"
 
-# Add the project root to sys.path to allow imports from api
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+# Add the api directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from api.scripts.user_management import login
-from cowhorse_v2.api.scripts.purchase_order import get_po_ticket, get_po_details, update_po_status
+from scripts.user_management import login
+from scripts.purchase_order import get_po_ticket, get_po_details, update_po_status
 
 # Supplier ID (John from user.csv)
 SUPPLIER_ID = "888e4567-e89b-12d3-a456-426614174001"

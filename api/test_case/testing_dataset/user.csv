@@ -1,6 +1,2 @@
 user_id,name,email,password_hash,raw_password,role_id,created_at
-111e4567-e89b-12d3-a456-426614174000,Ahmad,ahmad@fiamma.com.my,$2b$12$TQsaJ93GrOBK/6EpwTHbu.4/R94aqO/mszIEja6jZcy360yF1cKF2,,1,2026-03-07T00:00:00.000000
-194b1bd8-e13c-461a-8afb-04da92440a8b,Wallace,wallace@company.com,$2b$12$PsNuhCx0p/KUQUWbb98/meNbIxivqokJNpnglAJVgU9ROWHxhnOJi,c860c329,2,2026-03-08T15:47:00.704832
-dd4f18d8-3859-490f-88fd-330203e15be2,John Doe,johndoe@company.com,$2b$12$OXTajDYi8s/W9jgscvqmYuotmOzEccwyOZz6IjeKo9fwFQ5y6VWt6,eda7074c,3,2026-03-08T15:47:01.091964
-888e4567-e89b-12d3-a456-426614174001,John,john@fiamma.com.my,$2b$12$V9gN1wbpDXxPwu3rti6RDOrzP8240cX/gZ7TWY8I44/y8MDpds4r2,80290066,5,2026-03-08T15:47:01.468956
-444e4567-e89b-12d3-a456-426614174000,Wei,wei@fiamma.com.my,$2b$12$i8P8KgvlVMpywiUXalTY5OWPPbzPKc14RTIzvP23m6iGITEs1vHNy,2b3049bf,4,2026-03-08T15:47:01.870778
+111e4567-e89b-12d3-a456-426614174000,Ahmad,ahmad@fiamma.com.my,$2b$12$G.k4fPEDWR2YQiPtZ.DIBe3DGb0T.LbRpYxukDK88MgZ9iuR9yAFa,,1,2026-03-07T00:00:00.000000

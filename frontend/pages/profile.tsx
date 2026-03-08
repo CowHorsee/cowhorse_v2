@@ -1,13 +1,11 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
-import { useToast } from '../components/ToastProvider';
 import type { AuthUser } from '../utils/authApi';
 import { clearUserSession, getUserSession } from '../utils/localStorage';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { showToast } = useToast();
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
@@ -17,11 +15,6 @@ export default function ProfilePage() {
   function handleSignOut() {
     clearUserSession();
     setUser(null);
-    showToast({
-      title: 'Signed out',
-      description: 'Your local session has been cleared.',
-      variant: 'info',
-    });
     router.push('/login');
   }
 

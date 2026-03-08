@@ -1,12 +1,29 @@
 import Link from 'next/link';
+<<<<<<< HEAD
+import { useMemo, useState } from 'react';
+import Card, { CardHeader } from '../../../components/atoms/Card';
+import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
+=======
 import { useEffect, useMemo, useState } from 'react';
-import Card, { CardHeader } from '../../components/atoms/Card';
-import { getUserSession } from '../../utils/localStorage';
-import { purchaseRequests } from '../../utils/mockdata/purchaseRequestsData';
-import { getPrTickets, mapTicketToPurchaseRequest } from '../../utils/prApi';
+import Card, { CardHeader } from '../../../components/atoms/Card';
+import { getUserSession } from '../../../utils/localStorage';
+import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
+import { getPrTickets, mapTicketToPurchaseRequest } from '../../../utils/prApi';
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
 
-export default function PrPage() {
+const approvableStatuses = new Set(['Pending Approval', 'In Review']);
+
+export default function PrApprovalListPage() {
   const [searchTerm, setSearchTerm] = useState('');
+<<<<<<< HEAD
+
+  const approvals = useMemo(
+    () =>
+      purchaseRequests.filter((request) =>
+        approvableStatuses.has(request.status)
+      ),
+    []
+=======
   const [requests, setRequests] = useState(purchaseRequests);
 
   useEffect(() => {
@@ -33,10 +50,16 @@ export default function PrPage() {
     loadRequests();
   }, []);
 
-  const filteredRequests = useMemo(() => {
+  const approvals = useMemo(
+    () => requests.filter((request) => approvableStatuses.has(request.status)),
+    [requests]
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
+  );
+
+  const filteredApprovals = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return requests.filter((request) => {
+    return approvals.filter((request) => {
       if (!normalizedSearch) {
         return true;
       }
@@ -44,22 +67,18 @@ export default function PrPage() {
       return (
         request.id.toLowerCase().includes(normalizedSearch) ||
         request.title.toLowerCase().includes(normalizedSearch) ||
-        request.department.toLowerCase().includes(normalizedSearch) ||
+        request.requester.toLowerCase().includes(normalizedSearch) ||
         request.status.toLowerCase().includes(normalizedSearch)
       );
     });
-  }, [searchTerm]);
-
-  const pendingCount = requests.filter(
-    (request) => request.status === 'Pending Approval'
-  ).length;
+  }, [approvals, searchTerm]);
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4">
       <Card variant="surface" padding="lg">
         <CardHeader
-          subtitle="Purchase requests"
-          title="PR Board"
+          subtitle="Approval module"
+          title="PR Approvals"
           subtitleClassName="text-brand-red"
           titleClassName="text-brand-blue"
         />
@@ -67,18 +86,28 @@ export default function PrPage() {
         <div className="grid gap-3 md:grid-cols-3">
           <Card variant="soft" padding="md">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-              Total Requests
-            </p>
-            <p className="mt-2 text-3xl font-semibold text-brand-blue">
-              {requests.length}
-            </p>
-          </Card>
-          <Card variant="soft" padding="md">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-              Pending Approval
+              Needs Approval
             </p>
             <p className="mt-2 text-3xl font-semibold text-brand-red">
-              {pendingCount}
+              {approvals.length}
+            </p>
+          </Card>
+
+          <Card variant="soft" padding="md">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+              Visible Rows
+            </p>
+            <p className="mt-2 text-3xl font-semibold text-brand-blue">
+              {filteredApprovals.length}
+            </p>
+          </Card>
+
+          <Card variant="soft" padding="md">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+              Flow
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-700">
+              Select a PR below to open approval detail.
             </p>
           </Card>
         </div>
@@ -87,17 +116,17 @@ export default function PrPage() {
       <Card variant="surface" padding="lg">
         <div>
           <label
-            htmlFor="pr-search"
+            htmlFor="approval-search"
             className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500"
           >
-            Search by id / title / department / status
+            Search by id / title / requester / status
           </label>
           <input
-            id="pr-search"
+            id="approval-search"
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Type id, title, department, or status"
+            placeholder="Type id, title, requester, or status"
             className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand-blue"
           />
         </div>
@@ -107,14 +136,17 @@ export default function PrPage() {
             <thead className="bg-slate-50">
               <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
                 <th className="px-4 py-3">PR ID</th>
-                <th className="px-4 py-3">Title / Justification</th>
+                <th className="px-4 py-3">Title</th>
+                <th className="px-4 py-3">Requester</th>
+                <th className="px-4 py-3">Department</th>
+                <th className="px-4 py-3">Amount</th>
                 <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Details</th>
+                <th className="px-4 py-3">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredRequests.length ? (
-                filteredRequests.map((request) => (
+              {filteredApprovals.length ? (
+                filteredApprovals.map((request) => (
                   <tr key={request.id}>
                     <td className="px-4 py-3 font-semibold text-brand-blue">
                       {request.id}
@@ -122,15 +154,24 @@ export default function PrPage() {
                     <td className="px-4 py-3 text-slate-700">
                       {request.title}
                     </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {request.requester}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {request.department}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      RM {request.amount.toLocaleString()}
+                    </td>
                     <td className="px-4 py-3">
                       <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
                         {request.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <Link href={`/pr/${request.id}`}>
+                      <Link href={`/pr/approval/${request.id}`}>
                         <a className="text-sm font-bold text-brand-blue transition hover:text-brand-red">
-                          View
+                          Review
                         </a>
                       </Link>
                     </td>
@@ -139,10 +180,10 @@ export default function PrPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={7}
                     className="px-4 py-8 text-center text-slate-500"
                   >
-                    No purchase requests match the current search.
+                    No approvals match the current search.
                   </td>
                 </tr>
               )}

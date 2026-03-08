@@ -10,14 +10,26 @@ export type ManagedUser = {
 export const managedUsers: ManagedUser[] = [
   {
     user_id: 'USR-001',
-    name: 'Janson',
-    email: 'janson@cowhorse.com',
-    role: 'EMPLOYEE',
+    name: 'Ashley Chan',
+    email: 'ashley.chan@cowhorse.com',
+    role: 'ADMIN',
   },
   {
     user_id: 'USR-002',
-    name: 'Wallace',
-    email: 'wallace@cowhorse.com',
+    name: 'Aina Sofea',
+    email: 'aina.sofea@cowhorse.com',
+    role: 'EMPLOYEE',
+  },
+  {
+    user_id: 'USR-003',
+    name: 'Daniel Tan',
+    email: 'daniel.tan@cowhorse.com',
     role: 'MANAGER',
-  }
+  },
+  {
+    user_id: 'USR-004',
+    name: 'Sara Lim',
+    email: 'sara.lim@cowhorse.com',
+    role: 'EMPLOYEE',
+  },
 ];

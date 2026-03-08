@@ -1,8 +1,15 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
+import { getUserSession } from '../../utils/localStorage';
+import {
+  getPrDetails,
+  mergeDetailsIntoPurchaseRequest,
+} from '../../utils/prApi';
 import {
   purchaseRequests,
-  PurchaseRequest,
+  type PurchaseRequest,
 } from '../../utils/mockdata/purchaseRequestsData';
 
 type PrDetailsPageProps = {
@@ -10,21 +17,51 @@ type PrDetailsPageProps = {
 };
 
 export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
-  return (
-    <div className="mx-auto w-full max-w-6xl rounded-2xl bg-brand-white p-6 shadow-surface md:p-8">
-      <section className="mb-6">
-        <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-brand-red">
-          (Created Date: {purchaseRequest.description})
-        </p>
-        <h1 className="font-heading text-3xl font-semibold text-brand-blue md:text-4xl">
-          {purchaseRequest.id}
-        </h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Procurement Officer : {purchaseRequest.requester}
-        </p>
-      </section>
+  const router = useRouter();
+  const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
 
-      <Card as="section" variant="base" padding="lg" className="mb-5">
+  useEffect(() => {
+    const user = getUserSession();
+
+    if (user?.role === 'MANAGER') {
+      router.replace(`/pr/approval/${purchaseRequest.id}`);
+    }
+  }, [purchaseRequest.id, router]);
+
+  useEffect(() => {
+    async function loadDetails() {
+      const user = getUserSession();
+
+      try {
+        const details = await getPrDetails({
+          user_id: user?.user_id,
+          pr_id: purchaseRequest.id,
+        });
+
+        setCurrentRequest(
+          mergeDetailsIntoPurchaseRequest(purchaseRequest, details)
+        );
+      } catch {
+        setCurrentRequest(purchaseRequest);
+      }
+    }
+
+    loadDetails();
+  }, [purchaseRequest]);
+
+  return (
+    <div className="mx-auto w-full max-w-7xl">
+      <Card variant="surface" padding="lg">
+        <div className="mb-3 flex items-center">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
+            <Link href="/pr">
+              <a className="transition hover:text-brand-blue">PR Board</a>
+            </Link>
+            <span className="mx-1.5 text-slate-400">/</span>
+            <span className="text-brand-blue">{purchaseRequest.id}</span>
+          </div>
+        </div>
+
         <CardHeader
           title={purchaseRequest.description}
           className="mb-1"
@@ -66,20 +103,15 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
             {purchaseRequest.updatedAt}
           </strong>
         </div>
-      </Card>
 
-      <div className="flex flex-wrap gap-3">
-        <Link href={`/pr/split/${purchaseRequest.id}`}>
-          <a className="inline-flex items-center rounded-lg bg-brand-red px-4 py-2 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]">
-            Split into POs
-          </a>
-        </Link>
-        <Link href="/pr">
-          <a className="inline-flex items-center rounded-lg border border-brand-blue px-4 py-2 text-sm font-bold text-brand-blue transition hover:bg-brand-blue hover:text-brand-white">
-            Back to PR board
-          </a>
-        </Link>
-      </div>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link href={`/pr/split/${purchaseRequest.id}`}>
+            <a className="inline-flex items-center rounded-lg bg-brand-red px-4 py-2 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]">
+              Split into POs
+            </a>
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 }

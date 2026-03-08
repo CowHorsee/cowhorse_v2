@@ -9,28 +9,12 @@ from azure_functions_openapi.decorator import openapi
 
 bp = func.Blueprint(name='data_loader', url_prefix='/api/data-loader')
 
-def _get_table_service_client():
-    conn_str = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
-    if not conn_str:
-        raise ValueError("AZURE_STORAGE_CONNECTION_STRING is not set.")
-    return TableServiceClient.from_connection_string(conn_str)
-
-def sanitize_key(key):
-    """Sanitizes PartitionKey and RowKey for Azure Table Storage."""
-    if not key:
-        return "unknown"
-    key = str(key)
-    # PartitionKey and RowKey cannot contain: / \ # ? or control characters
-    forbidden = ['/', '\\', '#', '?']
-    for char in forbidden:
-        key = key.replace(char, '_')
-    # Remove control characters
-    return "".join(c for c in key if 31 < ord(c) < 127)
+from sharedlib.db_helper.db_ops import DBHelper, sanitize_key
 
 @bp.route(route="run", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
 @openapi(
     summary="Migrate CSV datasets to Azure Table Storage",
-    description="Iterates through all CSV files in api/dataset/ and uploads them to Azure Storage Tables using batch transactions.",
+    description="Iterates through all CSV files in api/dataset/ and uploads them to Azure Storage Tables using batch transactions and DBHelper mappings.",
     tags=["Maintenance"],
     operation_id="runDataLoader",
     response={
@@ -39,7 +23,7 @@ def sanitize_key(key):
     },
 )
 def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info("Starting data loading process with batching.")
+    logging.info("Starting data loading process with batching and DBHelper logic.")
     
     dataset_dir = os.path.join(os.path.dirname(__file__), 'dataset')
     if not os.path.exists(dataset_dir):
@@ -47,40 +31,44 @@ def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:
 
     results = {}
     try:
-        service_client = _get_table_service_client()
-        
+        db = DBHelper()
+        if not db.service_client:
+            return func.HttpResponse("Azure Storage Connection String not configured.", status_code=500)
+
         for filename in os.listdir(dataset_dir):
             if filename.endswith(".csv"):
-                logical_name = filename.replace(".csv", "")
-                table_name = logical_name.replace("_", "")
+                table_name = filename.replace(".csv", "")
                 csv_path = os.path.join(dataset_dir, filename)
                 
                 df = pd.read_csv(csv_path)
                 
-                id_col = None
-                for col in df.columns:
-                    if col.endswith("_id") or col == "id":
-                        id_col = col
-                        break
+                # Use DBHelper mapping for PK and RK
+                pk_val, rk_col = db.key_map.get(table_name, ("DATA", "id"))
                 
-                table_client = service_client.get_table_client(table_name)
-                try:
-                    table_client.create_table()
-                except Exception:
-                    pass
-
+                table_client = db._get_table_client(table_name)
+                
                 rows_loaded = 0
-                batch = []
+                batch_dict = {} # Keyed by (PartitionKey, RowKey) to prevent duplicates in batch
                 
                 for index, row in df.iterrows():
                     entity = row.to_dict()
-                    entity["PartitionKey"] = "DATA"
                     
-                    if id_col and pd.notna(row[id_col]):
-                        entity["RowKey"] = sanitize_key(row[id_col])
+                    # 1. Set PartitionKey (aligned with db_ops.load)
+                    if pk_val:
+                        entity["PartitionKey"] = pk_val
+                    elif "doc_id" in entity: # Special case for bridge
+                        entity["PartitionKey"] = sanitize_key(entity["doc_id"])
                     else:
+                        entity["PartitionKey"] = "DATA"
+
+                    # 2. Set RowKey (aligned with db_ops.load)
+                    if rk_col in entity and pd.notna(row[rk_col]):
+                        entity["RowKey"] = sanitize_key(row[rk_col])
+                    else:
+                        # If the expected RK column is missing or NaN, fallback to unique row index
                         entity["RowKey"] = f"row_{index}"
                     
+                    # 3. Handle Types & Overflows
                     for key, val in entity.items():
                         if pd.isna(val):
                             entity[key] = None
@@ -91,18 +79,19 @@ def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:
                             else:
                                 entity[key] = val
 
-                    # Batch logic (Azure limits batch to 100 operations)
-                    batch.append(("upsert", entity))
+                    # Deduplicate within batch by (PK, RK)
+                    batch_key = (entity["PartitionKey"], entity["RowKey"])
+                    batch_dict[batch_key] = ("upsert", entity)
                     
-                    if len(batch) >= 100:
-                        table_client.submit_transaction(batch)
-                        rows_loaded += len(batch)
-                        batch = []
+                    if len(batch_dict) >= 100:
+                        table_client.submit_transaction(list(batch_dict.values()))
+                        rows_loaded += len(batch_dict)
+                        batch_dict = {}
                 
                 # Final batch
-                if batch:
-                    table_client.submit_transaction(batch)
-                    rows_loaded += len(batch)
+                if batch_dict:
+                    table_client.submit_transaction(list(batch_dict.values()))
+                    rows_loaded += len(batch_dict)
                 
                 results[table_name] = f"Loaded {rows_loaded} rows."
 

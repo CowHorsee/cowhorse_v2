@@ -2,6 +2,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Card, { CardHeader } from '../components/atoms/Card';
+import { ApiError } from '../utils/apiClient';
+import { loginUser, mapBackendRole } from '../utils/authApi';
 import { saveUserSession } from '../utils/localStorage';
 
 export default function LoginPage() {
@@ -22,16 +24,29 @@ export default function LoginPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setErrorMessage('');
     setIsSubmitting(true);
 
     try {
-      saveUserSession({
-        user_id: 'local-dev-user',
-        name: formValues.email || 'Local User',
-        email: formValues.email || 'local.user@cowhorse.dev',
-        role: 'ADMIN',
+      const response = await loginUser({
+        email: formValues.email,
+        password: formValues.password,
       });
-      router.push('/');
+
+      saveUserSession({
+        user_id: response.user_id,
+        name: formValues.email.split('@')[0] || response.user_id,
+        email: formValues.email,
+        role: mapBackendRole(response.role),
+      });
+
+      await router.push('/');
+    } catch (error) {
+      setErrorMessage(
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to sign in right now.'
+      );
     } finally {
       setIsSubmitting(false);
     }

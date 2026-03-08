@@ -4,6 +4,7 @@ import Card, { CardHeader } from '../components/atoms/Card';
 import { useRouter } from 'next/router';
 import { ApiError } from '../utils/apiClient';
 import { registerUser, type UserRole } from '../utils/authApi';
+import { getUserSession } from '../utils/localStorage';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -31,8 +32,21 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await registerUser(formValues);
-      setSuccessMessage(response.message);
+      const sessionUser = getUserSession();
+
+      if (!sessionUser?.user_id) {
+        throw new Error('Admin session is required to register a user.');
+      }
+
+      const response = await registerUser({
+        admin_id: sessionUser.user_id,
+        email: formValues.email,
+        name: formValues.name,
+        role_name: formValues.role,
+        password: formValues.password,
+      });
+
+      setSuccessMessage(response);
       setFormValues({
         name: '',
         email: '',

@@ -1,8 +1,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { getUserSession } from '../../utils/localStorage';
+import {
+  getPrDetails,
+  mergeDetailsIntoPurchaseRequest,
+} from '../../utils/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -14,6 +18,7 @@ type PrDetailsPageProps = {
 
 export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
   const router = useRouter();
+  const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
 
   useEffect(() => {
     const user = getUserSession();
@@ -22,6 +27,27 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
       router.replace(`/pr/approval/${purchaseRequest.id}`);
     }
   }, [purchaseRequest.id, router]);
+
+  useEffect(() => {
+    async function loadDetails() {
+      const user = getUserSession();
+
+      try {
+        const details = await getPrDetails({
+          user_id: user?.user_id,
+          pr_id: purchaseRequest.id,
+        });
+
+        setCurrentRequest(
+          mergeDetailsIntoPurchaseRequest(purchaseRequest, details)
+        );
+      } catch {
+        setCurrentRequest(purchaseRequest);
+      }
+    }
+
+    loadDetails();
+  }, [purchaseRequest]);
 
   return (
     <div className="mx-auto w-full max-w-7xl">
@@ -41,7 +67,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
           title={purchaseRequest.id}
           action={
             <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
-              {purchaseRequest.status}
+              {currentRequest.status}
             </span>
           }
           subtitleClassName="text-brand-red"
@@ -61,7 +87,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
                   Title
                 </td>
                 <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.title}
+                  {currentRequest.title}
                 </td>
               </tr>
               <tr>
@@ -69,7 +95,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
                   Department
                 </td>
                 <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.department}
+                  {currentRequest.department}
                 </td>
               </tr>
               <tr>
@@ -77,7 +103,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
                   Requester
                 </td>
                 <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.requester}
+                  {currentRequest.requester}
                 </td>
               </tr>
               <tr>
@@ -85,7 +111,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
                   Vendor
                 </td>
                 <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.vendor}
+                  {currentRequest.vendor}
                 </td>
               </tr>
               <tr>
@@ -93,7 +119,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
                   Amount
                 </td>
                 <td className="px-4 py-3 text-slate-700">
-                  RM {purchaseRequest.amount.toLocaleString()}
+                  RM {currentRequest.amount.toLocaleString()}
                 </td>
               </tr>
               <tr>
@@ -101,7 +127,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
                   Last Update
                 </td>
                 <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.updatedAt}
+                  {currentRequest.updatedAt}
                 </td>
               </tr>
               <tr>
@@ -109,7 +135,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
                   Description
                 </td>
                 <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.description}
+                  {currentRequest.description}
                 </td>
               </tr>
             </tbody>

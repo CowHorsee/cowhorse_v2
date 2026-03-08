@@ -4,6 +4,9 @@ import Card, { CardHeader } from '../../../components/atoms/Card';
 import { getUserSession } from '../../../utils/localStorage';
 import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
 import { getPrTickets, mapTicketToPurchaseRequest } from '../../../utils/prApi';
+import { useMemo, useState } from 'react';
+import Card, { CardHeader } from '../../../components/atoms/Card';
+import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
 
 const approvableStatuses = new Set(['Pending Approval', 'In Review']);
 
@@ -38,6 +41,13 @@ export default function PrApprovalListPage() {
   const approvals = useMemo(
     () => requests.filter((request) => approvableStatuses.has(request.status)),
     [requests]
+
+  const approvals = useMemo(
+    () =>
+      purchaseRequests.filter((request) =>
+        approvableStatuses.has(request.status)
+      ),
+    []
   );
 
   const filteredApprovals = useMemo(() => {

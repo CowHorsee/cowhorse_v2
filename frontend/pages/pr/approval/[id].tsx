@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
+import { getUserSession } from '../../../utils/localStorage';
 import { ApiError } from '../../../utils/apiClient';
 import { getUserSession } from '../../../utils/localStorage';
 import {
@@ -23,6 +26,7 @@ type ApprovalDecision = 'APPROVED' | 'REJECTED' | null;
 export default function ManagerApprovalPage({
   purchaseRequest,
 }: ManagerApprovalPageProps) {
+  const router = useRouter();
   const router = useRouter();
   const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
   const [decision, setDecision] = useState<ApprovalDecision>(null);
@@ -83,6 +87,14 @@ export default function ManagerApprovalPage({
     }
   }
 
+  useEffect(() => {
+    const user = getUserSession();
+
+    if (user?.role !== 'MANAGER' && user?.role !== 'ADMIN') {
+      router.replace(`/pr/${purchaseRequest.id}`);
+    }
+  }, [purchaseRequest.id, router]);
+
   return (
     <div className="mx-auto w-full max-w-7xl">
       <Card variant="surface" padding="lg">
@@ -93,6 +105,9 @@ export default function ManagerApprovalPage({
             </Link>
             <span className="mx-1.5 text-slate-400">/</span>
             <Link href={`/pr/${purchaseRequest.id}`}>
+              <a className="transition hover:text-brand-blue">
+                {purchaseRequest.id}
+              </a>
               <a className="transition hover:text-brand-blue">
                 {purchaseRequest.id}
               </a>
@@ -156,6 +171,9 @@ export default function ManagerApprovalPage({
                 </td>
               </tr>
               <tr>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Amount
+                </td>
                 <td className="px-4 py-3 font-semibold text-brand-blue">
                   Amount
                 </td>

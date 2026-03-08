@@ -9,6 +9,18 @@ from azure.core.exceptions import ResourceNotFoundError
 def get_now():
     return datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
 
+# Utility to sanitize PartitionKey and RowKey for Azure Table Storage
+def sanitize_key(key):
+    if not key:
+        return "unknown"
+    key = str(key)
+    # PartitionKey and RowKey cannot contain: / \ # ? or control characters
+    forbidden = ['/', '\\', '#', '?']
+    for char in forbidden:
+        key = key.replace(char, '_')
+    # Remove control characters
+    return "".join(c for c in key if 31 < ord(c) < 127)
+
 class DBHelper:
     def __init__(self):
         # Configuration for PartitionKey and RowKey mapping
@@ -69,9 +81,11 @@ class DBHelper:
             for key, value in conditions.items():
                 # Map original ID name to RowKey if applicable
                 filter_key = "RowKey" if key == rk_col else key
+                # Sanitize value if it's used as a key in the filter
+                sanitized_value = sanitize_key(value) if filter_key in ["PartitionKey", "RowKey"] else value
                 
                 # Simple OData filter builder
-                clause = f"{filter_key} eq '{value}'" if isinstance(value, str) else f"{filter_key} eq {value}"
+                clause = f"{filter_key} eq '{sanitized_value}'" if isinstance(sanitized_value, str) else f"{filter_key} eq {value}"
                 query = f"({query}) and ({clause})" if query else clause
 
         try:
@@ -111,20 +125,28 @@ class DBHelper:
             if pk_val:
                 entity["PartitionKey"] = pk_val
             elif "doc_id" in entity: # Special case for bridge
-                entity["PartitionKey"] = str(entity["doc_id"])
+                entity["PartitionKey"] = sanitize_key(entity["doc_id"])
             else:
                 entity["PartitionKey"] = "DATA"
 
             # Set RowKey
             if rk_col in entity:
-                entity["RowKey"] = str(entity[rk_col])
+                entity["RowKey"] = sanitize_key(entity[rk_col])
             else:
                 import uuid
                 entity["RowKey"] = str(uuid.uuid4())
 
-            # Handle NaN/Null for Azure
+            # Handle NaN/Null and Large Integers for Azure
             for k, v in entity.items():
-                if pd.isna(v): entity[k] = None
+                if pd.isna(v):
+                    entity[k] = None
+                elif isinstance(v, (int, float)) and not isinstance(v, bool):
+                    # Handle INT32 overflow
+                    if (isinstance(v, int) or (isinstance(v, float) and v.is_integer())) and \
+                       (v > 2147483647 or v < -2147483648):
+                        entity[k] = str(int(v))
+                    else:
+                        entity[k] = v
 
             table_client.upsert_entity(entity)
 
@@ -152,8 +174,9 @@ class DBHelper:
         pk_val, rk_col = self.key_map.get(table, ("DATA", "id"))
         
         for _, row in df.iterrows():
-            rk = str(row[rk_col])
-            pk = pk_val if pk_val else str(row["doc_id"])
+            # Original ID might have been sanitized when stored as RowKey
+            rk = sanitize_key(row[rk_col])
+            pk = pk_val if pk_val else sanitize_key(row["doc_id"])
             try:
                 table_client.delete_entity(partition_key=pk, row_key=rk)
             except ResourceNotFoundError:

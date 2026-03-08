@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
-import Card, { CardHeader } from '../components/atoms/Card';
 import { useRouter } from 'next/router';
+import Card, { CardHeader } from '../components/atoms/Card';
+import { useToast } from '../components/ToastProvider';
 import { ApiError } from '../utils/apiClient';
 import { registerUser, type UserRole } from '../utils/authApi';
-import { getUserSession } from '../utils/localStorage';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [formValues, setFormValues] = useState({
     name: '',
     email: '',
@@ -32,24 +33,11 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const sessionUser = getUserSession();
-
-      if (!sessionUser?.user_id) {
-        throw new Error('Admin session is required to register a user.');
-      }
-
-      const response = await registerUser({
-        admin_id: sessionUser.user_id,
-        email: formValues.email,
-        name: formValues.name,
-        role_name: formValues.role,
-        password: formValues.password,
-      });
-
-      setSuccessMessage(response);
+      const response = await registerUser(formValues);
+      setSuccessMessage(response.message);
       showToast({
         title: 'Account created',
-        description: response,
+        description: response.message,
         variant: 'success',
       });
       setFormValues({
@@ -58,15 +46,20 @@ export default function RegisterPage() {
         role: 'EMPLOYEE',
         password: '',
       });
-      setTimeout(() => {
+      window.setTimeout(() => {
         router.push('/login');
       }, 800);
     } catch (error) {
-      setErrorMessage(
+      const message =
         error instanceof ApiError
           ? error.message
-          : 'Unable to create your account right now.'
-      );
+          : 'Unable to create your account right now.';
+      setErrorMessage(message);
+      showToast({
+        title: 'Registration failed',
+        description: message,
+        variant: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -159,7 +152,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mt-4 rounded-lg bg-brand-red px-4 py-2.5 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]"
+            className="mt-4 rounded-lg bg-brand-red px-4 py-2.5 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d] disabled:opacity-70"
           >
             {isSubmitting ? 'Creating Account...' : 'Create Account'}
           </button>

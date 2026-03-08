@@ -3,7 +3,7 @@ import os
 import io
 import logging
 from jinja2 import Environment, FileSystemLoader
-from playwright.async_api import async_playwright
+
 
 async def generate_pdf(data, output_path=None):
     """
@@ -19,6 +19,7 @@ async def generate_pdf(data, output_path=None):
     # 2. Render HTML with dynamic data
     html_content = template.render(data)
 
+    from playwright.async_api import async_playwright
     async with async_playwright() as p:
         # Launch browser (Ensure 'playwright install chromium' has been run)
         try:

@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
+import { getUserSession } from '../../../utils/localStorage';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -15,7 +17,16 @@ type ApprovalDecision = 'APPROVED' | 'REJECTED' | null;
 export default function ManagerApprovalPage({
   purchaseRequest,
 }: ManagerApprovalPageProps) {
+  const router = useRouter();
   const [decision, setDecision] = useState<ApprovalDecision>(null);
+
+  useEffect(() => {
+    const user = getUserSession();
+
+    if (user?.role !== 'MANAGER' && user?.role !== 'ADMIN') {
+      router.replace(`/pr/${purchaseRequest.id}`);
+    }
+  }, [purchaseRequest.id, router]);
 
   return (
     <div className="mx-auto w-full max-w-7xl">
@@ -27,7 +38,9 @@ export default function ManagerApprovalPage({
             </Link>
             <span className="mx-1.5 text-slate-400">/</span>
             <Link href={`/pr/${purchaseRequest.id}`}>
-              <a className="transition hover:text-brand-blue">{purchaseRequest.id}</a>
+              <a className="transition hover:text-brand-blue">
+                {purchaseRequest.id}
+              </a>
             </Link>
             <span className="mx-1.5 text-slate-400">/</span>
             <span className="text-brand-blue">Manager Approval</span>
@@ -56,8 +69,12 @@ export default function ManagerApprovalPage({
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">Title</td>
-                <td className="px-4 py-3 text-slate-700">{purchaseRequest.title}</td>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Title
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {purchaseRequest.title}
+                </td>
               </tr>
               <tr>
                 <td className="px-4 py-3 font-semibold text-brand-blue">
@@ -76,11 +93,17 @@ export default function ManagerApprovalPage({
                 </td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">Vendor</td>
-                <td className="px-4 py-3 text-slate-700">{purchaseRequest.vendor}</td>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Vendor
+                </td>
+                <td className="px-4 py-3 text-slate-700">
+                  {purchaseRequest.vendor}
+                </td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">Amount</td>
+                <td className="px-4 py-3 font-semibold text-brand-blue">
+                  Amount
+                </td>
                 <td className="px-4 py-3 text-slate-700">
                   RM {purchaseRequest.amount.toLocaleString()}
                 </td>
@@ -89,7 +112,9 @@ export default function ManagerApprovalPage({
                 <td className="px-4 py-3 font-semibold text-brand-blue">
                   Last Update
                 </td>
-                <td className="px-4 py-3 text-slate-700">{purchaseRequest.updatedAt}</td>
+                <td className="px-4 py-3 text-slate-700">
+                  {purchaseRequest.updatedAt}
+                </td>
               </tr>
               <tr>
                 <td className="px-4 py-3 font-semibold text-brand-blue">
@@ -140,7 +165,9 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }: { params: { id: string } }) {
-  const purchaseRequest = purchaseRequests.find((item) => item.id === params.id);
+  const purchaseRequest = purchaseRequests.find(
+    (item) => item.id === params.id
+  );
 
   if (!purchaseRequest) {
     return {

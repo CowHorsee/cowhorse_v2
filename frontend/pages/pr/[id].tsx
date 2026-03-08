@@ -1,5 +1,8 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
+import { getUserSession } from '../../utils/localStorage';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -10,6 +13,16 @@ type PrDetailsPageProps = {
 };
 
 export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
+  const router = useRouter();
+
+  useEffect(() => {
+    const user = getUserSession();
+
+    if (user?.role === 'MANAGER') {
+      router.replace(`/pr/approval/${purchaseRequest.id}`);
+    }
+  }, [purchaseRequest.id, router]);
+
   return (
     <div className="mx-auto w-full max-w-7xl">
       <Card variant="surface" padding="lg">
@@ -104,11 +117,6 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
         </div>
 
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link href={`/pr/approval/${purchaseRequest.id}`}>
-            <a className="inline-flex items-center rounded-lg border border-brand-blue px-4 py-2 text-sm font-bold text-brand-blue transition hover:bg-brand-blue hover:text-brand-white">
-              Manager Approval
-            </a>
-          </Link>
           <Link href={`/pr/split/${purchaseRequest.id}`}>
             <a className="inline-flex items-center rounded-lg bg-brand-red px-4 py-2 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]">
               Split into POs

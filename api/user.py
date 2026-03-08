@@ -35,7 +35,7 @@ def _get_users_table_client():
             "password": {"type": "string", "minLength": 8},
         },
     },
-    response={
+    responses={
         201: {"description": "User registered successfully"},
         400: {"description": "Invalid request body or role"},
         409: {"description": "User already exists"},
@@ -132,11 +132,18 @@ def register_user(req: func.HttpRequest) -> func.HttpResponse:
             "password": {"type": "string", "minLength": 8},
         },
     },
-    response={
-        201: {"description": "User registered successfully"},
-        400: {"description": "Invalid request body or role"},
-        409: {"description": "User already exists"},
-        500: {"description": "Failed to register user"},
+    responses={
+        200: {
+            "description": "Login successful",
+            "content": {"application/json": {"schema": {"type": "object", "properties": {
+                "message": {"type": "string", "example": "User logged in successfully"},
+                "user_id": {"type": "string", "format": "uuid"},
+                "role": {"type": "string", "example": "MANAGER"}
+            }}}}
+        },
+        401: {"description": "Invalid credentials provided"},
+        404: {"description": "User not found"},
+        500: {"description": "Internal server error during authentication"}
     },
 )
 def login_user(req: func.HttpRequest) -> func.HttpResponse:
@@ -198,8 +205,19 @@ def login_user(req: func.HttpRequest) -> func.HttpResponse:
     operation_id="listUsers",
     route="/api/users",
     method="get",
-    response={
-        200: {"description": "Users returned successfully"},
+    responses={
+        200: {
+            "description": "Users returned successfully",
+            "content": {"application/json": {"schema": {"type": "object", "properties": {
+                "count": {"type": "integer"},
+                "users": {"type": "array", "items": {"type": "object", "properties": {
+                    "user_id": {"type": "string"},
+                    "name": {"type": "string"},
+                    "role": {"type": "string"},
+                    "created_at": {"type": "string", "format": "date-time"}
+                }}}
+            }}}}
+        },
         500: {"description": "Failed to read users"},
     },
 )

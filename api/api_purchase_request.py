@@ -24,7 +24,7 @@ from sharedlib.db_helper.db_ops import DBHelper
         "proc_item": {"type": "object", "additionalProperties": {"type": "integer"}, "description": "Mapping of item names to requested quantities", "example": {"Elba Built-in Gas Hob": 10, "Faber Chimney Hood": 5}},
         "justification": {"type": "string", "description": "Business reason for the procurement request"}
     }},
-    responses={
+    response={
         200: {
             "description": "PR created and notifications triggered",
             "content": {"application/json": {"schema": {"type": "object", "properties": {
@@ -92,7 +92,7 @@ async def api_create_pr(req: func.HttpRequest) -> func.HttpResponse:
         "pr_id": {"type": "string", "description": "ID of the AI suggestion (PR_...) to accept"},
         "officer_id": {"type": "string", "format": "uuid", "description": "ID of the officer taking responsibility for the request"}
     }},
-    responses={
+    response={
         200: {"description": "AI suggestion accepted and converted to standard PR"},
         400: {"description": "PR is not a suggestion or invalid IDs provided"}
     }
@@ -116,7 +116,7 @@ def api_accept_pr_suggestion(req: func.HttpRequest) -> func.HttpResponse:
         "proc_item": {"type": "object", "additionalProperties": {"type": "integer"}, "description": "New item mapping (replaces old items)"},
         "justification": {"type": "string", "description": "Updated justification text"}
     }},
-    responses={
+    response={
         200: {"description": "PR updated successfully and audit log recorded"},
         400: {"description": "Modification not allowed due to current status or role restrictions"}
     }
@@ -139,7 +139,7 @@ def api_modify_pr(req: func.HttpRequest) -> func.HttpResponse:
         {"name": "pr_id", "in": "query", "type": "string", "description": "Optional specific PR ID filter"},
         {"name": "status", "in": "query", "type": "integer", "description": "Filter by status_id (1=AI, 2=Pending, 3=Rejected, 4=Approved)"}
     ],
-    responses={
+    response={
         200: {
             "description": "Enriched tickets retrieved",
             "content": {"application/json": {"schema": {"type": "array", "items": {"type": "object"}}}}
@@ -162,10 +162,10 @@ def api_get_pr_ticket(req: func.HttpRequest) -> func.HttpResponse:
     description="Retrieves the full structural data for a PR, including header and all bridged line items.",
     tags=["Purchase Request"],
     parameters=[
-        {"name": "user_id", "in": "query", "type": "string", "required": true, "description": "ID for authorization check"},
-        {"name": "pr_id", "in": "query", "type": "string", "required": true, "description": "ID of the PR to retrieve"}
+        {"name": "user_id", "in": "query", "type": "string", "required": True, "description": "ID for authorization check"},
+        {"name": "pr_id", "in": "query", "type": "string", "required": True, "description": "ID of the PR to retrieve"}
     ],
-    responses={
+    response={
         200: {
             "description": "Detailed PR data",
             "content": {"application/json": {"schema": {"type": "object", "properties": {
@@ -195,7 +195,7 @@ def api_get_pr_details(req: func.HttpRequest) -> func.HttpResponse:
         "decision": {"type": "string", "enum": ["approve", "reject"], "description": "Manager's decision"},
         "manager_id": {"type": "string", "format": "uuid", "description": "Manager performing the review"}
     }},
-    responses={
+    response={
         200: {"description": "PR status updated and reviewer logged"},
         403: {"description": "User is not a Manager"},
         400: {"description": "PR is not in a pending state or invalid ID"}
@@ -219,7 +219,7 @@ def api_review_pr(req: func.HttpRequest) -> func.HttpResponse:
         "predicted_demand": {"type": "number", "description": "Expected demand quantity"},
         "justification": {"type": "string", "description": "AI-generated reasoning for the alert"}
     }},
-    responses={
+    response={
         200: {
             "description": "Alert processed. May return standard PR result or notification of sufficient stock.",
             "content": {"application/json": {"schema": {"oneOf": [

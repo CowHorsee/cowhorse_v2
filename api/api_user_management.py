@@ -15,7 +15,7 @@ bp = func.Blueprint(name='user_v2', url_prefix='/api/user')
         "email": {"type": "string", "format": "email", "description": "User's registered email address"},
         "password": {"type": "string", "format": "password", "description": "User's password"}
     }},
-    responses={
+    response={
         200: {
             "description": "Login successful",
             "content": {"application/json": {"schema": {"type": "object", "properties": {
@@ -50,7 +50,7 @@ def api_login(req: func.HttpRequest) -> func.HttpResponse:
         "role_name": {"type": "string", "enum": ["Procurement Officer", "Procurement Manager", "Warehouse Personnel", "Supplier", "Admin"], "description": "Assigned role"},
         "password": {"type": "string", "description": "Optional initial password. If omitted, a random one will be generated and emailed."}
     }},
-    responses={
+    response={
         200: {"description": "User registered successfully"},
         403: {"description": "Permission denied: admin_id not authorized to create users"},
         400: {"description": "Invalid input or email already registered"}
@@ -73,7 +73,7 @@ def api_register(req: func.HttpRequest) -> func.HttpResponse:
     request_body={"type": "object", "required": ["user_id"], "properties": {
         "user_id": {"type": "string", "format": "uuid", "description": "Unique ID of the user requiring a reset"}
     }},
-    responses={
+    response={
         200: {"description": "Temporary password generated and email notification triggered"},
         400: {"description": "User not found or operation failed"}
     }
@@ -96,7 +96,7 @@ def api_forget_password(req: func.HttpRequest) -> func.HttpResponse:
         "user_id": {"type": "string", "format": "uuid", "description": "ID of the target user"},
         "new_role_name": {"type": "string", "enum": ["Procurement Officer", "Procurement Manager", "Warehouse Personnel", "Supplier", "Admin"], "description": "New role to assign"}
     }},
-    responses={
+    response={
         200: {"description": "User role updated successfully"},
         403: {"description": "Authorization failed for admin_id"},
         400: {"description": "Invalid user_id or role name"}
@@ -120,7 +120,7 @@ def api_modify_role(req: func.HttpRequest) -> func.HttpResponse:
         "old_password": {"type": "string", "description": "Current password for verification"},
         "new_password": {"type": "string", "description": "New password to set"}
     }},
-    responses={
+    response={
         200: {"description": "Password updated successfully"},
         401: {"description": "Incorrect old password"},
         400: {"description": "User not found"}
@@ -144,7 +144,7 @@ def api_change_password(req: func.HttpRequest) -> func.HttpResponse:
         {"name": "name", "in": "query", "type": "string", "description": "Partial match on user's name"},
         {"name": "role_name", "in": "query", "type": "string", "description": "Filter by role name (e.g., Supplier)"}
     ],
-    responses={
+    response={
         200: {
             "description": "Matching users retrieved",
             "content": {"application/json": {"schema": {"type": "array", "items": {"type": "object", "properties": {

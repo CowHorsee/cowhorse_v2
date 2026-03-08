@@ -24,7 +24,7 @@ from sharedlib.db_helper.db_ops import DBHelper
         }}, "description": "List of items and quantities to include in the order(s)"},
         "user_id": {"type": "string", "format": "uuid", "description": "ID of the officer issuing the PO"}
     }},
-    responses={
+    response={
         200: {
             "description": "PO(s) created successfully",
             "content": {"application/json": {"schema": {"type": "array", "items": {"type": "string"}, "example": ["PO_202603_00001", "PO_202603_00002"]}}}
@@ -86,9 +86,9 @@ async def api_create_po(req: func.HttpRequest) -> func.HttpResponse:
     description="Retrieves a list of Purchase Order tickets with enriched status information. Suppliers only see their own orders; Officers see all.",
     tags=["Purchase Order"],
     parameters=[
-        {"name": "user_id", "in": "query", "type": "string", "required": true, "description": "ID for role-based filtering"}
+        {"name": "user_id", "in": "query", "type": "string", "required": True, "description": "ID for role-based filtering"}
     ],
-    responses={
+    response={
         200: {
             "description": "List of PO summary tickets",
             "content": {"application/json": {"schema": {"type": "array", "items": {"type": "object"}}}}
@@ -109,10 +109,10 @@ def api_get_po_ticket(req: func.HttpRequest) -> func.HttpResponse:
     description="Retrieves the full structural data for a PO including header info and specific itemized line items.",
     tags=["Purchase Order"],
     parameters=[
-        {"name": "user_id", "in": "query", "type": "string", "required": true, "description": "ID for authorization check"},
-        {"name": "po_id", "in": "query", "type": "string", "required": true, "description": "ID of the PO to retrieve"}
+        {"name": "user_id", "in": "query", "type": "string", "required": True, "description": "ID for authorization check"},
+        {"name": "po_id", "in": "query", "type": "string", "required": True, "description": "ID of the PO to retrieve"}
     ],
-    responses={
+    response={
         200: {
             "description": "Detailed PO data",
             "content": {"application/json": {"schema": {"type": "object", "properties": {
@@ -142,7 +142,7 @@ def api_get_po_details(req: func.HttpRequest) -> func.HttpResponse:
         "po_id": {"type": "string", "description": "ID of the PO"},
         "status_name": {"type": "string", "enum": ["Awaiting Warehouse", "Shipped", "Delivered"], "description": "Target status name"}
     }},
-    responses={
+    response={
         200: {"description": "PO status successfully transitioned"},
         400: {"description": "Invalid status transition or unauthorized supplier"}
     }

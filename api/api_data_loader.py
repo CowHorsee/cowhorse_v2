@@ -17,7 +17,7 @@ from sharedlib.db_helper.db_ops import DBHelper, sanitize_key
     description="Iterates through all CSV files in api/dataset/ and uploads them to Azure Storage Tables using batch transactions and DBHelper mappings.",
     tags=["Maintenance"],
     operation_id="runDataLoader",
-    responses={
+    response={
         200: {
             "description": "Datasets loaded successfully",
             "content": {"application/json": {"schema": {"type": "object", "properties": {

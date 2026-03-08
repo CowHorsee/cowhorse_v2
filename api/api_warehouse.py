@@ -14,7 +14,7 @@ bp = func.Blueprint(name='warehouse_api', url_prefix='/api/warehouse')
     parameters=[
         {"name": "item_name", "in": "query", "type": "string", "description": "Optional name of a specific item to count"}
     ],
-    responses={
+    response={
         200: {
             "description": "Stock levels retrieved",
             "content": {"application/json": {"schema": {"oneOf": [
@@ -40,7 +40,7 @@ def api_count_inventory(req: func.HttpRequest) -> func.HttpResponse:
     request_body={"type": "object", "required": ["incoming_csv_path"], "properties": {
         "incoming_csv_path": {"type": "string", "description": "Absolute path to the delivery/warehouse CSV file"}
     }},
-    responses={
+    response={
         200: {"description": "Inventory successfully updated and stock levels reconciled"},
         400: {"description": "CSV file not found or invalid format"}
     }

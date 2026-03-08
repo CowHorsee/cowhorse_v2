@@ -174,7 +174,7 @@ def mock_create_pr(req: func.HttpRequest) -> func.HttpResponse:
             'prompt': {'type': 'string'},
         },
     },
-    responses={
+    response={
         200: {
             "description": "AI connectivity test succeeded",
             "content": {"application/json": {"schema": {"type": "object", "properties": {
@@ -236,7 +236,7 @@ def test_ai(req: func.HttpRequest) -> func.HttpResponse:
             'base_url': {'type': 'string'},
         },
     },
-    responses={
+    response={
         200: {
             "description": "Tool test completed",
             "content": {"application/json": {"schema": {"type": "object", "properties": {

@@ -2,13 +2,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Card, { CardHeader } from '../components/atoms/Card';
 import { useRouter } from 'next/router';
-import { useToast } from '../components/ToastProvider';
 import { ApiError } from '../utils/apiClient';
 import { registerUser, type UserRole } from '../utils/authApi';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { showToast } = useToast();
   const [formValues, setFormValues] = useState({
     name: '',
     email: '',
@@ -35,11 +33,6 @@ export default function RegisterPage() {
     try {
       const response = await registerUser(formValues);
       setSuccessMessage(response.message);
-      showToast({
-        title: 'Account created',
-        description: 'You can sign in with your new account now.',
-        variant: 'success',
-      });
       setFormValues({
         name: '',
         email: '',
@@ -50,17 +43,11 @@ export default function RegisterPage() {
         router.push('/login');
       }, 800);
     } catch (error) {
-      const message =
+      setErrorMessage(
         error instanceof ApiError
           ? error.message
-          : 'Unable to create your account right now.';
-
-      setErrorMessage(message);
-      showToast({
-        title: 'Registration failed',
-        description: message,
-        variant: 'error',
-      });
+          : 'Unable to create your account right now.'
+      );
     } finally {
       setIsSubmitting(false);
     }

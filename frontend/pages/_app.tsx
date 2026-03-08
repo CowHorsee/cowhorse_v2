@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import '../styles/globals.css';
 import AppShell from '../components/AppShell';
-import { ToastProvider } from '../components/ToastProvider';
 import type { AuthUser } from '../utils/authApi';
 import { getUserSession } from '../utils/localStorage';
 import { canAccessPath, getDefaultRouteForUser } from '../utils/rbac';
@@ -12,9 +11,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isSessionReady, setIsSessionReady] = useState(false);
-  const isAuthPage = ['/login', '/register', '/prototype-users'].includes(
-    router.pathname
-  );
+  const isAuthPage =
+    router.pathname === '/login' || router.pathname === '/register';
 
   useEffect(() => {
     setCurrentUser(getUserSession());
@@ -37,11 +35,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   }, [currentUser, isAuthPage, isSessionReady, router, router.pathname]);
 
   if (isAuthPage) {
-    return (
-      <ToastProvider>
-        <Component {...pageProps} />
-      </ToastProvider>
-    );
+    return <Component {...pageProps} />;
   }
 
   if (
@@ -53,10 +47,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   }
 
   return (
-    <ToastProvider>
-      <AppShell user={currentUser}>
-        <Component {...pageProps} />
-      </AppShell>
-    </ToastProvider>
+    <AppShell user={currentUser}>
+      <Component {...pageProps} />
+    </AppShell>
   );
 }

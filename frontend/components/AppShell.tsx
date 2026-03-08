@@ -7,7 +7,7 @@ import { getSidebarTabsForUser } from '../utils/rbac';
 
 type AppShellProps = {
   children: ReactNode;
-  user: AuthUser | null;
+  user: AuthUser;
 };
 
 function getUserInitials(name: string) {
@@ -42,17 +42,10 @@ export default function AppShell({ children, user }: AppShellProps) {
               isCollapsed ? 'md:max-w-0 md:overflow-hidden md:opacity-0' : ''
             }`}
           >
-            <div className="rounded-[26px] border border-white/10 bg-white/5 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-              <div className="mt-2 flex items-center justify-center gap-3">
-                <div className="min-w-0 text-center">
-                  <p className="font-heading text-2xl font-bold tracking-[0.22em] text-white">
-                    PPIS
-                  </p>
-                  <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-100/65">
-                    Procurement Platform
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-3">
+              <span className="font-heading text-xl font-bold tracking-[0.18em] text-white text-align-center">
+                PPIS
+              </span>
             </div>
           </div>
 

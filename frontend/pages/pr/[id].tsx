@@ -3,7 +3,10 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { getUserSession } from '../../utils/localStorage';
-import { getPrDetails, mergeDetailsIntoPurchaseRequest } from '../../utils/prApi';
+import {
+  getPrDetails,
+  mergeDetailsIntoPurchaseRequest,
+} from '../../utils/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -35,7 +38,9 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
           pr_id: purchaseRequest.id,
         });
 
-        setCurrentRequest(mergeDetailsIntoPurchaseRequest(purchaseRequest, details));
+        setCurrentRequest(
+          mergeDetailsIntoPurchaseRequest(purchaseRequest, details)
+        );
       } catch {
         setCurrentRequest(purchaseRequest);
       }

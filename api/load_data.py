@@ -13,7 +13,7 @@ bp = func.Blueprint(name='user', url_prefix='/api/user')
     operation_id="bulkInsertUsers",
     route="/api/user/bulk",
     method="post",
-    responses={
+    response={
         201: {
             "description": "Users inserted successfully",
             "content": {"application/json": {"schema": {"type": "object", "properties": {

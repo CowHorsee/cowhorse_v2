@@ -35,7 +35,7 @@ def _get_users_table_client():
             "password": {"type": "string", "minLength": 8},
         },
     },
-    responses={
+    response={
         201: {"description": "User registered successfully"},
         400: {"description": "Invalid request body or role"},
         409: {"description": "User already exists"},
@@ -132,7 +132,7 @@ def register_user(req: func.HttpRequest) -> func.HttpResponse:
             "password": {"type": "string", "minLength": 8},
         },
     },
-    responses={
+    response={
         200: {
             "description": "Login successful",
             "content": {"application/json": {"schema": {"type": "object", "properties": {
@@ -205,7 +205,7 @@ def login_user(req: func.HttpRequest) -> func.HttpResponse:
     operation_id="listUsers",
     route="/api/users",
     method="get",
-    responses={
+    response={
         200: {
             "description": "Users returned successfully",
             "content": {"application/json": {"schema": {"type": "object", "properties": {

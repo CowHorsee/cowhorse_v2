@@ -7,3 +7,5 @@ azure-functions-openapi
 azure-data-tables
 bcrypt
 pandas
+playwright
+jinja2

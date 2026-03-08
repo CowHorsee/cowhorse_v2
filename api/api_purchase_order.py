@@ -2,7 +2,7 @@ import logging
 import json
 import azure.functions as func
 from azure_functions_openapi.decorator import openapi
-from .scripts.purchase_order import create_po, get_po_ticket, get_po_details, update_po_status
+from scripts.purchase_order import create_po, get_po_ticket, get_po_details, update_po_status
 
 bp = func.Blueprint(name='purchase_order_api', url_prefix='/api/po')
 

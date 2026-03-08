@@ -2,7 +2,7 @@ import logging
 import json
 import azure.functions as func
 from azure_functions_openapi.decorator import openapi
-from .scripts.uat_warehouse_management import count_inventory, update_inventory
+from scripts.uat_warehouse_management import count_inventory, update_inventory
 
 bp = func.Blueprint(name='warehouse_api', url_prefix='/api/warehouse')
 

@@ -7,7 +7,7 @@ os.environ["TESTING"] = "true"
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from api.scripts.user_management import login
-from api.scripts.puchase_order import create_po
+from cowhorse_v2.api.scripts.purchase_order import create_po
 
 # Officer ID (Raju from user.csv)
 OFFICER_ID = "dd4f18d8-3859-490f-88fd-330203e15be2"

@@ -2,7 +2,7 @@ import logging
 import json
 import azure.functions as func
 from azure_functions_openapi.decorator import openapi
-from .scripts.purchase_request import (
+from scripts.purchase_request import (
     create_pr, accept_pr_suggestion, modify_pr, 
     get_pr_ticket, get_pr_details, review_pr, procurement_alert
 )

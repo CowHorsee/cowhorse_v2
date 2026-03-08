@@ -1,7 +1,7 @@
 import pandas as pd
 from datetime import datetime
-from ..sharedlib.rbac_helper.role_permissions_check import RBACGatekeeper
-from ..sharedlib.db_helper.db_ops import DBHelper, get_now
+from sharedlib.rbac_helper.role_permissions_check import RBACGatekeeper
+from sharedlib.db_helper.db_ops import DBHelper, get_now
 
 db = DBHelper()
 gatekeeper = RBACGatekeeper()
@@ -33,7 +33,7 @@ def generate_next_pr_id():
 def procurement_alert(item_name, predicted_demand, justification):
     """AI Trigger: Automatically creates a PR if stock is below threshold."""
     # 1. Get current stock
-    from .uat_warehouse_management import count_inventory
+    from scripts.uat_warehouse_management import count_inventory
     current_stock = count_inventory(item_name)
     
     # 2. Check threshold

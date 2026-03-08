@@ -2,7 +2,7 @@ import logging
 import json
 import azure.functions as func
 from azure_functions_openapi.decorator import openapi
-from .scripts.user_management import login, register, forget_password, modify_role, change_password, search_user
+from scripts.user_management import login, register, forget_password, modify_role, change_password, search_user
 
 bp = func.Blueprint(name='user_v2', url_prefix='/api/user')
 

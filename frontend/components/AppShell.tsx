@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ReactNode, useState } from 'react';
 import Card from './atoms/Card';
+import type { AuthUser } from '../utils/authApi';
+import { getSidebarTabsForUser } from '../utils/rbac';
 
 type AppShellProps = {
   children: ReactNode;
@@ -12,11 +14,26 @@ const navItems = [
   { href: '/pr', label: 'Purchase Requests', iconPath: '/clipboard-text.svg' },
   { href: '/inventory', label: 'Inventory', iconPath: '/box.svg' },
   { href: '/users', label: 'User Management', iconPath: '/user.svg' },
-];
+]
 
-export default function AppShell({ children }: AppShellProps) {
+function getUserInitials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('');
+}
+
+function formatRoleLabel(role: AuthUser['role']) {
+  return role.charAt(0) + role.slice(1).toLowerCase();
+}
+
+export default function AppShell({ children, user }: AppShellProps) {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const navItems = getSidebarTabsForUser(user);
+  const userInitials = user ? getUserInitials(user.name) : 'NA';
 
   return (
     <div className="min-h-screen bg-app">
@@ -76,7 +93,7 @@ export default function AppShell({ children }: AppShellProps) {
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/10">
                         <img
-                          src={item.iconPath}
+                          src={item.iconPath || '/element-2.svg'}
                           alt={`${item.label} icon`}
                           width="20"
                           height="20"
@@ -109,7 +126,7 @@ export default function AppShell({ children }: AppShellProps) {
                 }`}
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-base font-bold text-white">
-                  AC
+                  {userInitials}
                 </div>
                 <div
                   className={`min-w-0 transition-all duration-300 ${
@@ -119,10 +136,10 @@ export default function AppShell({ children }: AppShellProps) {
                   }`}
                 >
                   <p className="truncate text-sm font-semibold text-white">
-                    Ashley Chan
+                    {user?.name || 'Unknown User'}
                   </p>
                   <p className="mt-1 truncate text-xs uppercase tracking-[0.18em] text-sky-100/70">
-                    Procurement Admin
+                    {user ? formatRoleLabel(user.role) : 'No Role'}
                   </p>
                 </div>
               </div>

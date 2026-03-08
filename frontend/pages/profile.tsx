@@ -1,10 +1,11 @@
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import Card, { CardHeader } from '../components/atoms/Card';
 import type { AuthUser } from '../utils/authApi';
 import { clearUserSession, getUserSession } from '../utils/localStorage';
 
-import Card, { CardHeader } from '../components/atoms/Card';
-
 export default function ProfilePage() {
+  const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
@@ -14,6 +15,7 @@ export default function ProfilePage() {
   function handleSignOut() {
     clearUserSession();
     setUser(null);
+    router.push('/login');
   }
 
   return (
@@ -23,7 +25,7 @@ export default function ProfilePage() {
           User profile
         </p>
         <h1 className="font-heading text-3xl font-semibold text-brand-blue md:text-4xl">
-          Hi Ashwin👋
+          {user ? `Hi ${user.name}` : 'My Profile'}
         </h1>
       </section>
 
@@ -63,10 +65,6 @@ export default function ProfilePage() {
             className="mb-0"
             titleClassName="text-lg"
           />
-          <p className="mt-3 text-sm text-slate-700">Name: Ashwin Kumar</p>
-          <h3 className="font-heading text-lg font-semibold text-brand-blue">
-            Account
-          </h3>
           <p className="mt-3 text-sm text-slate-700">
             Name: {user?.name || 'Not available'}
           </p>
@@ -76,7 +74,6 @@ export default function ProfilePage() {
           <p className="mt-2 text-sm text-slate-700">
             Role: {user?.role || 'Not available'}
           </p>
-          <p className="mt-2 text-sm text-slate-700">Role: Senior Engineer</p>
         </Card>
         <Card as="article" variant="base" padding="lg">
           <CardHeader

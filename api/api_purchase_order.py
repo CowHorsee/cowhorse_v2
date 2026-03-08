@@ -16,6 +16,8 @@ from sharedlib.db_helper.db_ops import DBHelper
     summary="Create purchase order",
     description="Generates one or more Purchase Orders from a single Purchase Request. If the PR contains items from multiple suppliers, separate POs are created automatically. Triggers PDF generation and supplier notification.",
     tags=["Purchase Order"],
+    route="create_po",
+    method="POST",
     request_body={"type": "object", "required": ["pr_id", "proc_item", "user_id"], "properties": {
         "pr_id": {"type": "string", "description": "ID of the source Purchase Request"},
         "proc_item": {"type": "array", "items": {"type": "object", "properties": {
@@ -85,6 +87,8 @@ async def api_create_po(req: func.HttpRequest) -> func.HttpResponse:
     summary="Get PO tickets",
     description="Retrieves a list of Purchase Order tickets with enriched status information. Suppliers only see their own orders; Officers see all.",
     tags=["Purchase Order"],
+    route="get_po_ticket",
+    method="GET",
     parameters=[
         {"name": "user_id", "in": "query", "type": "string", "required": True, "description": "ID for role-based filtering"}
     ],
@@ -108,6 +112,8 @@ def api_get_po_ticket(req: func.HttpRequest) -> func.HttpResponse:
     summary="Get PO details",
     description="Retrieves the full structural data for a PO including header info and specific itemized line items.",
     tags=["Purchase Order"],
+    route="get_po_details",
+    method="GET",
     parameters=[
         {"name": "user_id", "in": "query", "type": "string", "required": True, "description": "ID for authorization check"},
         {"name": "po_id", "in": "query", "type": "string", "required": True, "description": "ID of the PO to retrieve"}
@@ -137,6 +143,8 @@ def api_get_po_details(req: func.HttpRequest) -> func.HttpResponse:
     summary="Update PO status",
     description="Allows a Supplier to update the status of an order (e.g., 'Awaiting Warehouse', 'Shipped'). Rules vary by current status.",
     tags=["Purchase Order"],
+    route="update_po_status",
+    method="POST",
     request_body={"type": "object", "required": ["supplier_id", "po_id", "status_name"], "properties": {
         "supplier_id": {"type": "string", "format": "uuid", "description": "ID of the supplier performing the update"},
         "po_id": {"type": "string", "description": "ID of the PO"},

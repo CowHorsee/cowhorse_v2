@@ -19,6 +19,8 @@ from sharedlib.db_helper.db_ops import DBHelper
     summary="Create purchase request",
     description="Submits a new purchase request for procurement. Triggers automated PDF generation and manager notification upon success.",
     tags=["Purchase Request"],
+    route="create_pr",
+    method="POST",
     request_body={"type": "object", "required": ["user_id", "proc_item", "justification"], "properties": {
         "user_id": {"type": "string", "format": "uuid", "description": "ID of the procurement officer creating the request"},
         "proc_item": {"type": "object", "additionalProperties": {"type": "integer"}, "description": "Mapping of item names to requested quantities", "example": {"Elba Built-in Gas Hob": 10, "Faber Chimney Hood": 5}},
@@ -88,6 +90,8 @@ async def api_create_pr(req: func.HttpRequest) -> func.HttpResponse:
     summary="Accept AI PR suggestion",
     description="Converts an AI-generated procurement suggestion (Status 1) into a standard Purchase Request (Status 2) by associating it with a responsible officer.",
     tags=["Purchase Request"],
+    route="accept_pr_suggestion",
+    method="POST",
     request_body={"type": "object", "required": ["pr_id", "officer_id"], "properties": {
         "pr_id": {"type": "string", "description": "ID of the AI suggestion (PR_...) to accept"},
         "officer_id": {"type": "string", "format": "uuid", "description": "ID of the officer taking responsibility for the request"}
@@ -110,6 +114,8 @@ def api_accept_pr_suggestion(req: func.HttpRequest) -> func.HttpResponse:
     summary="Modify purchase request",
     description="Updates the items or justification of a PR. Rules: Officers can only modify AI suggestions (Status 1). Managers can modify submitted requests (Status 2).",
     tags=["Purchase Request"],
+    route="modify_pr",
+    method="POST",
     request_body={"type": "object", "required": ["user_id", "pr_id", "proc_item", "justification"], "properties": {
         "user_id": {"type": "string", "format": "uuid", "description": "ID of the user performing the modification"},
         "pr_id": {"type": "string", "description": "ID of the target PR"},
@@ -134,6 +140,8 @@ def api_modify_pr(req: func.HttpRequest) -> func.HttpResponse:
     summary="Get PR tickets",
     description="Retrieves a list of PR tickets with enriched status names and creator role info for the dashboard view.",
     tags=["Purchase Request"],
+    route="get_pr_ticket",
+    method="GET",
     parameters=[
         {"name": "user_id", "in": "query", "type": "string", "description": "Filter by creator (required for Officers to see their own)"},
         {"name": "pr_id", "in": "query", "type": "string", "description": "Optional specific PR ID filter"},
@@ -161,6 +169,8 @@ def api_get_pr_ticket(req: func.HttpRequest) -> func.HttpResponse:
     summary="Get PR details",
     description="Retrieves the full structural data for a PR, including header and all bridged line items.",
     tags=["Purchase Request"],
+    route="get_pr_details",
+    method="GET",
     parameters=[
         {"name": "user_id", "in": "query", "type": "string", "required": True, "description": "ID for authorization check"},
         {"name": "pr_id", "in": "query", "type": "string", "required": True, "description": "ID of the PR to retrieve"}
@@ -190,6 +200,8 @@ def api_get_pr_details(req: func.HttpRequest) -> func.HttpResponse:
     summary="Review purchase request",
     description="Allows a Manager to Approve or Reject a PR. Status 2 -> (4 or 3).",
     tags=["Purchase Request"],
+    route="review_pr",
+    method="POST",
     request_body={"type": "object", "required": ["pr_id", "decision", "manager_id"], "properties": {
         "pr_id": {"type": "string", "description": "ID of the PR to review"},
         "decision": {"type": "string", "enum": ["approve", "reject"], "description": "Manager's decision"},
@@ -214,6 +226,8 @@ def api_review_pr(req: func.HttpRequest) -> func.HttpResponse:
     summary="Trigger procurement alert (AI)",
     description="Simulates an AI detecting low stock. If predicted demand vs current stock exceeds 80%, an automated PR suggestion (Status 1) is created and Officers are notified.",
     tags=["Purchase Request"],
+    route="procurement_alert",
+    method="POST",
     request_body={"type": "object", "required": ["item_name", "predicted_demand", "justification"], "properties": {
         "item_name": {"type": "string", "description": "Name of the item to check"},
         "predicted_demand": {"type": "number", "description": "Expected demand quantity"},

@@ -16,6 +16,8 @@ from sharedlib.db_helper.db_ops import DBHelper, sanitize_key
     summary="Migrate CSV datasets to Azure Table Storage",
     description="Iterates through all CSV files in api/dataset/ and uploads them to Azure Storage Tables using batch transactions and DBHelper mappings.",
     tags=["Maintenance"],
+    route="run",
+    method="POST",
     operation_id="runDataLoader",
     response={
         200: {

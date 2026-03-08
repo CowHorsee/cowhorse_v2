@@ -20,13 +20,14 @@ def login(email, password_plain):
     stored_hash = str(user_data['password_hash']).encode('utf-8')
     
     if bcrypt.checkpw(password_plain.encode('utf-8'), stored_hash):
-        role_df = db.extract("dim_role", conditions={"role_id": user_data['role_id']})
+        # Pass role_id as int to conditions to match inferred dtype in db_ops.py
+        role_df = db.extract("dim_role", conditions={"role_id": int(user_data['role_id'])})
         role_name = role_df.iloc[0]['role_name'] if not role_df.empty else "Unknown"
         return role_name, user_data['user_id'], "Login Successful"
     else:
         return None, None, "Error: Incorrect password."
 
-def register(admin_id, email, name, role_name):
+def register(admin_id, email, name, role_name, password=None, user_id=None):
     """Registers a new user and looks up role_id from dim_role.csv."""
 
     if not gatekeeper.is_authorized(admin_id, "register"):
@@ -40,19 +41,20 @@ def register(admin_id, email, name, role_name):
     role_df = db.extract("dim_role", conditions={"role_name": role_name})
     if role_df.empty:
         return f"Error: Role '{role_name}' not found."
-    role_id = role_df.iloc[0]['role_id']
+    role_id = int(role_df.iloc[0]['role_id'])
     
     # 3. Security
-    raw_password = str(uuid.uuid4())[:8]
+    raw_password = password if password else str(uuid.uuid4())[:8]
     password_hash = bcrypt.hashpw(raw_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     # 4. Save
     new_user = pd.DataFrame([{
-        "user_id": str(uuid.uuid4()),
+        "user_id": user_id if user_id else str(uuid.uuid4()),
         "name": name,
         "email": email,
         "password_hash": password_hash,
-        "role_id": int(role_id),
+        "raw_password": raw_password,
+        "role_id": role_id,
         "created_at": get_now()
     }])
     
@@ -83,12 +85,12 @@ def modify_role(admin_id, user_id, new_role_name):
     if role_df.empty:
         return "Error: New role name is invalid."
     
-    new_role_id = role_df.iloc[0]['role_id']
+    new_role_id = int(role_df.iloc[0]['role_id'])
     
     if db.extract("user", conditions={"user_id": user_id}).empty:
         return "Error: User not found."
     
-    db.modify("user", {"role_id": int(new_role_id)}, {"user_id": user_id})
+    db.modify("user", {"role_id": new_role_id}, {"user_id": user_id})
     return "Success: User role updated."
 
 def change_password(user_id, old_password, new_password):

@@ -1,5 +1,5 @@
 import pandas as pd
-import datetime
+from datetime import datetime
 from ..sharedlib.db_helper.db_ops import DBHelper, get_now
 from ..sharedlib.rbac_helper.role_permissions_check import RBACGatekeeper
 
@@ -89,50 +89,85 @@ def create_po(pr_id, proc_item, user_id):
     print(f"Success: {pr_id} converted into {len(proc_item)} Purchase Orders.")
     return True
 
-def get_po_ticket(supplier_id):
-    """
-    Retrieves all purchase orders associated with a specific supplier.
-    Includes the status name for clarity.
-    """
-
-    if not gatekeeper.is_authorized(supplier_id, "update_po_status"):
-        return ("Error: Access Denied. You do not have permission to view PO tickets.")
+def get_po_ticket(user_id):
+    """Retrieves PO tickets with enriched status and role names."""
+    role = gatekeeper.get_user_role(user_id)
     
-    # 1. Extract POs for this supplier
-    po_df = db.extract("purchase_order", conditions={"supplier_id": supplier_id})
-    
-    if po_df.empty:
-        return []
+    if role == "Supplier":
+        po_df = db.extract("purchase_order", conditions={"supplier_id": user_id})
+    elif role == "Warehouse Personnel":
+        # Warehouse sees Order Accepted (6), Shipped (7), Arrived (8), Received (9)
+        po_df = db.extract("purchase_order")
+        if not po_df.empty:
+            # Ensure status is treated as int for the comparison
+            po_df = po_df[po_df['status'].astype(int).isin([6, 7, 8, 9])]
+    else:
+        return "Error: Access Denied. Unauthorized role."
 
-    # 2. Join with dim_status to get human-readable status
+    if po_df.empty: return []
+
+    # 1. Join with dim_status
     status_df = db.extract("dim_status")
+    po_df['status'] = po_df['status'].astype(str)
+    status_df['status_id'] = status_df['status_id'].astype(str)
+    
     merged_df = po_df.merge(status_df, left_on="status", right_on="status_id", how="left")
     
-    # 3. Clean up columns and return as list of dicts
-    result = merged_df[['po_id', 'status', 'status_name', 'created_at']]
+    # 2. Join with User/Role for creator enrichment
+    user_df = db.extract("user", fields=["user_id", "role_id"])
+    role_df = db.extract("dim_role", fields=["role_id", "role_name"])
+    user_df['role_id'] = user_df['role_id'].astype(str)
+    role_df['role_id'] = role_df['role_id'].astype(str)
+    user_with_role = user_df.merge(role_df, on='role_id', how='left')
+
+    merged_df = merged_df.merge(user_with_role[['user_id', 'role_name']], left_on='created_by', right_on='user_id', how='left')
+    merged_df = merged_df.rename(columns={'role_name': 'creator_role'})
+
+    # After merge: status_x is from po (the ID), status_y is from dim_status (the Name)
+    # Wait, in the new schema, dim_status has 'status_name'. So it won't be status_y.
+    # If the column name in dim_status is 'status_name', it's directly available.
+    if 'user_id' in merged_df.columns: merged_df = merged_df.drop(columns=['user_id'])
+    
+    result = merged_df[['po_id', 'status', 'status_name', 'created_at', 'creator_role']]
     return result.to_dict(orient='records')
 
-def get_po_details(supplier_id, po_id):
-    """
-    Retrieves full details for a specific PO, including the items involved.
-    """
-    if not gatekeeper.is_authorized(supplier_id, "get_po_details"):
-        return ("Error: Access Denied. You do not have permission to view PO details.")
-
-    # 1. Get the PO header information
-    po_header = db.extract("purchase_order", conditions={"po_id": po_id})
-    if po_header.empty:
-        return None
-
-    # 2. Get the items from the bridge table
-    bridge_df = db.extract("purchase_item_bridge", conditions={"doc_id": po_id})
+def get_po_details(user_id, po_id):
+    """Retrieves full details for a specific PO with enriched status and role names."""
+    role = gatekeeper.get_user_role(user_id)
     
-    # 3. Join with item master to get names and prices
+    po_header_df = db.extract("purchase_order", conditions={"po_id": po_id})
+    if po_header_df.empty: return "Error: Purchase Order not found."
+
+    po_data = po_header_df.iloc[0]
+    if role == "Supplier":
+        if po_data['supplier_id'] != user_id:
+            return "Error: Access Denied. You are not the supplier for this PO."
+    elif role == "Warehouse Personnel":
+        if int(po_data['status']) not in [6, 7, 8, 9]:
+            return "Error: Access Denied. This PO is not in a state accessible to Warehouse."
+    else:
+        return "Error: Access Denied. Unauthorized role."
+
+    # Enrichment
+    status_df = db.extract("dim_status")
+    po_header_df['status'] = po_header_df['status'].astype(str)
+    status_df['status_id'] = status_df['status_id'].astype(str)
+    po_header_df = po_header_df.merge(status_df[['status_id', 'status_name']], left_on='status', right_on='status_id', how='left')
+
+    user_df = db.extract("user", fields=["user_id", "role_id"])
+    role_df = db.extract("dim_role", fields=["role_id", "role_name"])
+    user_df['role_id'] = user_df['role_id'].astype(str)
+    role_df['role_id'] = role_df['role_id'].astype(str)
+    user_with_role = user_df.merge(role_df, on='role_id', how='left')
+
+    po_header_df = po_header_df.merge(user_with_role[['user_id', 'role_name']], left_on='created_by', right_on='user_id', how='left')
+    po_header_df = po_header_df.rename(columns={'role_name': 'creator_role'})
+
+    bridge_df = db.extract("purchase_item_bridge", conditions={"doc_id": po_id})
     item_master = db.extract("item", fields=["item_id", "item_name", "unit_price"])
     details_df = bridge_df.merge(item_master, on="item_id", how="left")
     
-    # 4. Combine header and items into a single detailed object
-    po_details = po_header.iloc[0].to_dict()
+    po_details = po_header_df.iloc[0].to_dict()
     po_details['items'] = details_df[['item_id', 'item_name', 'quantity', 'unit_price']].to_dict(orient='records')
     
     return po_details
@@ -145,7 +180,7 @@ def update_po_status(supplier_id, po_id, status_name):
         return ("Error: Access Denied. You do not have permission to update PO status.")
     
     # 1. Resolve status_name to status_id
-    status_df = db.extract("dim_status", conditions={"status": status_name})
+    status_df = db.extract("dim_status", conditions={"status_name": status_name})
     if status_df.empty:
         return f"Error: Status '{status_name}' is not valid."
     

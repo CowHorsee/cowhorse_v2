@@ -33,8 +33,8 @@ def generate_next_pr_id():
 def procurement_alert(item_name, predicted_demand, justification):
     """AI Trigger: Automatically creates a PR if stock is below threshold."""
     # 1. Get current stock
-    from uat_warehouse_management import count_current_stock
-    current_stock = count_current_stock(item_name)
+    from .uat_warehouse_management import count_inventory
+    current_stock = count_inventory(item_name)
     
     # 2. Check threshold
     if (predicted_demand * THRESHOLD_PERCENTAGE) > current_stock:
@@ -45,11 +45,21 @@ def procurement_alert(item_name, predicted_demand, justification):
 
 def create_pr(user_id, proc_item, justification):
     """Creates a PR header and bridge entries. Status 1 for AI, 2 for Officer."""
+    # A. Validate Items
+    item_master = db.extract("item", fields=["item_id", "item_name"])
+    invalid_items = []
+    for name in proc_item.keys():
+        if item_master[item_master['item_name'] == name].empty:
+            invalid_items.append(name)
+    
+    if invalid_items:
+        return f"Error: Invalid items found: {', '.join(invalid_items)}"
+
+    # B. Create PR Header
     new_pr_id = generate_next_pr_id()
     status_id = 2 if user_id else 1
     now_ts = get_now()
 
-    # A. Create PR Header
     new_pr_header = pd.DataFrame([{
         "pr_id": new_pr_id,
         "status_id": status_id,
@@ -63,8 +73,7 @@ def create_pr(user_id, proc_item, justification):
     }])
     db.load("purchase_request", new_pr_header, mode='append')
 
-    # B. Create Bridge Entries
-    item_master = db.extract("item", fields=["item_id", "item_name"])
+    # C. Create Bridge Entries
     bridge_data = []
     
     for name, qty in proc_item.items():
@@ -122,7 +131,22 @@ def modify_pr(user_id, pr_id, proc_item, justification):
     }
     if role == "Procurement Officer": updates["status_id"] = 2
     
-    db.modify("purchase_request", updates, {"pr_id": pr_id})
+    # Manually apply update to ensure dtype consistency and bypass LossySetitemError
+    full_df = db.extract("purchase_request")
+    if not full_df.empty:
+        # Cast critical columns to object BEFORE any assignment to prevent LossySetitemError (float64 -> object)
+        for col in ["justification", "reviewed_at", "reviewed_by", "created_by", "last_modified_by"]:
+            if col in full_df.columns:
+                full_df[col] = full_df[col].astype(object)
+        
+        mask = full_df['pr_id'] == pr_id
+        for col, val in updates.items():
+            full_df.loc[mask, col] = val
+            
+        full_df.loc[mask, 'last_modified_at'] = get_now()
+        full_df.loc[mask, 'last_modified_by'] = user_id
+
+        db.load("purchase_request", full_df, mode='overwrite')
 
     # 2. Update Items (Delete old bridge records and insert new ones)
     db.delete("purchase_item_bridge", {"doc_id": pr_id})
@@ -134,24 +158,74 @@ def modify_pr(user_id, pr_id, proc_item, justification):
         if not match.empty:
             new_bridge.append({"doc_id": pr_id, "item_id": match.iloc[0]['item_id'], "quantity": qty})
     
-    db.load("purchase_item_bridge", pd.DataFrame(new_bridge), mode='append')
+    if new_bridge:
+        db.load("purchase_item_bridge", pd.DataFrame(new_bridge), mode='append')
     return f"PR {pr_id} updated successfully."
 
-def get_pr_ticket(officer_id, pr_id=None, status=None):
-    """Retrieves PR tickets based on filters."""
-    conditions = {"created_by": officer_id}
-    if pr_id: conditions["pr_id"] = pr_id
-    if status: conditions["status_id"] = status
+def get_pr_ticket(user_id, pr_id=None, status=None):
+    """Retrieves PR tickets with enriched status and role names."""
+    role = gatekeeper.get_user_role(user_id)
     
-    return db.extract("purchase_request", conditions=conditions).to_dict(orient='records')
+    conditions = {}
+    if role == "Procurement Officer":
+        conditions["created_by"] = user_id
+    
+    if pr_id: conditions["pr_id"] = pr_id
+    if status: conditions["status_id"] = int(status) if status else None
+    
+    pr_df = db.extract("purchase_request", conditions=conditions)
+    if pr_df.empty: return []
 
-def get_pr_details(officer_id, pr_id):
-    """Retrieves full PR details including items."""
-    header = db.extract("purchase_request", conditions={"pr_id": pr_id, "created_by": officer_id})
-    if header.empty: return "Error: PR not found or unauthorized access."
+    # 1. Join with dim_status
+    status_df = db.extract("dim_status")
+    pr_df['status_id'] = pr_df['status_id'].astype(str)
+    status_df['status_id'] = status_df['status_id'].astype(str)
+    pr_df = pr_df.merge(status_df[['status_id', 'status_name']], on='status_id', how='left')
+
+    # 2. Join with User and Role to get creator's role name
+    user_df = db.extract("user", fields=["user_id", "role_id"])
+    role_df = db.extract("dim_role", fields=["role_id", "role_name"])
+    
+    user_df['role_id'] = user_df['role_id'].astype(str)
+    role_df['role_id'] = role_df['role_id'].astype(str)
+    user_with_role = user_df.merge(role_df, on='role_id', how='left')
+
+    pr_df = pr_df.merge(user_with_role[['user_id', 'role_name']], left_on='created_by', right_on='user_id', how='left')
+    pr_df = pr_df.rename(columns={'role_name': 'creator_role'})
+    
+    # Drop redundant user_id from merge
+    if 'user_id' in pr_df.columns: pr_df = pr_df.drop(columns=['user_id'])
+
+    return pr_df.to_dict(orient='records')
+
+def get_pr_details(user_id, pr_id):
+    """Retrieves full PR details with enriched status and role names."""
+    role = gatekeeper.get_user_role(user_id)
+    
+    conditions = {"pr_id": pr_id}
+    if role == "Procurement Officer":
+        conditions["created_by"] = user_id
+        
+    header_df = db.extract("purchase_request", conditions=conditions)
+    if header_df.empty: return "Error: PR not found or unauthorized access."
+
+    # Enrichment
+    status_df = db.extract("dim_status")
+    header_df['status_id'] = header_df['status_id'].astype(str)
+    status_df['status_id'] = status_df['status_id'].astype(str)
+    header_df = header_df.merge(status_df[['status_id', 'status_name']], on='status_id', how='left')
+
+    user_df = db.extract("user", fields=["user_id", "role_id"])
+    role_df = db.extract("dim_role", fields=["role_id", "role_name"])
+    user_df['role_id'] = user_df['role_id'].astype(str)
+    role_df['role_id'] = role_df['role_id'].astype(str)
+    user_with_role = user_df.merge(role_df, on='role_id', how='left')
+
+    header_df = header_df.merge(user_with_role[['user_id', 'role_name']], left_on='created_by', right_on='user_id', how='left')
+    header_df = header_df.rename(columns={'role_name': 'creator_role'})
 
     items = db.extract("purchase_item_bridge", conditions={"doc_id": pr_id})
-    return {"header": header.iloc[0].to_dict(), "items": items.to_dict(orient='records')}
+    return {"header": header_df.iloc[0].to_dict(), "items": items.to_dict(orient='records')}
 
 def review_pr(pr_id, decision, manager_id):
     """Manager approves (4) or rejects (3) a PR."""
@@ -168,5 +242,24 @@ def review_pr(pr_id, decision, manager_id):
         "reviewed_at": get_now(),
         "reviewed_by": manager_id
     }
-    db.modify("purchase_request", updates, {"pr_id": pr_id})
+    
+    # Manually apply update to ensure dtype consistency and bypass LossySetitemError
+    full_df = db.extract("purchase_request")
+    if not full_df.empty:
+        # Cast critical columns to object BEFORE any assignment to prevent LossySetitemError (float64 -> object)
+        for col in ["reviewed_at", "reviewed_by", "justification", "created_by", "last_modified_by"]:
+            if col in full_df.columns:
+                full_df[col] = full_df[col].astype(object)
+        
+        mask = full_df['pr_id'] == pr_id
+        for col, val in updates.items():
+            full_df.loc[mask, col] = val
+            
+        if 'last_modified_at' in full_df.columns:
+            full_df.loc[mask, 'last_modified_at'] = get_now()
+        if 'last_modified_by' in full_df.columns:
+            full_df.loc[mask, 'last_modified_by'] = manager_id
+
+        db.load("purchase_request", full_df, mode='overwrite')
+        
     return f"PR {pr_id} has been {decision}ed."

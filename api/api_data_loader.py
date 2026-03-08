@@ -17,9 +17,15 @@ from sharedlib.db_helper.db_ops import DBHelper, sanitize_key
     description="Iterates through all CSV files in api/dataset/ and uploads them to Azure Storage Tables using batch transactions and DBHelper mappings.",
     tags=["Maintenance"],
     operation_id="runDataLoader",
-    response={
-        200: {"description": "Datasets loaded successfully"},
-        500: {"description": "Failed to load datasets"},
+    responses={
+        200: {
+            "description": "Datasets loaded successfully",
+            "content": {"application/json": {"schema": {"type": "object", "properties": {
+                "message": {"type": "string", "example": "Data migration complete"},
+                "details": {"type": "object", "additionalProperties": {"type": "string"}, "description": "Row counts per table", "example": {"user": "Loaded 50 rows.", "item": "Loaded 200 rows."}}
+            }}}}
+        },
+        500: {"description": "Failed to load datasets or connection string missing"},
     },
 )
 def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:

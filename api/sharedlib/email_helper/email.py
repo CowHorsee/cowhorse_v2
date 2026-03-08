@@ -1,66 +1,116 @@
-# Code snippets are only available for the latest version. Current version is 1.x
-from msgraph import GraphServiceClient
-from msgraph.generated.users.item.send_mail.send_mail_post_request_body import SendMailPostRequestBody
-from msgraph.generated.models.message import Message
-from msgraph.generated.models.item_body import ItemBody
-from msgraph.generated.models.body_type import BodyType
-from msgraph.generated.models.recipient import Recipient
-from msgraph.generated.models.email_address import EmailAddress
-from msgraph.generated.models.attachment import Attachment
-from msgraph.generated.models.file_attachment import FileAttachment
+import os
+import smtplib
+import ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from jinja2 import Environment, FileSystemLoader
+import logging
 
-# To initialize your graph_client, see https://learn.microsoft.com/en-us/graph/sdks/create-client?from=snippets&tabs=python
-request_body = SendMailPostRequestBody(
-	message = Message(
-		subject = "Meet for lunch?",
-		body = ItemBody(
-			content_type = BodyType.Text,
-			content = "The new cafeteria is open.",
-		),
-		to_recipients = [
-			Recipient(
-				email_address = EmailAddress(
-					address = "meganb@contoso.com",
-				),
-			),
-		],
-		attachments = [
-			FileAttachment(
-				odata_type = "#microsoft.graph.fileAttachment",
-				name = "attachment.txt",
-				content_type = "text/plain",
-				content_bytes = base64.urlsafe_b64decode("SGVsbG8gV29ybGQh"),
-			),
-		],
-	),
-)
+class EmailHelper:
+    def __init__(self):
+        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        self.username = os.getenv("SMTP_USERNAME")
+        self.password = os.getenv("SMTP_PASSWORD")
+        self.sender_email = os.getenv("EMAIL_SENDER_ADDRESS", self.username)
+        
+        # Setup Jinja2 environment
+        template_dir = os.path.dirname(os.path.abspath(__file__))
+        self.env = Environment(loader=FileSystemLoader(template_dir))
+        
+    def send_email(self, recipient_email, subject, template_name, template_data=None, attachments=None, cc_emails=None, **kwargs):
+        """
+        Sends an email using SMTP.
+        Supports both template_data dict and direct keyword arguments.
+        """
+        if not all([self.username, self.password]):
+            logging.error("SMTP credentials not configured.")
+            return False
 
-await graph_client.me.send_mail.post(request_body)
+        try:
+            # 1. Prepare data for template
+            render_data = template_data.copy() if (template_data and isinstance(template_data, dict)) else {}
+            render_data.update(kwargs) # Add any direct keyword arguments
+            
+            # 2. Render HTML body
+            template = self.env.get_template(template_name)
+            html_content = template.render(**render_data)
 
-import base64
-from azure.communication.email import EmailClient
+            # 3. Create message
+            msg = MIMEMultipart()
+            # Ensure sender_email fallback
+            from_email = self.sender_email or "system@cowhorse.com"
+            msg['From'] = from_email
+            msg['To'] = recipient_email
+            msg['Subject'] = subject
+            
+            if cc_emails:
+                if isinstance(cc_emails, list):
+                    msg['Cc'] = ", ".join(cc_emails)
+                else:
+                    msg['Cc'] = cc_emails
+            
+            msg.attach(MIMEText(html_content, 'html'))
 
-# 1. Read your PDF file and encode it
-with open("purchase_order.pdf", "rb") as f:
-    file_bytes = f.read()
-    encoded_file = base64.b64encode(file_bytes).decode()
+            # 4. Handle attachments
+            if attachments:
+                for file_path in attachments:
+                    if os.path.exists(file_path):
+                        with open(file_path, "rb") as f:
+                            part = MIMEApplication(f.read(), Name=os.path.basename(file_path))
+                        part['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+                        msg.attach(part)
+                    else:
+                        logging.warning(f"Attachment not found: {file_path}")
 
-# 2. Build the message with the HTML body and the attachment
-message = {
-    "senderAddress": "no-reply@fiamma.com.my",
-    "content": {
-        "subject": "Approval: PR_001",
-        "html": html_content_from_above, # The HTML code from Step 2
-    },
-    "recipients": { "to": [{"address": "officer@fiamma.com.my"}] },
-    "attachments": [
-        {
-            "name": "Order_PR_001.pdf",
-            "contentType": "application/pdf",
-            "contentInBase64": encoded_file
-        }
-    ]
-}
+            # 5. Send email
+            context = ssl.create_default_context()
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                server.starttls(context=context)
+                server.login(self.username, self.password)
+                
+                # Combine all recipients for the SMTP send command
+                all_recipients = [recipient_email]
+                if cc_emails:
+                    if isinstance(cc_emails, list):
+                        all_recipients.extend(cc_emails)
+                    else:
+                        all_recipients.append(cc_emails)
+                    
+                server.sendmail(from_email, all_recipients, msg.as_string())
+            
+            logging.info(f"Email sent successfully to {recipient_email}")
+            return True
 
-# 3. Send via Client
-client.begin_send(message)
+        except Exception as e:
+            logging.error(f"Failed to send email: {str(e)}")
+            return False
+
+def quick_send(recipient_email=None, subject=None, template_name="email_templates.html", template_data=None, **kwargs):
+    """
+    Highly flexible helper for email sending. 
+    Accepts explicit args or keyword arguments to suit various call sites.
+    """
+    # 1. Resolve core parameters from keyword args if missing
+    r_email = recipient_email or kwargs.pop('recipient_email', None)
+    subj = subject or kwargs.pop('subject', 'System Notification')
+    t_name = template_name or kwargs.pop('template_name', 'email_templates.html')
+    
+    attachments = kwargs.pop('attachments', None)
+    cc_emails = kwargs.pop('cc_emails', None)
+
+    if not r_email:
+        logging.error("No recipient email provided to quick_send")
+        return False
+
+    helper = EmailHelper()
+    return helper.send_email(
+        recipient_email=r_email, 
+        subject=subj, 
+        template_name=t_name, 
+        template_data=template_data, 
+        attachments=attachments, 
+        cc_emails=cc_emails, 
+        **kwargs
+    )

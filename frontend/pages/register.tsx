@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
-import Card from '../components/atoms/Card';
+import Card, { CardHeader } from '../components/atoms/Card';
 import { useRouter } from 'next/router';
 import { ApiError } from '../utils/apiClient';
 import { registerUser, type UserRole } from '../utils/authApi';
-import Card, { CardHeader } from '../components/atoms/Card';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -67,7 +66,7 @@ export default function RegisterPage() {
           className="mb-0"
           titleClassName="text-3xl"
         />
-        <form className="mt-5 flex flex-col gap-2">
+        <form className="mt-5 flex flex-col gap-2" onSubmit={handleSubmit}>
           <label htmlFor="name" className="text-sm font-bold text-brand-blue">
             Full name
           </label>

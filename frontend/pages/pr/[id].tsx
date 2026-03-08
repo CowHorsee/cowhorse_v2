@@ -19,7 +19,9 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
         <h1 className="font-heading text-3xl font-semibold text-brand-blue md:text-4xl">
           {purchaseRequest.id}
         </h1>
-        <p className="mt-2 text-sm text-slate-600">Procurement Officer : {purchaseRequest.requester}</p>
+        <p className="mt-2 text-sm text-slate-600">
+          Procurement Officer : {purchaseRequest.requester}
+        </p>
       </section>
 
       <Card as="section" variant="base" padding="lg" className="mb-5">
@@ -64,7 +66,6 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
             {purchaseRequest.updatedAt}
           </strong>
         </div>
-
       </Card>
 
       <div className="flex flex-wrap gap-3">

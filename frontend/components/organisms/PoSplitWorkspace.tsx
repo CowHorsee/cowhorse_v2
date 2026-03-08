@@ -5,7 +5,7 @@ import type { PurchaseRequest } from '../../utils/mockdata/purchaseRequestsData'
 import type {
   PurchaseOrderDraft,
   SplitLineItem,
-} from '../../utils/poSplitData';
+} from '../../utils/mockdata/poSplitData';
 
 type PoSplitWorkspaceProps = {
   purchaseRequest: PurchaseRequest;

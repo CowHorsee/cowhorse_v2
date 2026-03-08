@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Card, { CardHeader } from '../atoms/Card';
-import type { PurchaseRequest } from '../../utils/purchaseRequestsData';
+import type { PurchaseRequest } from '../../utils/mockdata/purchaseRequestsData';
 
 type RecentPurchaseRequestsPanelProps = {
   requests: PurchaseRequest[];

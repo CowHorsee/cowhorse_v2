@@ -3,7 +3,7 @@ import Card, { CardHeader } from '../../../components/atoms/Card';
 import {
   purchaseRequests,
   PurchaseRequest,
-} from '../../../utils/purchaseRequestsData';
+} from '../../../utils/mockdata/purchaseRequestsData';
 
 type PrSplitPageProps = {
   purchaseRequest: PurchaseRequest;

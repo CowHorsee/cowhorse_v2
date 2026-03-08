@@ -34,6 +34,22 @@ export const appRouteConfig: AppRouteConfig[] = [
     showInSidebar: true,
     matchMode: 'prefix',
   },
+    {
+    href: '/inventory',
+    label: 'Inventory',
+    iconPath: '/box.svg',
+    allowedRoles: ['ADMIN', 'MANAGER', 'EMPLOYEE'],
+    showInSidebar: true,
+    matchMode: 'prefix',
+  },
+    {
+    href: '/users',
+    label: 'Users',
+    iconPath: '/user.svg',
+    allowedRoles: ['ADMIN'],
+    showInSidebar: true,
+    matchMode: 'prefix',
+  },
   {
     href: '/profile',
     label: 'Profile',

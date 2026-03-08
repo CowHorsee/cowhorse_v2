@@ -7,14 +7,8 @@ import { getSidebarTabsForUser } from '../utils/rbac';
 
 type AppShellProps = {
   children: ReactNode;
+  user: AuthUser;
 };
-
-const navItems = [
-  { href: '/', label: 'Dashboard', iconPath: '/element-2.svg' },
-  { href: '/pr', label: 'Purchase Requests', iconPath: '/clipboard-text.svg' },
-  { href: '/inventory', label: 'Inventory', iconPath: '/box.svg' },
-  { href: '/users', label: 'User Management', iconPath: '/user.svg' },
-]
 
 function getUserInitials(name: string) {
   return name

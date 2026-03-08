@@ -54,14 +54,6 @@ export default function PrPage() {
               {pendingCount}
             </p>
           </Card>
-          <Card variant="soft" padding="md">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-              Visible Rows
-            </p>
-            <p className="mt-2 text-3xl font-semibold text-brand-blue">
-              {filteredRequests.length}
-            </p>
-          </Card>
         </div>
       </Card>
 
@@ -88,10 +80,6 @@ export default function PrPage() {
             <thead className="bg-slate-50">
               <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
                 <th className="px-4 py-3">PR ID</th>
-                <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Department</th>
-                <th className="px-4 py-3">Requester</th>
-                <th className="px-4 py-3">Vendor</th>
                 <th className="px-4 py-3">Amount</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Details</th>
@@ -106,18 +94,6 @@ export default function PrPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-700">
                       {request.title}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {request.department}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {request.requester}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {request.vendor}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      RM {request.amount.toLocaleString()}
                     </td>
                     <td className="px-4 py-3">
                       <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">

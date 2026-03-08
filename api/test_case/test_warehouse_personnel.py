@@ -25,8 +25,8 @@ def run_tests():
 
     print("\n--- 2. Get PO Ticket ---")
     # Search by status = shipped (7), arrived (8)
-    print("Search by status (using Supplier ID as current script requires it):")
-    print(get_po_ticket(SUPPLIER_ID_DUMMY)) 
+    print("Search by status (Warehouse Personnel):")
+    print(get_po_ticket(WAREHOUSE_ID)) 
 
     print("\n--- 3. Update PO Status to Received ---")
     print(update_po_status(WAREHOUSE_ID, TEST_PO_ID, "Order Received"))
@@ -44,7 +44,7 @@ def run_tests():
     print("By default:")
     print(count_inventory())
     print("\nBy item_name (Brake Pad):")
-    print(count_inventory(item_name="Brake Pad"))
+    print(count_inventory(item_name="Elba Built-in Gas Hob"))
 
 if __name__ == "__main__":
     run_tests()

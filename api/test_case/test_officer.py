@@ -15,22 +15,22 @@ OFFICER_EMAIL = "johndoe@company.com"
 
 def run_tests():
     print("--- 1. Login Account ---")
-    role, user_id, msg = login(OFFICER_EMAIL, "9434c0de")
+    role, user_id, msg = login(OFFICER_EMAIL, "eda7074c")
     print(f"Login Result: {msg}, Role: {role}, User ID: {user_id}")
 
     print("\n--- 2. Change Password ---")
     # Change from 'password123' to 'newpassword456'
-    print(change_password(OFFICER_ID, "9434c0de", "newpassword456"))
+    print(change_password(OFFICER_ID, "eda7074c", "newpassword456"))
 
     # Verify by logging in with new password
-    role, user_id, msg = login(OFFICER_EMAIL, "9434c0de")
+    role, user_id, msg = login(OFFICER_EMAIL, "newpassword456")
     print(f"Login with NEW password: {msg}")
 
     print("\n--- 3. Forget Password ---")
     print(forget_password(OFFICER_ID))
 
     print("\n--- 4. Create PR ---")
-    proc_item = {"Air Filter": 10, "Brake Pad": 5}
+    proc_item = {"Elba Built-in Gas Hob": 10, "Faber Chimney Hood": 5}
     pr_result = create_pr(OFFICER_ID, proc_item, "Monthly replenishment")
     print(pr_result)
     new_pr_id = pr_result['pr_id']

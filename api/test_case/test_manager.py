@@ -12,7 +12,7 @@ from api.scripts.purchase_request import modify_pr, review_pr, get_pr_ticket, ge
 # Manager ID (Siti from user.csv)
 MANAGER_ID = "194b1bd8-e13c-461a-8afb-04da92440a8b"
 MANAGER_EMAIL = "wallace@company.com"
-TEST_PR_ID = "PR_202603_00002"
+TEST_PR_ID = "PR_202603_00001"
 
 def run_tests():
     print("--- 1. Login Account ---")
@@ -21,7 +21,7 @@ def run_tests():
 
     print("\n--- 2. Modify PR ---")
     # Managers can modify status 2 PRs
-    proc_item = {"Brake Pad": 15}
+    proc_item = {"Rubine Electric Oven": 15}
     print(modify_pr(MANAGER_ID, TEST_PR_ID, proc_item, "Modified by manager for better quantity"))
 
     print("\n--- 3. Review PR ---")

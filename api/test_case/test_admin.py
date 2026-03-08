@@ -7,16 +7,20 @@ os.environ["TESTING"] = "true"
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from api.scripts.user_management import register, search_user, modify_role
+from reset_test_data import reset_test_data
 
 # Admin ID from user.csv (Ahmad)
 ADMIN_ID = "111e4567-e89b-12d3-a456-426614174000"
 
 def run_tests():
-    print("--- 1. Register Users ---")
-    print(register(ADMIN_ID, "wallace@company.com", "Wallace", "Procurement Manager"))
-    print(register(ADMIN_ID, "johndoe@company.com", "John Doe", "Procurement Manager"))
-    print(register(ADMIN_ID, "supplier_test@company.com", "Supplier Test", "Supplier"))
-    print(register(ADMIN_ID, "warehouse_test@company.com", "Warehouse Test", "Warehouse Personnel"))
+    print("--- 0. Reset Test Data ---")
+    reset_test_data()
+
+    print("\n--- 1. Register Users ---")
+    print(register(ADMIN_ID, "wallace@company.com", "Wallace", "Procurement Manager", password="c860c329", user_id="194b1bd8-e13c-461a-8afb-04da92440a8b"))
+    print(register(ADMIN_ID, "johndoe@company.com", "John Doe", "Procurement Manager", password="eda7074c", user_id="dd4f18d8-3859-490f-88fd-330203e15be2"))
+    print(register(ADMIN_ID, "john@fiamma.com.my", "John", "Supplier", password="80290066", user_id="888e4567-e89b-12d3-a456-426614174001"))
+    print(register(ADMIN_ID, "wei@fiamma.com.my", "Wei", "Warehouse Personnel", password="2b3049bf", user_id="444e4567-e89b-12d3-a456-426614174000"))
 
     print("\n--- 2. Search User ---")
     print("Search by name (Wallace):")

@@ -16,13 +16,13 @@ TEST_PR_ID = "PR_202603_00001" # Approved PR
 
 def run_tests():
     print("--- 1. Login Account ---")
-    role, user_id, msg = login(OFFICER_EMAIL, "newpassword456")
+    role, user_id, msg = login(OFFICER_EMAIL, "47bfdea2")
     print(f"Login Result: {msg}, Role: {role}, User ID: {user_id}")
 
     print("\n--- 2. Create PO ---")
     # proc_item example: [{"ITM_001": 10, "ITM_002": 5}, {"ITM_003": 2}]
     # Using item IDs from item.csv
-    proc_item = [{"ITM_001": 10, "ITM_002": 5}]
+    proc_item = [{"ITM_00001": 10, "ITM_00002": 5}]
     print(create_po(TEST_PR_ID, proc_item, OFFICER_ID))
 
 if __name__ == "__main__":

@@ -3,10 +3,10 @@ import os
 
 os.environ["TESTING"] = "true"
 
-# Add the project root to sys.path to allow imports from api
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+# Add the api directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from api.scripts.user_management import register, search_user, modify_role
+from scripts.user_management import register, search_user, modify_role
 from reset_test_data import reset_test_data
 
 # Admin ID from user.csv (Ahmad)

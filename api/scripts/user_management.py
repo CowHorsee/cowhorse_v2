@@ -3,6 +3,7 @@ import bcrypt
 import pandas as pd
 from sharedlib.db_helper.db_ops import DBHelper, get_now
 from sharedlib.rbac_helper.role_permissions_check import RBACGatekeeper
+from sharedlib.email_helper.email import quick_send
 
 db = DBHelper()
 gatekeeper = RBACGatekeeper()
@@ -60,6 +61,18 @@ def register(admin_id, email, name, role_name, password=None, user_id=None):
     
     db.load("user", new_user, mode='append')
     print(f"DEBUG: Temporary Password for {email} is: {raw_password}")
+
+    # Send Welcome Email
+    quick_send(
+        template_type="ACCOUNT_CREATED",
+        recipient_email=email,
+        subject="Welcome to Team Cow Horse - Your Account Details",
+        name=name,
+        email=email,
+        role_name=role_name,
+        temp_password=raw_password
+    )
+
     return "Registration Successful"
 
 def forget_password(user_id):
@@ -73,6 +86,17 @@ def forget_password(user_id):
     
     db.modify("user", {"password_hash": new_hash}, {"user_id": user_id})
     print(f"CONSOLE: User {user_id} password reset to: {new_raw_pw}")
+
+    # Send Reset Email (to the user whose password was reset)
+    user_email = user_df.iloc[0]['email']
+    quick_send(
+        template_type="FORGET_PASSWORD",
+        recipient_email=user_email,
+        subject="Password Reset - Team Cow Horse",
+        user_id=user_id,
+        temp_password=new_raw_pw
+    )
+
     return "Success: Password has been reset."
 
 def modify_role(admin_id, user_id, new_role_name):

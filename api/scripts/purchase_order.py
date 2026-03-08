@@ -39,6 +39,7 @@ def create_po(pr_id, proc_item, user_id):
     """
     Converts a PR into one or more POs based on the proc_item structure.
     proc_item example: [{"ITM_001": 10, "ITM_002": 5}, {"ITM_003": 2}]
+    Returns a list of created po_id strings.
     """
     # 1. Validate PR status
     if not validate_pr_status(pr_id):
@@ -49,6 +50,7 @@ def create_po(pr_id, proc_item, user_id):
     item_master = db.extract("item", fields=["item_id", "supplier_id"])
 
     # 2. Process each PO in the list
+    created_pos = []
     for po_items_dict in proc_item:
         new_po_id = generate_next_po_id()
         
@@ -68,6 +70,7 @@ def create_po(pr_id, proc_item, user_id):
             "created_by": user_id
         }])
         db.load("purchase_order", new_po_header, mode='append')
+        created_pos.append(new_po_id)
 
         # B. Create Bridge Records
         bridge_entries = []
@@ -87,7 +90,7 @@ def create_po(pr_id, proc_item, user_id):
     
     # Optionally: Update PR status to 'Converted' or similar if you add that status
     print(f"Success: {pr_id} converted into {len(proc_item)} Purchase Orders.")
-    return True
+    return created_pos
 
 def get_po_ticket(user_id):
     """Retrieves PO tickets with enriched status and role names."""

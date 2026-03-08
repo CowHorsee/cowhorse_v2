@@ -2,6 +2,7 @@ import pandas as pd
 from datetime import datetime
 from sharedlib.rbac_helper.role_permissions_check import RBACGatekeeper
 from sharedlib.db_helper.db_ops import DBHelper, get_now
+from sharedlib.email_helper.email import quick_send
 
 db = DBHelper()
 gatekeeper = RBACGatekeeper()
@@ -39,7 +40,30 @@ def procurement_alert(item_name, predicted_demand, justification):
     # 2. Check threshold
     if (predicted_demand * THRESHOLD_PERCENTAGE) > current_stock:
         proc_item = {item_name: int(predicted_demand - current_stock)}
-        return create_pr(user_id=None, proc_item=proc_item, justification=justification)
+        result = create_pr(user_id=None, proc_item=proc_item, justification=justification)
+        
+        # Integration 3: Send AI Procurement Alert to all Officers
+        if isinstance(result, dict) and "pr_id" in result:
+            db = DBHelper()
+            # Get All Officers
+            roles = db.extract("dim_role", conditions={"role_name": "Procurement Officer"})
+            if not roles.empty:
+                officer_role_id = roles.iloc[0]['role_id']
+                officers = db.extract("user", conditions={"role_id": int(officer_role_id)})
+                officer_emails = officers['email'].tolist() if not officers.empty else []
+                
+                if officer_emails:
+                    quick_send(
+                        template_type="PROCUREMENT_ALERT",
+                        recipient_email=officer_emails[0],
+                        subject=f"AI Alert: Predicted Shortage for {item_name}",
+                        cc_emails=officer_emails[1:],
+                        item_name=item_name,
+                        predicted_demand=predicted_demand,
+                        current_stock=current_stock,
+                        justification=justification
+                    )
+        return result
     
     return "Stock level sufficient. No PR triggered."
 

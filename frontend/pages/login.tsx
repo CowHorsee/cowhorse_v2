@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useToast } from '../components/ToastProvider';
+import { ApiError } from '../utils/apiClient';
+import { loginUser, mapBackendRole } from '../utils/authApi';
 import { saveUserSession } from '../utils/localStorage';
-import { prototypeUsers } from '../utils/prototypeUsers';
 
 const heroPhrases = [
   'Maximize procurement visibility.',
@@ -27,6 +28,9 @@ export default function LoginPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [typedPhrase, setTypedPhrase] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -96,17 +100,40 @@ export default function LoginPage() {
   }, []);
 
   async function handleLogin() {
+    if (!email || !password) {
+      setLoginError('Email and password are required.');
+      return;
+    }
+
     setIsSubmitting(true);
+    setLoginError('');
 
     try {
-      const defaultPrototypeUser = prototypeUsers[0];
-      saveUserSession(defaultPrototypeUser);
+      const response = await loginUser({ email, password });
+
+      saveUserSession({
+        user_id: response.user_id,
+        role: mapBackendRole(response.role),
+        email,
+        name: email.split('@')[0] || response.user_id,
+      });
+
       showToast({
         title: 'Signed in',
-        description: 'Opening the PPIS dashboard.',
+        description: response.message || 'Opening the PPIS dashboard.',
         variant: 'success',
       });
-      router.push('/');
+      await router.push('/');
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.message : 'Unable to sign in right now.';
+
+      setLoginError(message);
+      showToast({
+        title: 'Sign in failed',
+        description: message,
+        variant: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -208,8 +235,28 @@ export default function LoginPage() {
                   Workspace Access
                 </p>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
-                  Use the secure entry point below to continue to the dashboard.
+                  Use your backend account credentials to continue to the dashboard.
                 </p>
+
+                <div className="mt-4 space-y-3">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@company.com"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
+                  />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Password"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
+                  />
+                  {loginError ? (
+                    <p className="text-sm font-semibold text-brand-red">{loginError}</p>
+                  ) : null}
+                </div>
 
                 <button
                   type="button"
@@ -235,10 +282,10 @@ export default function LoginPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => router.push('/prototype-users')}
+                  onClick={() => router.push('/register')}
                   className="rounded-full bg-brand-red/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-red transition hover:bg-brand-red/20"
                 >
-                  View Users
+                  Register
                 </button>
               </div>
             </div>

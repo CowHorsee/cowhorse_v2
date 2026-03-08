@@ -10,16 +10,12 @@ export type AuthUser = {
   created_at?: string;
 };
 
-type AuthResponse = {
-  message: string;
-  user: AuthUser;
-};
-
 export type RegisterPayload = {
+  admin_id: string;
   name: string;
   email: string;
-  role: UserRole;
-  password: string;
+  role_name: string;
+  password?: string;
 };
 
 export type LoginPayload = {
@@ -27,17 +23,37 @@ export type LoginPayload = {
   password: string;
 };
 
-/** Calls the backend registration endpoint and returns the created user payload. */
+export type LoginResponse = {
+  role: string;
+  user_id: string;
+  message: string;
+};
+
+export function mapBackendRole(roleName: string): UserRole {
+  const normalized = roleName.trim().toLowerCase();
+
+  if (normalized.includes('admin')) {
+    return 'ADMIN';
+  }
+
+  if (normalized.includes('manager')) {
+    return 'MANAGER';
+  }
+
+  return 'EMPLOYEE';
+}
+
+/** Calls the backend registration endpoint and returns backend message text. */
 export function registerUser(payload: RegisterPayload) {
-  return apiRequest<AuthResponse>('/api/user/register', {
+  return apiRequest<string>('/api/user/register', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
-/** Calls the backend login endpoint and returns the authenticated user payload. */
+/** Calls backend login endpoint and returns user_id, role and message. */
 export function loginUser(payload: LoginPayload) {
-  return apiRequest<AuthResponse>('/api/user/login', {
+  return apiRequest<LoginResponse>('/api/user/login', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

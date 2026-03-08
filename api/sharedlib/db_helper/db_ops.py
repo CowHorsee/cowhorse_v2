@@ -1,121 +1,151 @@
 import pandas as pd
 import os
+import logging
 from datetime import datetime
+from azure.data.tables import TableServiceClient, TableClient
+from azure.core.exceptions import ResourceNotFoundError
 
-# Utility to get current timestamp in your specific format
+# Utility to get current timestamp
 def get_now():
     return datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
 
 class DBHelper:
-    def __init__(self, data_dir="data/"):
-        base_path = os.path.dirname(os.path.abspath(__file__))
+    def __init__(self):
+        # Configuration for PartitionKey and RowKey mapping
+        # table_name -> (PartitionKey, RowKeySourceColumn)
+        self.key_map = {
+            "user": ("USER", "user_id"),
+            "dim_role": ("ROLE", "role_id"),
+            "dim_status": ("STATUS", "status_id"),
+            "item": ("ITEM", "item_id"),
+            "purchase_request": ("PR", "pr_id"),
+            "purchase_order": ("PO", "po_id"),
+            "supplier": ("SUPPLIER", "supplier_id"),
+            "warehouse_stock": ("STOCK", "item_id"),
+            "purchase_item_bridge": (None, "item_id") # PK is doc_id, provided at runtime
+        }
         
-        if os.getenv("TESTING") == "true":
-            self.data_dir = os.path.join(base_path, "..", "..", "test_case", "testing_dataset")
+        conn_str = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
+        if not conn_str:
+            # Fallback for local testing if needed, though plan says migrate to Azure
+            logging.warning("AZURE_STORAGE_CONNECTION_STRING not set. DBHelper may fail.")
+            self.service_client = None
         else:
-            self.data_dir = os.path.join(base_path, "..", "..", "dataset")
+            self.service_client = TableServiceClient.from_connection_string(conn_str)
 
-        if not os.path.exists(self.data_dir):
-            os.makedirs(self.data_dir)
-
-    def _get_path(self, table):
-        return os.path.join(self.data_dir, f"{table}.csv")
+    def _get_table_client(self, table):
+        if not self.service_client:
+            raise ConnectionError("Azure Storage Connection String not configured.")
+        table_client = self.service_client.get_table_client(table)
+        try:
+            table_client.create_table()
+        except:
+            pass # Already exists
+        return table_client
 
     def extract(self, table, fields=None, conditions=None):
-        """
-        Extracts data from a CSV.
-        :param fields: List of columns to return (e.g., ['name', 'email'])
-        :param conditions: A dictionary for simple filtering (e.g., {'role_id': 1})
-        """
-        path = self._get_path(table)
-        if not os.path.exists(path):
-            print(f"File {path} does not exist. Returning empty DataFrame.")
-            return pd.DataFrame()
-
-        df = pd.read_csv(path)
-
-        # Apply filtering (Where conditions)
+        """Extracts data from Azure Table Storage and returns a DataFrame."""
+        table_client = self._get_table_client(table)
+        pk_val, rk_col = self.key_map.get(table, ("DATA", "id"))
+        
+        query = ""
+        if pk_val:
+            query = f"PartitionKey eq '{pk_val}'"
+        
         if conditions:
             for key, value in conditions.items():
-                df = df[df[key] == value]
+                # Map original ID name to RowKey if applicable
+                filter_key = "RowKey" if key == rk_col else key
+                
+                # Simple OData filter builder
+                clause = f"{filter_key} eq '{value}'" if isinstance(value, str) else f"{filter_key} eq {value}"
+                query = f"({query}) and ({clause})" if query else clause
 
-        # Select specific fields
+        try:
+            entities = table_client.query_entities(query_filter=query) if query else table_client.list_entities()
+            df = pd.DataFrame(list(entities))
+        except Exception as e:
+            logging.error(f"Error extracting from {table}: {e}")
+            return pd.DataFrame()
+
+        if df.empty:
+            return pd.DataFrame()
+
+        # Aliasing: Restore original ID column from RowKey
+        if rk_col in self.key_map.get(table, (None, None))[1:] or rk_col == self.key_map.get(table, (None, "id"))[1]:
+            df[rk_col] = df["RowKey"]
+        
+        # Cleanup Azure internal columns for clean DataFrame
+        cols_to_drop = ["PartitionKey", "RowKey", "Timestamp", "etag"]
+        df = df.drop(columns=[c for c in cols_to_drop if c in df.columns])
+
         if fields:
-            df = df[fields]
+            # Ensure requested fields exist (might be aliased or original)
+            existing_fields = [f for f in fields if f in df.columns]
+            df = df[existing_fields]
 
         return df
 
     def load(self, table, dataframe, mode='append'):
-        """
-        Loads data into CSV. 
-        :param mode: 'append' to add rows, 'overwrite' to replace the whole file.
-        """
-        path = self._get_path(table)
-        
-        if mode == 'overwrite':
-            dataframe.to_csv(path, index=False)
-        else:
-            # Append mode
-            header = not os.path.exists(path)
+        """Loads data into Azure Table using Upsert logic."""
+        table_client = self._get_table_client(table)
+        pk_val, rk_col = self.key_map.get(table, ("DATA", "id"))
+
+        for _, row in dataframe.iterrows():
+            entity = row.to_dict()
             
-            # Ensure file ends with a newline before appending
-            if not header:
-                with open(path, 'r+b') as f:
-                    f.seek(0, os.SEEK_END)
-                    if f.tell() > 0:
-                        f.seek(-1, os.SEEK_END)
-                        if f.read(1) != b'\n':
-                            f.write(b'\n')
-            
-            dataframe.to_csv(path, mode='a', index=False, header=header)
+            # Set PartitionKey
+            if pk_val:
+                entity["PartitionKey"] = pk_val
+            elif "doc_id" in entity: # Special case for bridge
+                entity["PartitionKey"] = str(entity["doc_id"])
+            else:
+                entity["PartitionKey"] = "DATA"
+
+            # Set RowKey
+            if rk_col in entity:
+                entity["RowKey"] = str(entity[rk_col])
+            else:
+                import uuid
+                entity["RowKey"] = str(uuid.uuid4())
+
+            # Handle NaN/Null for Azure
+            for k, v in entity.items():
+                if pd.isna(v): entity[k] = None
+
+            table_client.upsert_entity(entity)
 
     def modify(self, table, update_values, conditions):
-        """
-        Extracts, updates specific rows based on conditions, and saves back.
-        :param update_values: Dict of columns to update {'status_id': 4}
-        """
-        df = self.extract(table)
-        if df.empty:
-            return
-
-        # Find rows matching conditions
-        mask = pd.Series([True] * len(df))
-        for key, value in conditions.items():
-            mask &= (df[key] == value)
+        """Queries entities, modifies them in DataFrame, and upserts back."""
+        df = self.extract(table, conditions=conditions)
+        if df.empty: return
 
         # Apply updates
         for col, val in update_values.items():
-            df.loc[mask, col] = val
+            df[col] = val
             
-        # Add a common audit field if it exists
         if 'last_modified_at' in df.columns:
-            df.loc[mask, 'last_modified_at'] = get_now()
+            df['last_modified_at'] = get_now()
 
-        self.load(table, df, mode='overwrite')
+        self.load(table, df)
 
     def delete(self, table, conditions):
-        """
-        Removes rows that match the conditions.
-        """
-        df = self.extract(table)
-        if df.empty:
-            return
+        """Deletes entities matching conditions."""
+        table_client = self._get_table_client(table)
+        # Extract to get PK and RK of targets
+        df = self.extract(table, conditions=conditions)
+        if df.empty: return
 
-        # Filter out rows that meet conditions (keep everything else)
-        for key, value in conditions.items():
-            df = df[df[key] != value]
-
-        self.load(table, df, mode='overwrite')
+        pk_val, rk_col = self.key_map.get(table, ("DATA", "id"))
+        
+        for _, row in df.iterrows():
+            rk = str(row[rk_col])
+            pk = pk_val if pk_val else str(row["doc_id"])
+            try:
+                table_client.delete_entity(partition_key=pk, row_key=rk)
+            except ResourceNotFoundError:
+                pass
 
     def upsert(self, table, new_df, id_col):
-        """
-        Update existing records by ID, and insert new ones.
-        """
-        existing_df = self.extract(table)
-        if existing_df.empty:
-            self.load(table, new_df, mode='overwrite')
-            return
-
-        # Combine and drop duplicates keeping the last (the new data)
-        updated_df = pd.concat([existing_df, new_df]).drop_duplicates(subset=[id_col], keep='last')
-        self.load(table, updated_df, mode='overwrite')
+        """Implementation remains similar but redirected to load which uses upsert_entity."""
+        self.load(table, new_df)

@@ -22,7 +22,17 @@ class DBHelper:
             "purchase_order": ("PO", "po_id"),
             "supplier": ("SUPPLIER", "supplier_id"),
             "warehouse_stock": ("STOCK", "item_id"),
-            "purchase_item_bridge": (None, "item_id") # PK is doc_id, provided at runtime
+            "purchase_item_bridge": (None, "item_id")
+        }
+
+        # Alphanumeric mapping for Azure Table naming constraints
+        self.table_name_map = {
+            "dim_role": "dimrole",
+            "dim_status": "dimstatus",
+            "purchase_request": "purchaserequest",
+            "purchase_order": "purchaseorder",
+            "warehouse_stock": "warehousestock",
+            "purchase_item_bridge": "purchaseitembridge"
         }
         
         conn_str = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
@@ -36,7 +46,10 @@ class DBHelper:
     def _get_table_client(self, table):
         if not self.service_client:
             raise ConnectionError("Azure Storage Connection String not configured.")
-        table_client = self.service_client.get_table_client(table)
+        
+        # Use sanitized table name if mapped
+        azure_table_name = self.table_name_map.get(table, table)
+        table_client = self.service_client.get_table_client(azure_table_name)
         try:
             table_client.create_table()
         except:

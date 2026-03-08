@@ -295,7 +295,7 @@ export default function InventoryOverviewChart({
                         : 'border-slate-200 bg-white opacity-60'
                     }`}
                   >
-                    <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-600">
+                    <span className="flex items-center gap-2 text-sm text-slate-600">
                       <span
                         className={`h-2.5 w-2.5 rounded-full ${series.backgroundClassName}`}
                       />

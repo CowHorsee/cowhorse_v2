@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import Card, { CardHeader } from '../components/atoms/Card';
 import DashboardMetricCard from '../components/molecules/DashboardMetricCard';
-import InventoryOverviewChart, {
+import DashboardChart, {
   type InventoryOverviewPoint,
-} from '../components/organisms/InventoryOverviewChart';
+} from '../components/organisms/DashboardChart';
 import RecentPurchaseRequestsPanel from '../components/organisms/RecentPurchaseRequestsPanel';
 import { purchaseRequests } from '../utils/mockdata/purchaseRequestsData';
 
@@ -155,7 +155,7 @@ const Home = () => {
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-7xl flex-col gap-4">
-      <InventoryOverviewChart data={inventoryOverviewData} />
+      <DashboardChart data={inventoryOverviewData} />
 
       <section className="grid flex-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_360px]">
         <Card

@@ -1,17 +1,53 @@
 import type { AppProps } from 'next/app';
 import { useRouter } from 'next/router';
-import AppShell from '../components/AppShell';
+import { useEffect, useState } from 'react';
 import '../styles/globals.css';
+import AppShell from '../components/AppShell';
+import type { AuthUser } from '../utils/authApi';
+import { getUserSession } from '../utils/localStorage';
+import { canAccessPath, getDefaultRouteForUser } from '../utils/rbac';
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [isSessionReady, setIsSessionReady] = useState(false);
   const isAuthPage =
     router.pathname === '/login' || router.pathname === '/register';
 
-  return isAuthPage ? (
-    <Component {...pageProps} />
-  ) : (
-    <AppShell>
+  useEffect(() => {
+    setCurrentUser(getUserSession());
+    setIsSessionReady(true);
+  }, [router.asPath]);
+
+  useEffect(() => {
+    if (!router.isReady || isAuthPage || !isSessionReady) {
+      return;
+    }
+
+    if (!currentUser) {
+      router.replace('/login');
+      return;
+    }
+
+    if (!canAccessPath(router.pathname, currentUser)) {
+      router.replace(getDefaultRouteForUser(currentUser));
+    }
+  }, [currentUser, isAuthPage, isSessionReady, router, router.pathname]);
+
+  if (isAuthPage) {
+    return <Component {...pageProps} />;
+  }
+
+  if (
+    !isSessionReady ||
+    !currentUser ||
+    !canAccessPath(router.pathname, currentUser)
+  ) {
+    return null;
+  }
+
+  return (
+    <AppShell user={currentUser}>
       <Component {...pageProps} />
     </AppShell>
   );

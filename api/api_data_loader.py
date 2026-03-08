@@ -48,7 +48,7 @@ def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:
                 table_client = db._get_table_client(table_name)
                 
                 rows_loaded = 0
-                batch_dict = {} # Keyed by (PartitionKey, RowKey) to prevent duplicates in batch
+                dedup_dict = {} # Keyed by (PartitionKey, RowKey) to ensure unique entities
                 
                 for index, row in df.iterrows():
                     entity = row.to_dict()
@@ -65,7 +65,6 @@ def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:
                     if rk_col in entity and pd.notna(row[rk_col]):
                         entity["RowKey"] = sanitize_key(row[rk_col])
                     else:
-                        # If the expected RK column is missing or NaN, fallback to unique row index
                         entity["RowKey"] = f"row_{index}"
                     
                     # 3. Handle Types & Overflows
@@ -79,19 +78,13 @@ def run_data_loader(req: func.HttpRequest) -> func.HttpResponse:
                             else:
                                 entity[key] = val
 
-                    # Deduplicate within batch by (PK, RK)
-                    batch_key = (entity["PartitionKey"], entity["RowKey"])
-                    batch_dict[batch_key] = ("upsert", entity)
-                    
-                    if len(batch_dict) >= 100:
-                        table_client.submit_transaction(list(batch_dict.values()))
-                        rows_loaded += len(batch_dict)
-                        batch_dict = {}
+                    # Deduplicate: Maintain only the latest version of an entity (PK+RK)
+                    dedup_dict[(entity["PartitionKey"], entity["RowKey"])] = entity
                 
-                # Final batch
-                if batch_dict:
-                    table_client.submit_transaction(list(batch_dict.values()))
-                    rows_loaded += len(batch_dict)
+                # 4. Upload entities individually to handle dynamic PartitionKeys safely
+                for entity in dedup_dict.values():
+                    table_client.upsert_entity(entity=entity)
+                    rows_loaded += 1
                 
                 results[table_name] = f"Loaded {rows_loaded} rows."
 

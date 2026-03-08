@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { AuthUser } from '../utils/authApi';
-import { clearUserSession, getUserSession } from '../utils/authSession';
+import { clearUserSession, getUserSession } from '../utils/localStorage';
 
 import Card from '../components/atoms/Card';
 

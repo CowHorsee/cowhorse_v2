@@ -4,7 +4,7 @@ import Card from '../components/atoms/Card';
 import { useRouter } from 'next/router';
 import { ApiError } from '../utils/apiClient';
 import { loginUser } from '../utils/authApi';
-import { saveUserSession } from '../utils/authSession';
+import { saveUserSession } from '../utils/localStorage';
 
 export default function LoginPage() {
   const router = useRouter();

@@ -3,7 +3,7 @@ import Card from '../../components/atoms/Card';
 import {
   purchaseRequests,
   PurchaseRequest,
-} from '../../utils/purchaseRequestsData';
+} from '../../utils/mockdata/purchaseRequestsData';
 
 type PrDetailsPageProps = {
   purchaseRequest: PurchaseRequest;

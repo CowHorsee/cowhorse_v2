@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import PurchaseOrderList from '../molecules/PurchaseOrderList';
-import type { PurchaseRequest } from '../../utils/purchaseRequestsData';
+import type { PurchaseRequest } from '../../utils/mockdata/purchaseRequestsData';
 import type {
   PurchaseOrderDraft,
   SplitLineItem,

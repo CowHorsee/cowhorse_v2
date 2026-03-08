@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Card from '../../components/atoms/Card';
-import { purchaseRequests } from '../../utils/purchaseRequestsData';
+import { purchaseRequests } from '../../utils/mockdata/purchaseRequestsData';
 
 export default function PrPage() {
   return (

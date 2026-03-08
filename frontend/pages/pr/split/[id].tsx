@@ -1,5 +1,5 @@
 import PoSplitWorkspace from '../../../components/organisms/PoSplitWorkspace';
-import { purchaseRequests } from '../../../utils/purchaseRequestsData';
+import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
 import { buildPoSplitScenario } from '../../../utils/poSplitData';
 
 type PrSplitPageProps = {

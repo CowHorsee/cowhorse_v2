@@ -5,7 +5,7 @@ import InventoryOverviewChart, {
   type InventoryOverviewPoint,
 } from '../components/organisms/InventoryOverviewChart';
 import RecentPurchaseRequestsPanel from '../components/organisms/RecentPurchaseRequestsPanel';
-import { purchaseRequests } from '../utils/purchaseRequestsData';
+import { purchaseRequests } from '../utils/mockdata/purchaseRequestsData';
 
 const inventoryOverviewData: InventoryOverviewPoint[] = [
   {

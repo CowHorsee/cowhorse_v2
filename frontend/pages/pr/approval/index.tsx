@@ -1,29 +1,14 @@
 import Link from 'next/link';
-<<<<<<< HEAD
-import { useMemo, useState } from 'react';
-import Card, { CardHeader } from '../../../components/atoms/Card';
-import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
-=======
 import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { getUserSession } from '../../../utils/localStorage';
 import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
 import { getPrTickets, mapTicketToPurchaseRequest } from '../../../utils/prApi';
->>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
 
 const approvableStatuses = new Set(['Pending Approval', 'In Review']);
 
 export default function PrApprovalListPage() {
   const [searchTerm, setSearchTerm] = useState('');
-<<<<<<< HEAD
-
-  const approvals = useMemo(
-    () =>
-      purchaseRequests.filter((request) =>
-        approvableStatuses.has(request.status)
-      ),
-    []
-=======
   const [requests, setRequests] = useState(purchaseRequests);
 
   useEffect(() => {
@@ -53,7 +38,6 @@ export default function PrApprovalListPage() {
   const approvals = useMemo(
     () => requests.filter((request) => approvableStatuses.has(request.status)),
     [requests]
->>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
   );
 
   const filteredApprovals = useMemo(() => {

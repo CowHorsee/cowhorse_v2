@@ -29,15 +29,35 @@ type ToastContextValue = {
 const toastContext = createContext<ToastContextValue | null>(null);
 
 const toastStyles: Record<ToastVariant, string> = {
-  success: 'border-emerald-200 bg-emerald-50 text-emerald-950',
-  error: 'border-rose-200 bg-rose-50 text-rose-950',
-  info: 'border-sky-200 bg-sky-50 text-sky-950',
+  success:
+    'border-emerald-200/90 bg-gradient-to-br from-white to-emerald-50/70 text-slate-900',
+  error:
+    'border-brand-red/35 bg-gradient-to-br from-white to-rose-50/70 text-slate-900',
+  info: 'border-brand-blue/25 bg-gradient-to-br from-white to-slate-100 text-slate-900',
 };
 
 const toastAccentStyles: Record<ToastVariant, string> = {
   success: 'bg-emerald-500',
-  error: 'bg-rose-500',
-  info: 'bg-sky-500',
+  error: 'bg-brand-red',
+  info: 'bg-brand-blue',
+};
+
+const toastBadgeStyles: Record<ToastVariant, string> = {
+  success: 'bg-emerald-100 text-emerald-700',
+  error: 'bg-rose-100 text-brand-red',
+  info: 'bg-brand-blue/10 text-brand-blue',
+};
+
+const toastIconWrapStyles: Record<ToastVariant, string> = {
+  success: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  error: 'border-brand-red/30 bg-rose-50 text-brand-red',
+  info: 'border-brand-blue/25 bg-brand-blue/5 text-brand-blue',
+};
+
+const toastIcons: Record<ToastVariant, string> = {
+  success: 'OK',
+  error: '!!',
+  info: 'i',
 };
 
 type ToastProviderProps = {
@@ -97,25 +117,39 @@ export function ToastProvider({ children }: ToastProviderProps) {
   return (
     <toastContext.Provider value={{ showToast, dismissToast }}>
       {children}
-      <div className="pointer-events-none fixed right-4 top-4 z-[100] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-3">
+      <div className="pointer-events-none fixed right-4 top-4 z-[100] flex w-[min(25rem,calc(100vw-2rem))] flex-col gap-3">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto overflow-hidden rounded-[24px] border shadow-[0_24px_60px_rgba(15,23,42,0.12)] backdrop-blur ${
+            className={`pointer-events-auto overflow-hidden rounded-[22px] border shadow-[0_20px_55px_rgba(15,23,42,0.14)] backdrop-blur ${
               toastStyles[toast.variant]
             }`}
           >
             <div
               className={`h-1.5 w-full ${toastAccentStyles[toast.variant]}`}
             />
-            <div className="flex items-start gap-4 p-4">
+            <div className="flex items-start gap-3 p-4">
+              <div
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-xs font-black uppercase ${
+                  toastIconWrapStyles[toast.variant]
+                }`}
+                aria-hidden="true"
+              >
+                {toastIcons[toast.variant]}
+              </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-extrabold uppercase tracking-[0.14em]">
+                <p
+                  className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] ${
+                    toastBadgeStyles[toast.variant]
+                  }`}
+                >
                   {toast.variant}
                 </p>
-                <p className="mt-2 text-sm font-semibold">{toast.title}</p>
+                <p className="mt-2 text-[15px] font-bold text-slate-900">
+                  {toast.title}
+                </p>
                 {toast.description ? (
-                  <p className="mt-1 text-sm leading-6 text-slate-700">
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
                     {toast.description}
                   </p>
                 ) : null}
@@ -123,7 +157,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
               <button
                 type="button"
                 onClick={() => dismissToast(toast.id)}
-                className="rounded-full border border-current/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] transition hover:bg-white/60"
+                className="rounded-full border border-slate-300 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-500 transition hover:border-brand-blue hover:text-brand-blue"
               >
                 Close
               </button>

@@ -2,8 +2,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
+<<<<<<< HEAD
 import { getUserSession } from '../../../utils/localStorage';
 import {
+=======
+import { ApiError } from '../../../utils/apiClient';
+import { getUserSession } from '../../../utils/localStorage';
+import {
+  getPrDetails,
+  mergeDetailsIntoPurchaseRequest,
+  reviewPr,
+} from '../../../utils/prApi';
+import {
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
   purchaseRequests,
   type PurchaseRequest,
 } from '../../../utils/mockdata/purchaseRequestsData';
@@ -18,7 +29,13 @@ export default function ManagerApprovalPage({
   purchaseRequest,
 }: ManagerApprovalPageProps) {
   const router = useRouter();
+<<<<<<< HEAD
   const [decision, setDecision] = useState<ApprovalDecision>(null);
+=======
+  const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
+  const [decision, setDecision] = useState<ApprovalDecision>(null);
+  const [decisionMessage, setDecisionMessage] = useState('');
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
 
   useEffect(() => {
     const user = getUserSession();
@@ -28,6 +45,56 @@ export default function ManagerApprovalPage({
     }
   }, [purchaseRequest.id, router]);
 
+<<<<<<< HEAD
+=======
+  useEffect(() => {
+    async function loadDetails() {
+      const user = getUserSession();
+
+      try {
+        const details = await getPrDetails({
+          user_id: user?.user_id,
+          pr_id: purchaseRequest.id,
+        });
+
+        setCurrentRequest(
+          mergeDetailsIntoPurchaseRequest(purchaseRequest, details)
+        );
+      } catch {
+        setCurrentRequest(purchaseRequest);
+      }
+    }
+
+    loadDetails();
+  }, [purchaseRequest]);
+
+  async function handleDecision(nextDecision: 'approve' | 'reject') {
+    const user = getUserSession();
+
+    if (!user?.user_id) {
+      setDecisionMessage('User session is required to submit approval.');
+      return;
+    }
+
+    try {
+      const response = await reviewPr({
+        pr_id: currentRequest.id,
+        decision: nextDecision,
+        manager_id: user.user_id,
+      });
+
+      setDecision(nextDecision === 'approve' ? 'APPROVED' : 'REJECTED');
+      setDecisionMessage(response || 'Decision submitted.');
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to submit review right now.';
+      setDecisionMessage(message);
+    }
+  }
+
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
   return (
     <div className="mx-auto w-full max-w-7xl">
       <Card variant="surface" padding="lg">
@@ -52,7 +119,11 @@ export default function ManagerApprovalPage({
           title={purchaseRequest.id}
           action={
             <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
+<<<<<<< HEAD
               {purchaseRequest.status}
+=======
+              {currentRequest.status}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
             </span>
           }
           subtitleClassName="text-brand-red"
@@ -73,7 +144,11 @@ export default function ManagerApprovalPage({
                   Title
                 </td>
                 <td className="px-4 py-3 text-slate-700">
+<<<<<<< HEAD
                   {purchaseRequest.title}
+=======
+                  {currentRequest.title}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
                 </td>
               </tr>
               <tr>
@@ -81,7 +156,11 @@ export default function ManagerApprovalPage({
                   Department
                 </td>
                 <td className="px-4 py-3 text-slate-700">
+<<<<<<< HEAD
                   {purchaseRequest.department}
+=======
+                  {currentRequest.department}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
                 </td>
               </tr>
               <tr>
@@ -89,7 +168,11 @@ export default function ManagerApprovalPage({
                   Requester
                 </td>
                 <td className="px-4 py-3 text-slate-700">
+<<<<<<< HEAD
                   {purchaseRequest.requester}
+=======
+                  {currentRequest.requester}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
                 </td>
               </tr>
               <tr>
@@ -97,7 +180,11 @@ export default function ManagerApprovalPage({
                   Vendor
                 </td>
                 <td className="px-4 py-3 text-slate-700">
+<<<<<<< HEAD
                   {purchaseRequest.vendor}
+=======
+                  {currentRequest.vendor}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
                 </td>
               </tr>
               <tr>
@@ -105,7 +192,11 @@ export default function ManagerApprovalPage({
                   Amount
                 </td>
                 <td className="px-4 py-3 text-slate-700">
+<<<<<<< HEAD
                   RM {purchaseRequest.amount.toLocaleString()}
+=======
+                  RM {currentRequest.amount.toLocaleString()}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
                 </td>
               </tr>
               <tr>
@@ -113,7 +204,11 @@ export default function ManagerApprovalPage({
                   Last Update
                 </td>
                 <td className="px-4 py-3 text-slate-700">
+<<<<<<< HEAD
                   {purchaseRequest.updatedAt}
+=======
+                  {currentRequest.updatedAt}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
                 </td>
               </tr>
               <tr>
@@ -121,7 +216,11 @@ export default function ManagerApprovalPage({
                   Description
                 </td>
                 <td className="px-4 py-3 text-slate-700">
+<<<<<<< HEAD
                   {purchaseRequest.description}
+=======
+                  {currentRequest.description}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
                 </td>
               </tr>
             </tbody>
@@ -131,14 +230,22 @@ export default function ManagerApprovalPage({
         <div className="mt-5 flex flex-wrap gap-3">
           <button
             type="button"
+<<<<<<< HEAD
             onClick={() => setDecision('APPROVED')}
+=======
+            onClick={() => handleDecision('approve')}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
             className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
           >
             Approve
           </button>
           <button
             type="button"
+<<<<<<< HEAD
             onClick={() => setDecision('REJECTED')}
+=======
+            onClick={() => handleDecision('reject')}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
             className="inline-flex items-center rounded-lg bg-brand-red px-4 py-2 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]"
           >
             Reject
@@ -150,6 +257,12 @@ export default function ManagerApprovalPage({
             Manager decision recorded: {decision}.
           </p>
         ) : null}
+<<<<<<< HEAD
+=======
+        {decisionMessage ? (
+          <p className="mt-2 text-sm text-slate-600">{decisionMessage}</p>
+        ) : null}
+>>>>>>> c29feea16da9cf0dc1b60a04f7912c8d82c668d8
       </Card>
     </div>
   );

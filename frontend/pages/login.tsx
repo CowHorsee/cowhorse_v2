@@ -2,10 +2,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Card, { CardHeader } from '../components/atoms/Card';
+import { useToast } from '../components/ToastProvider';
 import { saveUserSession } from '../utils/localStorage';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [formValues, setFormValues] = useState({
     email: '',
     password: '',
@@ -30,6 +32,11 @@ export default function LoginPage() {
         name: formValues.email || 'Local User',
         email: formValues.email || 'local.user@cowhorse.dev',
         role: 'ADMIN',
+      });
+      showToast({
+        title: 'Signed in',
+        description: 'Redirecting you to the dashboard.',
+        variant: 'success',
       });
       router.push('/');
     } finally {

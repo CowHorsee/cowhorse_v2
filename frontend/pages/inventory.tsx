@@ -199,13 +199,7 @@ export default function InventoryPage() {
   }
 
   function handleCsvExport() {
-    const headers = [
-      'sku',
-      'itemName',
-      'currentStock',
-      'unit',
-      'lastUpdated',
-    ];
+    const headers = ['sku', 'itemName', 'currentStock', 'unit', 'lastUpdated'];
     const csvBody = items.map((item) =>
       toCsvRow([
         item.sku,

@@ -29,36 +29,7 @@ export default function ProfilePage() {
         </h1>
       </section>
 
-      {!user ? (
-        <section className="mb-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
-          <p className="text-sm font-semibold text-brand-blue">
-            No active session found.
-          </p>
-          <p className="mt-2 text-sm text-slate-600">
-            Sign in through the login page to load profile data from the API.
-          </p>
-        </section>
-      ) : (
-        <section className="mb-6 flex items-center justify-between rounded-xl bg-slate-50 p-4">
-          <div>
-            <p className="text-sm font-semibold text-brand-blue">
-              Signed in as {user.email}
-            </p>
-            <p className="mt-1 text-sm text-slate-600">
-              This profile is populated from the API login response.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue"
-          >
-            Sign Out
-          </button>
-        </section>
-      )}
-
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="grid gap-4">
         <Card as="article" variant="base" padding="lg">
           <CardHeader
             title="Account"
@@ -74,20 +45,16 @@ export default function ProfilePage() {
           <p className="mt-2 text-sm text-slate-700">
             Role: {user?.role || 'Not available'}
           </p>
-        </Card>
-        <Card as="article" variant="base" padding="lg">
-          <CardHeader
-            title="Approval settings"
-            className="mb-0"
-            titleClassName="text-lg"
-          />
-          <p className="mt-3 text-sm text-slate-700">
-            Preferred category: IT Procurement
-          </p>
-          <p className="mt-2 text-sm text-slate-700">Notification: Instant</p>
-          <p className="mt-2 text-sm text-slate-700">
-            Timezone: Asia/Kuala_Lumpur
-          </p>
+
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue"
+            >
+              Sign Out
+            </button>
+          </div>
         </Card>
       </section>
     </div>

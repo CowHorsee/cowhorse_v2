@@ -15,6 +15,7 @@ import {
 // } from '../utils/api/userManagementApi';
 
 const roleOptions: UserRole[] = ['ADMIN', 'MANAGER', 'WAREHOUSE', 'EMPLOYEE'];
+const roleOptions: UserRole[] = ['ADMIN', 'MANAGER', 'WAREHOUSE', 'EMPLOYEE'];
 
 type RoleDropdownProps = {
   value: UserRole;
@@ -91,6 +92,7 @@ function RoleDropdown({ value, onChange, compact = false }: RoleDropdownProps) {
 export default function UsersPage() {
   const [users, setUsers] = useState<ManagedUser[]>(initialManagedUsers);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
@@ -151,7 +153,7 @@ export default function UsersPage() {
     });
   }
 
-  function confirmEditingRow() {
+  async function confirmEditingRow() {
     if (!editingUserId || !editDraft) {
       return;
     }
@@ -189,25 +191,25 @@ export default function UsersPage() {
     //   return;
     // }
 
-    setUsers((currentUsers) =>
-      currentUsers.map((user) =>
-        user.user_id === editingUserId
-          ? {
-              ...user,
-              name: normalizedName,
-              email: normalizedEmail,
-              role: editDraft.role,
-            }
-          : user
-      )
-    );
+      setUsers((currentUsers) =>
+        currentUsers.map((user) =>
+          user.user_id === editingUserId
+            ? {
+                ...user,
+                name: normalizedName,
+                email: normalizedEmail,
+                role: editDraft.role,
+              }
+            : user
+        )
+      );
 
     setFeedbackMessage(`User ${editingUserId} updated (mock mode).`);
     setEditingUserId(null);
     setEditDraft(null);
   }
 
-  function handleAddUser(event: FormEvent<HTMLFormElement>) {
+  async function handleAddUser(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFeedbackMessage('');
 
@@ -277,6 +279,7 @@ export default function UsersPage() {
               Total Users
             </p>
             <p className="mt-2 text-3xl font-semibold text-brand-blue">
+              {isLoadingUsers ? '...' : users.length}
               {isLoadingUsers ? '...' : users.length}
             </p>
           </Card>

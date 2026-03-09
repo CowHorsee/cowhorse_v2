@@ -104,6 +104,10 @@ function buildUrl(path: string) {
   return `${getApiBaseUrl()}${normalizedPath}`;
 }
 
+function isLiveApiEnabled() {
+  return process.env.NEXT_PUBLIC_ENABLE_API_CALLS === 'true';
+}
+
 /** Parses JSON responses safely and falls back to null for non-JSON bodies. */
 function tryParseJson(text: string): JsonValue | null {
   if (!text) {

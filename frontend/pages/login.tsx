@@ -24,6 +24,9 @@ function LoadingSpinner() {
 export default function LoginPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [typedPhrase, setTypedPhrase] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -104,7 +107,13 @@ export default function LoginPage() {
   }
 
   async function handleLogin() {
+    if (!email || !password) {
+      setLoginError('Email and password are required.');
+      return;
+    }
+
     setIsSubmitting(true);
+    setLoginError('');
 
     try {
       const email = formValues.email || 'guest@cowhorse.local';
@@ -184,7 +193,7 @@ export default function LoginPage() {
                 Welcome Back
               </p>
               <h2 className="mt-3 font-heading text-4xl font-semibold tracking-[-0.02em] text-brand-blue">
-                Sign in to PPIS
+                Login to PPIS
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
                 Enter your account credentials to continue to the dashboard.

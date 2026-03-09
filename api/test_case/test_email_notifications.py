@@ -44,7 +44,7 @@ def load_env():
 # Load environment before importing EmailHelper logic
 load_env()
 
-TARGET_EMAIL = "ashley@gmail.com"
+TARGET_EMAIL = "cashley2705@gmail.com"
 DUMMY_PDF = os.path.join(api_dir, "test_case/test_pdf_output/test_pr_20260308_194010.pdf")
 
 def test_all_emails():
@@ -58,7 +58,7 @@ def test_all_emails():
         template_name="email_templates.html",
         template_data={
             "template_type": "ACCOUNT_CREATED",
-            "name": "Ashley",
+            "name": "Ashley Chan",
             "email": TARGET_EMAIL,
             "role_name": "Procurement Manager",
             "temp_password": "HackathonUser2026!",

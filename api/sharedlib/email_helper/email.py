@@ -66,19 +66,34 @@ class EmailHelper:
 
             # 5. Send email
             context = ssl.create_default_context()
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                server.starttls(context=context)
-                server.login(self.username, self.password)
-                
-                # Combine all recipients for the SMTP send command
-                all_recipients = [recipient_email]
-                if cc_emails:
-                    if isinstance(cc_emails, list):
-                        all_recipients.extend(cc_emails)
-                    else:
-                        all_recipients.append(cc_emails)
+            
+            if self.smtp_port == 465:
+                # SSL/TLS directly (Port 465)
+                with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port, context=context, timeout=15) as server:
+                    server.login(self.username, self.password)
                     
-                server.sendmail(from_email, all_recipients, msg.as_string())
+                    all_recipients = [recipient_email]
+                    if cc_emails:
+                        if isinstance(cc_emails, list):
+                            all_recipients.extend(cc_emails)
+                        else:
+                            all_recipients.append(cc_emails)
+                    
+                    server.sendmail(from_email, all_recipients, msg.as_string())
+            else:
+                # STARTTLS (Port 587)
+                with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=15) as server:
+                    server.starttls(context=context)
+                    server.login(self.username, self.password)
+                    
+                    all_recipients = [recipient_email]
+                    if cc_emails:
+                        if isinstance(cc_emails, list):
+                            all_recipients.extend(cc_emails)
+                        else:
+                            all_recipients.append(cc_emails)
+                    
+                    server.sendmail(from_email, all_recipients, msg.as_string())
             
             logging.info(f"Email sent successfully to {recipient_email}")
             return True

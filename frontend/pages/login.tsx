@@ -221,24 +221,10 @@ export default function LoginPage() {
                 Welcome Back
               </p>
               <h2 className="mt-3 font-heading text-4xl font-semibold tracking-[-0.02em] text-brand-blue">
-                Sign in to PPIS
+                Login to PPIS
               </h2>
-              <p className="mt-4 text-sm leading-7 text-slate-600">
-                Enter the procurement workspace. For now, this opens the
-                dashboard directly.
-              </p>
-            </div>
 
-            <div className="mt-10 rounded-[28px] border border-slate-200 bg-[#FBFBFD] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-              <div className="rounded-[24px] border border-brand-blue/10 bg-white p-5">
-                <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-brand-blue/45">
-                  Workspace Access
-                </p>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  Use your backend account credentials to continue to the dashboard.
-                </p>
-
-                <div className="mt-4 space-y-3">
+              <div className="mt-4 space-y-3">
                   <input
                     type="email"
                     value={email}
@@ -269,25 +255,6 @@ export default function LoginPage() {
                     {isSubmitting ? 'Opening Dashboard...' : 'Log In'}
                   </span>
                 </button>
-              </div>
-
-              <div className="mt-5 flex items-center justify-between gap-4 rounded-[20px] bg-brand-blue/[0.03] px-4 py-3">
-                <div>
-                  <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-blue/45">
-                    Access Mode
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-brand-blue">
-                    Local prototype sign-in enabled
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => router.push('/register')}
-                  className="rounded-full bg-brand-red/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-red transition hover:bg-brand-red/20"
-                >
-                  Register
-                </button>
-              </div>
             </div>
           </div>
         </section>

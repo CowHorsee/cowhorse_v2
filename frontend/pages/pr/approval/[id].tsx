@@ -19,6 +19,7 @@ export default function ManagerApprovalPage({
 }: ManagerApprovalPageProps) {
   const router = useRouter();
   const [decision, setDecision] = useState<ApprovalDecision>(null);
+  const [managerComment, setManagerComment] = useState('');
 
   useEffect(() => {
     const user = getUserSession();
@@ -31,7 +32,7 @@ export default function ManagerApprovalPage({
   return (
     <div className="mx-auto w-full max-w-7xl">
       <Card variant="surface" padding="lg">
-        <div className="mb-3 flex items-center justify-end">
+        <div className="mb-3 flex items-center">
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
             <Link href="/pr">
               <a className="transition hover:text-brand-blue">PR Board</a>
@@ -42,13 +43,11 @@ export default function ManagerApprovalPage({
                 {purchaseRequest.id}
               </a>
             </Link>
-            <span className="mx-1.5 text-slate-400">/</span>
-            <span className="text-brand-blue">Manager Approval</span>
           </div>
         </div>
 
         <CardHeader
-          subtitle="Manager approval"
+          subtitle="Purchase request details"
           title={purchaseRequest.id}
           action={
             <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
@@ -61,12 +60,6 @@ export default function ManagerApprovalPage({
 
         <div className="overflow-x-auto rounded-2xl border border-slate-200">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">Field</th>
-                <th className="px-4 py-3">Value</th>
-              </tr>
-            </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               <tr>
                 <td className="px-4 py-3 font-semibold text-brand-blue">
@@ -128,7 +121,24 @@ export default function ManagerApprovalPage({
           </table>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-5">
+          <label
+            htmlFor="manager-comment"
+            className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500"
+          >
+            Manager comment
+          </label>
+          <textarea
+            id="manager-comment"
+            value={managerComment}
+            onChange={(event) => setManagerComment(event.target.value)}
+            rows={4}
+            placeholder="Add your approval or rejection notes"
+            className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand-blue"
+          />
+        </div>
+
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
           <button
             type="button"
             onClick={() => setDecision('APPROVED')}
@@ -147,7 +157,8 @@ export default function ManagerApprovalPage({
 
         {decision ? (
           <p className="mt-3 text-sm font-semibold text-brand-blue">
-            Manager decision recorded: {decision}.
+            Manager decision recorded: {decision}
+            {managerComment.trim() ? ` - ${managerComment.trim()}` : '.'}
           </p>
         ) : null}
       </Card>

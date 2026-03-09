@@ -49,12 +49,6 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
         />
         <div className="overflow-x-auto rounded-2xl border border-slate-200">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">Field</th>
-                <th className="px-4 py-3">Value</th>
-              </tr>
-            </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               <tr>
                 <td className="px-4 py-3 font-semibold text-brand-blue">

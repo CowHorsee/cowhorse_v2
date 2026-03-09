@@ -40,6 +40,10 @@ function buildUrl(path: string) {
   return `${getApiBaseUrl()}${normalizedPath}`;
 }
 
+function isLiveApiEnabled() {
+  return process.env.NEXT_PUBLIC_ENABLE_API_CALLS === 'true';
+}
+
 /** Parses JSON responses safely and falls back to null for non-JSON bodies. */
 function tryParseJson(text: string): JsonValue | null {
   if (!text) {
@@ -60,6 +64,14 @@ export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {}
 ): Promise<T> {
+  if (!isLiveApiEnabled()) {
+    throw new ApiError(
+      'Live API calls are disabled. Set NEXT_PUBLIC_ENABLE_API_CALLS=true after backend endpoints are available.',
+      503,
+      null
+    );
+  }
+
   const response = await fetch(buildUrl(path), {
     method: options.method || 'GET',
     headers: {

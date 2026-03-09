@@ -1,6 +1,28 @@
 import { apiRequest } from './apiClient';
 import type { PurchaseRequest, PurchaseRequestStatus } from './mockdata/purchaseRequestsData';
 
+export type PrStatusFilter = 1 | 2 | 3 | 4;
+
+export type PrItemQuantityMap = Record<string, number>;
+
+export type CreatePrPayload = {
+  user_id: string;
+  proc_item: PrItemQuantityMap;
+  justification: string;
+};
+
+export type ModifyPrPayload = {
+  user_id: string;
+  pr_id: string;
+  proc_item: PrItemQuantityMap;
+  justification: string;
+};
+
+export type AcceptPrSuggestionPayload = {
+  pr_id: string;
+  officer_id: string;
+};
+
 type PrTicketRow = {
   pr_id?: string;
   status_name?: string;
@@ -32,7 +54,11 @@ function toStringValue(value: unknown, fallback: string): string {
   return typeof value === 'string' && value.trim() ? value : fallback;
 }
 
-export function getPrTickets(params: { user_id?: string; pr_id?: string; status?: string }) {
+export function getPrTickets(params: {
+  user_id?: string;
+  pr_id?: string;
+  status?: PrStatusFilter;
+}) {
   const query = new URLSearchParams();
 
   if (params.user_id) {
@@ -42,24 +68,46 @@ export function getPrTickets(params: { user_id?: string; pr_id?: string; status?
     query.set('pr_id', params.pr_id);
   }
   if (params.status) {
-    query.set('status', params.status);
+    query.set('status', String(params.status));
   }
 
   const suffix = query.toString() ? `?${query.toString()}` : '';
   return apiRequest<PrTicketRow[]>(`/api/pr/get_pr_ticket${suffix}`);
 }
 
-export function getPrDetails(params: { user_id?: string; pr_id: string }) {
+export function getPrDetails(params: { user_id: string; pr_id: string }) {
   const query = new URLSearchParams();
 
-  if (params.user_id) {
-    query.set('user_id', params.user_id);
-  }
+  query.set('user_id', params.user_id);
   query.set('pr_id', params.pr_id);
 
   return apiRequest<PrDetailsResponse | string>(
     `/api/pr/get_pr_details?${query.toString()}`
   );
+}
+
+export function createPr(payload: CreatePrPayload) {
+  return apiRequest<{ pr_id?: string; status?: number; items?: unknown[] }>(
+    '/api/pr/create_pr',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+export function modifyPr(payload: ModifyPrPayload) {
+  return apiRequest<string>('/api/pr/modify_pr', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function acceptPrSuggestion(payload: AcceptPrSuggestionPayload) {
+  return apiRequest<string>('/api/pr/accept_pr_suggestion', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 export function reviewPr(payload: {

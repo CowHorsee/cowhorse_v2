@@ -40,13 +40,15 @@ jobs:
       - name: Zip artifact for deployment
         run: |
           cd "${{ env.FUNCTION_APP_PROJECT_PATH }}"
-          zip -r ../release.zip . -x "venv/*" ".venv/*" "__pycache__/*" "*.pyc"
+          zip -r ../release.zip .
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: release.zip
+          path: |
+            release.zip
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
@@ -58,11 +60,16 @@ jobs:
         with:
           name: python-app
 
+      - name: Unzip artifact for deployment
+        run: |
+          unzip release.zip
+          rm release.zip
+        
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
         id: deploy-to-function
         with:
           app-name: 'cow-horse-procurement'
           slot-name: 'Production'
-          package: 'release.zip'
+          package: '.'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1BB182F19E954D519C66521590189A96 }}

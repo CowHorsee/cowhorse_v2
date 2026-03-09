@@ -1,53 +1,40 @@
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
-import Card, { CardHeader } from '../../../components/atoms/Card';
-import { getUserSession } from '../../../utils/localStorage';
-import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
-import { getPrTickets, mapTicketToPurchaseRequest } from '../../../utils/prApi';
 import { useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
+// import { getUserSession } from '../../../utils/localStorage';
+// import { getPrTickets, mapTicketToPurchaseRequest } from '../../../utils/prApi';
 
 const approvableStatuses = new Set(['Pending Approval', 'In Review']);
 
 export default function PrApprovalListPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [requests, setRequests] = useState(purchaseRequests);
-
-  useEffect(() => {
-    async function loadRequests() {
-      const sessionUser = getUserSession();
-
-      try {
-        const rows = await getPrTickets({ user_id: sessionUser?.user_id });
-        if (rows.length) {
-          setRequests(
-            rows.map((row) =>
-              mapTicketToPurchaseRequest(
-                row,
-                purchaseRequests.find((item) => item.id === row.pr_id)
-              )
-            )
-          );
-        }
-      } catch {
-        setRequests(purchaseRequests);
-      }
-    }
-
-    loadRequests();
-  }, []);
+  const [requests] = useState(purchaseRequests);
+  // useEffect(() => {
+  //   async function loadRequests() {
+  //     const sessionUser = getUserSession();
+  //     try {
+  //       const rows = await getPrTickets({ user_id: sessionUser?.user_id });
+  //       if (rows.length) {
+  //         setRequests(
+  //           rows.map((row) =>
+  //             mapTicketToPurchaseRequest(
+  //               row,
+  //               purchaseRequests.find((item) => item.id === row.pr_id)
+  //             )
+  //           )
+  //         );
+  //       }
+  //     } catch {
+  //       setRequests(purchaseRequests);
+  //     }
+  //   }
+  //   loadRequests();
+  // }, []);
 
   const approvals = useMemo(
     () => requests.filter((request) => approvableStatuses.has(request.status)),
     [requests]
-
-  const approvals = useMemo(
-    () =>
-      purchaseRequests.filter((request) =>
-        approvableStatuses.has(request.status)
-      ),
-    []
   );
 
   const filteredApprovals = useMemo(() => {
@@ -84,24 +71,6 @@ export default function PrApprovalListPage() {
             </p>
             <p className="mt-2 text-3xl font-semibold text-brand-red">
               {approvals.length}
-            </p>
-          </Card>
-
-          <Card variant="soft" padding="md">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-              Visible Rows
-            </p>
-            <p className="mt-2 text-3xl font-semibold text-brand-blue">
-              {filteredApprovals.length}
-            </p>
-          </Card>
-
-          <Card variant="soft" padding="md">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-              Flow
-            </p>
-            <p className="mt-2 text-sm font-semibold text-slate-700">
-              Select a PR below to open approval detail.
             </p>
           </Card>
         </div>

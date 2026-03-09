@@ -1,12 +1,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { getUserSession } from '../../utils/localStorage';
-import {
-  getPrDetails,
-  mergeDetailsIntoPurchaseRequest,
-} from '../../utils/prApi';
+// import { getPrDetails, mergeDetailsIntoPurchaseRequest } from '../../utils/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -18,7 +15,6 @@ type PrDetailsPageProps = {
 
 export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
   const router = useRouter();
-  const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
 
   useEffect(() => {
     const user = getUserSession();
@@ -28,26 +24,21 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
     }
   }, [purchaseRequest.id, router]);
 
-  useEffect(() => {
-    async function loadDetails() {
-      const user = getUserSession();
-
-      try {
-        const details = await getPrDetails({
-          user_id: user?.user_id,
-          pr_id: purchaseRequest.id,
-        });
-
-        setCurrentRequest(
-          mergeDetailsIntoPurchaseRequest(purchaseRequest, details)
-        );
-      } catch {
-        setCurrentRequest(purchaseRequest);
-      }
-    }
-
-    loadDetails();
-  }, [purchaseRequest]);
+  // useEffect(() => {
+  //   async function loadDetails() {
+  //     const user = getUserSession();
+  //     try {
+  //       const details = await getPrDetails({
+  //         user_id: user?.user_id,
+  //         pr_id: purchaseRequest.id,
+  //       });
+  //       setCurrentRequest(mergeDetailsIntoPurchaseRequest(purchaseRequest, details));
+  //     } catch {
+  //       setCurrentRequest(purchaseRequest);
+  //     }
+  //   }
+  //   loadDetails();
+  // }, [purchaseRequest]);
 
   return (
     <div className="mx-auto w-full max-w-7xl">
@@ -68,10 +59,6 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
           titleClassName="text-lg"
         />
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Department</p>
-          <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.department}
-          </strong>
         </div>
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-slate-600">Requester</p>
@@ -86,28 +73,28 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
           </strong>
         </div>
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Vendor</p>
+          <p className="text-sm text-slate-600">Item  1 </p>
           <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.vendor}
+            Faber Chimney Hood - 99
           </strong>
         </div>
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Amount</p>
+          <p className="text-sm text-slate-600">Item  2 </p>
           <strong className="font-semibold text-brand-blue">
-            RM {purchaseRequest.amount.toLocaleString()}
+            Elba Built-in Gas Hob - 19
           </strong>
         </div>
-        <div className="flex flex-col py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Last update</p>
+                <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-slate-600">Total Amount (RM)</p>
           <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.updatedAt}
+            {purchaseRequest.amount.toLocaleString()}
           </strong>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-3">
           <Link href={`/pr/split/${purchaseRequest.id}`}>
             <a className="inline-flex items-center rounded-lg bg-brand-red px-4 py-2 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]">
-              Split into POs
+              Send For Approval
             </a>
           </Link>
         </div>

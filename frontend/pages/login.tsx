@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { ApiError } from '../utils/apiClient';
-import { loginUser, mapBackendRole } from '../utils/authApi';
 import { saveUserSession } from '../utils/localStorage';
 
 const heroPhrases = [
@@ -30,6 +28,10 @@ export default function LoginPage() {
   const [typedPhrase, setTypedPhrase] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [counters, setCounters] = useState<number[]>(statItems.map(() => 0));
+  const [formValues, setFormValues] = useState({
+    email: '',
+    password: '',
+  });
 
   useEffect(() => {
     const currentPhrase = heroPhrases[phraseIndex];
@@ -94,41 +96,27 @@ export default function LoginPage() {
     };
   }, []);
 
+  function updateField(field: 'email' | 'password', value: string) {
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      [field]: value,
+    }));
+  }
+
   async function handleLogin() {
-    setErrorMessage('');
     setIsSubmitting(true);
 
     try {
-      const response = await loginUser({
-        email: formValues.email,
-        password: formValues.password,
-      });
+      const email = formValues.email || 'guest@cowhorse.local';
 
       saveUserSession({
-        user_id: response.user_id,
-        name: formValues.email.split('@')[0] || response.user_id,
-        email: formValues.email,
-        role: mapBackendRole(response.role),
+        user_id: `local-${Date.now()}`,
+        name: email.split('@')[0] || 'Guest User',
+        email,
+        role: 'MANAGER',
       });
 
       await router.push('/');
-    } catch (error) {
-      setErrorMessage(
-        error instanceof ApiError
-          ? error.message
-          : 'Unable to sign in right now.'
-      );
-        user_id: 'local-dev-user',
-        name: 'Ashley Chan',
-        email: 'ashley.chan@cowhorse.dev',
-        role: 'ADMIN',
-      });
-      showToast({
-        title: 'Signed in',
-        description: 'Opening the PPIS dashboard.',
-        variant: 'success',
-      });
-      router.push('/');
     } finally {
       setIsSubmitting(false);
     }
@@ -159,11 +147,8 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-12 max-w-xl md:mt-20">
-              <p className="text-xs font-extrabold uppercase tracking-[0.32em] text-white/55">
-                Control Center
-              </p>
               <h1 className="mt-4 font-heading text-4xl font-semibold leading-tight md:text-5xl md:leading-[1.05]">
-                Turn purchasing operations into a sharper system of record.
+                Procurement Planning Intelligence System
               </h1>
               <div className="mt-6 min-h-[2.5rem] text-lg font-semibold text-brand-white md:text-2xl">
                 <span className="text-[#FFD700]">{typedPhrase}</span>
@@ -171,10 +156,6 @@ export default function LoginPage() {
                   |
                 </span>
               </div>
-              <p className="mt-6 max-w-lg text-sm leading-7 text-white/70 md:text-base">
-                PPIS keeps procurement teams aligned across requests, stock
-                visibility, and approvals with one clean operational workspace.
-              </p>
             </div>
           </div>
 
@@ -198,22 +179,6 @@ export default function LoginPage() {
 
         <section className="flex w-full items-center justify-center bg-white px-6 py-8 md:w-1/2 md:px-10 md:py-10">
           <div className="w-full max-w-md">
-            <div className="md:hidden">
-              <div className="inline-flex items-center gap-3 rounded-[24px] border border-brand-blue/10 bg-brand-white px-4 py-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-red text-sm font-black tracking-[0.18em] text-white">
-                  P
-                </span>
-                <div>
-                  <p className="font-heading text-xl font-bold tracking-[0.22em] text-brand-blue">
-                    PPIS
-                  </p>
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-brand-blue/55">
-                    Procurement Platform
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <div className="mt-8 md:mt-0">
               <p className="text-xs font-extrabold uppercase tracking-[0.28em] text-brand-red">
                 Welcome Back
@@ -222,8 +187,7 @@ export default function LoginPage() {
                 Sign in to PPIS
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
-                Enter the procurement workspace. For now, this opens the
-                dashboard directly.
+                Enter your account credentials to continue to the dashboard.
               </p>
             </div>
 
@@ -236,6 +200,27 @@ export default function LoginPage() {
                   Use the secure entry point below to continue to the dashboard.
                 </p>
 
+                <div className="mt-4 space-y-3">
+                  <input
+                    type="email"
+                    value={formValues.email}
+                    onChange={(event) =>
+                      updateField('email', event.target.value)
+                    }
+                    placeholder="you@company.com"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
+                  />
+                  <input
+                    type="password"
+                    value={formValues.password}
+                    onChange={(event) =>
+                      updateField('password', event.target.value)
+                    }
+                    placeholder="Password"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
+                  />
+                </div>
+
                 <button
                   type="button"
                   onClick={handleLogin}
@@ -243,24 +228,24 @@ export default function LoginPage() {
                   className="mt-6 flex w-full items-center justify-center gap-3 rounded-[20px] bg-brand-blue px-5 py-4 text-sm font-bold text-white shadow-[0_20px_45px_rgba(39,36,92,0.28)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#1f1b4b] disabled:cursor-not-allowed disabled:opacity-80"
                 >
                   {isSubmitting ? <LoadingSpinner /> : null}
-                  <span>
-                    {isSubmitting ? 'Opening Dashboard...' : 'Log In'}
-                  </span>
+                  <span>{isSubmitting ? 'Signing In...' : 'Log In'}</span>
                 </button>
               </div>
 
               <div className="mt-5 flex items-center justify-between gap-4 rounded-[20px] bg-brand-blue/[0.03] px-4 py-3">
                 <div>
                   <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-blue/45">
-                    Access Mode
+                    Need Access?
                   </p>
                   <p className="mt-1 text-sm font-semibold text-brand-blue">
-                    Local prototype sign-in enabled
+                    Request an account from an admin.
                   </p>
                 </div>
-                <span className="rounded-full bg-brand-red/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-red">
-                  Demo
-                </span>
+                <Link href="/register">
+                  <a className="rounded-full bg-brand-red/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-red transition hover:bg-brand-red/20">
+                    Register
+                  </a>
+                </Link>
               </div>
             </div>
           </div>

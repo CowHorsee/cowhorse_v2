@@ -9,7 +9,6 @@ type DashboardMetricCardProps = {
 export default function DashboardMetricCard({
   label,
   value,
-  description,
 }: DashboardMetricCardProps) {
   return (
     <Card as="article" variant="soft" padding="md">
@@ -20,9 +19,6 @@ export default function DashboardMetricCard({
         subtitleClassName="text-slate-500"
         titleClassName="mt-2 text-3xl"
       />
-      {description ? (
-        <p className="mt-2 text-sm text-slate-600">{description}</p>
-      ) : null}
     </Card>
   );
 }

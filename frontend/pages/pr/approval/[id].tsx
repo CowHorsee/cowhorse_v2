@@ -1,17 +1,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { getUserSession } from '../../../utils/localStorage';
-import { ApiError } from '../../../utils/apiClient';
-import { getUserSession } from '../../../utils/localStorage';
-import {
-  getPrDetails,
-  mergeDetailsIntoPurchaseRequest,
-  reviewPr,
-} from '../../../utils/prApi';
+// import { ApiError } from '../../../utils/apiClient';
+// import {
+//   getPrDetails,
+//   mergeDetailsIntoPurchaseRequest,
+//   reviewPr,
+// } from '../../../utils/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -27,7 +24,6 @@ export default function ManagerApprovalPage({
   purchaseRequest,
 }: ManagerApprovalPageProps) {
   const router = useRouter();
-  const router = useRouter();
   const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
   const [decision, setDecision] = useState<ApprovalDecision>(null);
   const [decisionMessage, setDecisionMessage] = useState('');
@@ -40,60 +36,49 @@ export default function ManagerApprovalPage({
     }
   }, [purchaseRequest.id, router]);
 
-  useEffect(() => {
-    async function loadDetails() {
-      const user = getUserSession();
-
-      try {
-        const details = await getPrDetails({
-          user_id: user?.user_id,
-          pr_id: purchaseRequest.id,
-        });
-
-        setCurrentRequest(
-          mergeDetailsIntoPurchaseRequest(purchaseRequest, details)
-        );
-      } catch {
-        setCurrentRequest(purchaseRequest);
-      }
-    }
-
-    loadDetails();
-  }, [purchaseRequest]);
+  // useEffect(() => {
+  //   async function loadDetails() {
+  //     const user = getUserSession();
+  //     try {
+  //       const details = await getPrDetails({
+  //         user_id: user?.user_id,
+  //         pr_id: purchaseRequest.id,
+  //       });
+  //       setCurrentRequest(
+  //         mergeDetailsIntoPurchaseRequest(purchaseRequest, details)
+  //       );
+  //     } catch {
+  //       setCurrentRequest(purchaseRequest);
+  //     }
+  //   }
+  //   loadDetails();
+  // }, [purchaseRequest]);
 
   async function handleDecision(nextDecision: 'approve' | 'reject') {
-    const user = getUserSession();
+    // const user = getUserSession();
+    // if (!user?.user_id) {
+    //   setDecisionMessage('User session is required to submit approval.');
+    //   return;
+    // }
+    // try {
+    //   const response = await reviewPr({
+    //     pr_id: currentRequest.id,
+    //     decision: nextDecision,
+    //     manager_id: user.user_id,
+    //   });
+    //   setDecision(nextDecision === 'approve' ? 'APPROVED' : 'REJECTED');
+    //   setDecisionMessage(response || 'Decision submitted.');
+    // } catch (error) {
+    //   const message =
+    //     error instanceof ApiError
+    //       ? error.message
+    //       : 'Unable to submit review right now.';
+    //   setDecisionMessage(message);
+    // }
 
-    if (!user?.user_id) {
-      setDecisionMessage('User session is required to submit approval.');
-      return;
-    }
-
-    try {
-      const response = await reviewPr({
-        pr_id: currentRequest.id,
-        decision: nextDecision,
-        manager_id: user.user_id,
-      });
-
-      setDecision(nextDecision === 'approve' ? 'APPROVED' : 'REJECTED');
-      setDecisionMessage(response || 'Decision submitted.');
-    } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? error.message
-          : 'Unable to submit review right now.';
-      setDecisionMessage(message);
-    }
+    setDecision(nextDecision === 'approve' ? 'APPROVED' : 'REJECTED');
+    setDecisionMessage('Decision submitted in mock mode.');
   }
-
-  useEffect(() => {
-    const user = getUserSession();
-
-    if (user?.role !== 'MANAGER' && user?.role !== 'ADMIN') {
-      router.replace(`/pr/${purchaseRequest.id}`);
-    }
-  }, [purchaseRequest.id, router]);
 
   return (
     <div className="mx-auto w-full max-w-7xl">
@@ -105,9 +90,6 @@ export default function ManagerApprovalPage({
             </Link>
             <span className="mx-1.5 text-slate-400">/</span>
             <Link href={`/pr/${purchaseRequest.id}`}>
-              <a className="transition hover:text-brand-blue">
-                {purchaseRequest.id}
-              </a>
               <a className="transition hover:text-brand-blue">
                 {purchaseRequest.id}
               </a>
@@ -171,9 +153,6 @@ export default function ManagerApprovalPage({
                 </td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Amount
-                </td>
                 <td className="px-4 py-3 font-semibold text-brand-blue">
                   Amount
                 </td>

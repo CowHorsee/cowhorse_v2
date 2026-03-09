@@ -157,7 +157,7 @@ const Home = () => {
     <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-7xl flex-col gap-4">
       <DashboardChart data={inventoryOverviewData} />
 
-      <section className="grid flex-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+      <section className="grid flex-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_760px]">
         <Card
           as="aside"
           variant="surface"
@@ -170,15 +170,9 @@ const Home = () => {
               value={purchaseRequests.length}
             />
             <DashboardMetricCard
-              label="Budget Exposure"
-              value={`RM ${totalSpend.toLocaleString()}`}
-            />
-            <DashboardMetricCard
               label="Pending / Review"
               value={pendingCount + inReviewCount}
-              description={`${pendingCount} pending and ${inReviewCount} in review.`}
             />
-            <DashboardMetricCard label="Approved" value={approvedCount} />
           </div>
         </Card>
 
@@ -186,16 +180,18 @@ const Home = () => {
           <CardHeader subtitle="Executive Notes" title="What to watch today" />
           <ul className="mt-5 space-y-4 text-sm leading-6 text-slate-600">
             <Card as="li" variant="soft" padding="md">
-              Predicted sales have moved above live inventory in the latest
-              weekly snapshot.
+              Strait of Hormuz Disruptions: Geopolitical escalations have led to
+              the effective closure of the Strait of Hormuz, a corridor
+              responsible for 20% of global oil and LNG transit.
             </Card>
             <Card as="li" variant="soft" padding="md">
               Procurement demand is concentrated in engineering and logistics,
               making approval turnaround the main operational bottleneck.
             </Card>
             <Card as="li" variant="soft" padding="md">
-              Use this dashboard as the default landing surface for buyers,
-              approvers, and operations leads entering the system.
+              AI in Construction Procurement: Developers are increasingly using
+              AI for &quot;material requirement planning&quot; to reduce excess
+              procurement and accurately model labor productivity.
             </Card>
           </ul>
         </Card>

@@ -1,37 +1,34 @@
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
-import { getUserSession } from '../../utils/localStorage';
 import { purchaseRequests } from '../../utils/mockdata/purchaseRequestsData';
-import { getPrTickets, mapTicketToPurchaseRequest } from '../../utils/prApi';
+// import { getUserSession } from '../../utils/localStorage';
+// import { getPrTickets, mapTicketToPurchaseRequest } from '../../utils/prApi';
 
 export default function PrPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [requests, setRequests] = useState(purchaseRequests);
-
-  useEffect(() => {
-    async function loadRequests() {
-      const sessionUser = getUserSession();
-
-      try {
-        const rows = await getPrTickets({ user_id: sessionUser?.user_id });
-        if (rows.length) {
-          setRequests(
-            rows.map((row) =>
-              mapTicketToPurchaseRequest(
-                row,
-                purchaseRequests.find((item) => item.id === row.pr_id)
-              )
-            )
-          );
-        }
-      } catch {
-        setRequests(purchaseRequests);
-      }
-    }
-
-    loadRequests();
-  }, []);
+  const [requests] = useState(purchaseRequests);
+  // useEffect(() => {
+  //   async function loadRequests() {
+  //     const sessionUser = getUserSession();
+  //     try {
+  //       const rows = await getPrTickets({ user_id: sessionUser?.user_id });
+  //       if (rows.length) {
+  //         setRequests(
+  //           rows.map((row) =>
+  //             mapTicketToPurchaseRequest(
+  //               row,
+  //               purchaseRequests.find((item) => item.id === row.pr_id)
+  //             )
+  //           )
+  //         );
+  //       }
+  //     } catch {
+  //       setRequests(purchaseRequests);
+  //     }
+  //   }
+  //   loadRequests();
+  // }, []);
 
   const filteredRequests = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();

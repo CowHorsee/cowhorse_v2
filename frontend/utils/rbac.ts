@@ -11,7 +11,7 @@ export type AppRouteConfig = {
   matchMode?: RouteMatchMode;
 };
 
-const ALL_ROLES: UserRole[] = ['ADMIN', 'EMPLOYEE', 'MANAGER'];
+const ALL_ROLES: UserRole[] = ['ADMIN', 'EMPLOYEE', 'MANAGER', 'WAREHOUSE'];
 
 /**
  * Central RBAC config for navigation and route access.
@@ -30,7 +30,7 @@ export const appRouteConfig: AppRouteConfig[] = [
     href: '/pr/approval',
     label: 'PR Approvals',
     iconPath: '/clipboard-text.svg',
-    allowedRoles: ['ADMIN'],
+    allowedRoles: ['ADMIN', 'MANAGER'],
     showInSidebar: true,
     matchMode: 'prefix',
   },
@@ -38,7 +38,7 @@ export const appRouteConfig: AppRouteConfig[] = [
     href: '/pr',
     label: 'Purchase Requests',
     iconPath: '/clipboard-text.svg',
-    allowedRoles: ['ADMIN', 'MANAGER'],
+    allowedRoles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'WAREHOUSE'],
     showInSidebar: true,
     matchMode: 'prefix',
   },
@@ -46,7 +46,7 @@ export const appRouteConfig: AppRouteConfig[] = [
     href: '/inventory',
     label: 'Inventory',
     iconPath: '/box.svg',
-    allowedRoles: ['ADMIN', 'MANAGER', 'EMPLOYEE'],
+    allowedRoles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'WAREHOUSE'],
     showInSidebar: true,
     matchMode: 'prefix',
   },

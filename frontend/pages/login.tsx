@@ -126,7 +126,9 @@ export default function LoginPage() {
       await router.push('/');
     } catch (error) {
       const message =
-        error instanceof ApiError ? error.message : 'Unable to sign in right now.';
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to sign in right now.';
 
       setLoginError(message);
       showToast({
@@ -218,36 +220,36 @@ export default function LoginPage() {
               </h2>
 
               <div className="mt-4 space-y-3">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@company.com"
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
-                  />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Password"
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
-                  />
-                  {loginError ? (
-                    <p className="text-sm font-semibold text-brand-red">{loginError}</p>
-                  ) : null}
-                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@company.com"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
+                />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Password"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
+                />
+                {loginError ? (
+                  <p className="text-sm font-semibold text-brand-red">
+                    {loginError}
+                  </p>
+                ) : null}
+              </div>
 
-                <button
-                  type="button"
-                  onClick={handleLogin}
-                  disabled={isSubmitting}
-                  className="mt-6 flex w-full items-center justify-center gap-3 rounded-[20px] bg-brand-blue px-5 py-4 text-sm font-bold text-white shadow-[0_20px_45px_rgba(39,36,92,0.28)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#1f1b4b] disabled:cursor-not-allowed disabled:opacity-80"
-                >
-                  {isSubmitting ? <LoadingSpinner /> : null}
-                  <span>
-                    {isSubmitting ? 'Opening Dashboard...' : 'Log In'}
-                  </span>
-                </button>
+              <button
+                type="button"
+                onClick={handleLogin}
+                disabled={isSubmitting}
+                className="mt-6 flex w-full items-center justify-center gap-3 rounded-[20px] bg-brand-blue px-5 py-4 text-sm font-bold text-white shadow-[0_20px_45px_rgba(39,36,92,0.28)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#1f1b4b] disabled:cursor-not-allowed disabled:opacity-80"
+              >
+                {isSubmitting ? <LoadingSpinner /> : null}
+                <span>{isSubmitting ? 'Opening Dashboard...' : 'Log In'}</span>
+              </button>
             </div>
           </div>
         </section>

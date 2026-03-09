@@ -1,5 +1,9 @@
 import { apiRequest } from './apiClient';
-import { mapBackendRole, type UserRole } from './authApi';
+import {
+  mapBackendRole,
+  type BackendRoleName,
+  type UserRole,
+} from './authApi';
 
 type SearchUserRow = {
   user_id?: string;
@@ -19,7 +23,7 @@ export type UserRecord = {
 export function searchUsers(params: {
   email?: string;
   name?: string;
-  role_name?: string;
+  role_name?: BackendRoleName;
 } = {}) {
   const query = new URLSearchParams();
 
@@ -40,7 +44,7 @@ export function searchUsers(params: {
 export function modifyUserRole(payload: {
   admin_id: string;
   user_id: string;
-  new_role_name: string;
+  new_role_name: BackendRoleName;
 }) {
   return apiRequest<string>('/api/user/modify_role', {
     method: 'POST',
@@ -56,6 +60,6 @@ export function mapSearchUserRowToUserRecord(
     user_id: row.user_id || `USR-${String(fallbackIndex + 1).padStart(3, '0')}`,
     name: row.name || 'Unknown User',
     email: row.email || 'unknown@cowhorse.local',
-    role: mapBackendRole(row.role_name || row.role || 'EMPLOYEE'),
+    role: mapBackendRole(row.role_name || row.role || 'Procurement Officer'),
   };
 }

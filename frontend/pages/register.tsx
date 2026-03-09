@@ -4,7 +4,11 @@ import Card, { CardHeader } from '../components/atoms/Card';
 import { useRouter } from 'next/router';
 import { useToast } from '../components/ToastProvider';
 import { ApiError } from '../utils/apiClient';
-import { registerUser, type UserRole } from '../utils/authApi';
+import {
+  mapUserRoleToBackendRoleName,
+  registerUser,
+  type UserRole,
+} from '../utils/authApi';
 import { getUserSession } from '../utils/localStorage';
 
 export default function RegisterPage() {
@@ -44,7 +48,7 @@ export default function RegisterPage() {
         admin_id: sessionUser.user_id,
         email: formValues.email,
         name: formValues.name,
-        role_name: formValues.role,
+        role_name: mapUserRoleToBackendRoleName(formValues.role),
         password: formValues.password,
       });
 
@@ -135,6 +139,7 @@ export default function RegisterPage() {
           >
             <option value="EMPLOYEE">Employee</option>
             <option value="MANAGER">Manager</option>
+            <option value="WAREHOUSE">Warehouse</option>
             <option value="ADMIN">Admin</option>
           </select>
 

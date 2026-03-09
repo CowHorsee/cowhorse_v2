@@ -1,134 +1,137 @@
 import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
 import DashboardMetricCard from '../components/molecules/DashboardMetricCard';
 import DashboardChart, {
   type InventoryOverviewPoint,
 } from '../components/organisms/DashboardChart';
 import RecentPurchaseRequestsPanel from '../components/organisms/RecentPurchaseRequestsPanel';
+import type { AuthUser } from '../utils/authApi';
+import { getUserSession } from '../utils/localStorage';
 import { purchaseRequests } from '../utils/mockdata/purchaseRequestsData';
 
 const inventoryOverviewData: InventoryOverviewPoint[] = [
   {
-    label: 'Week 1',
+    label: 'Jan',
     itemName: 'Industrial Sensors',
     actualSkuInventory: 920,
     actualSales: 510,
     predictedSales: 540,
   },
   {
-    label: 'Week 2',
+    label: 'Feb',
     itemName: 'Industrial Sensors',
     actualSkuInventory: 880,
     actualSales: 560,
     predictedSales: 575,
   },
   {
-    label: 'Week 3',
+    label: 'Mar',
     itemName: 'Industrial Sensors',
     actualSkuInventory: 845,
     actualSales: 590,
     predictedSales: 610,
   },
   {
-    label: 'Week 4',
+    label: 'Apr',
     itemName: 'Industrial Sensors',
     actualSkuInventory: 810,
     actualSales: 645,
     predictedSales: 660,
   },
   {
-    label: 'Week 5',
+    label: 'May',
     itemName: 'Industrial Sensors',
     actualSkuInventory: 770,
     actualSales: 680,
     predictedSales: 705,
   },
   {
-    label: 'Week 6',
+    label: 'Jun',
     itemName: 'Industrial Sensors',
     actualSkuInventory: 740,
     actualSales: 710,
     predictedSales: 760,
   },
   {
-    label: 'Week 1',
+    label: 'Jan',
     itemName: 'Copper Wiring',
     actualSkuInventory: 640,
     actualSales: 420,
     predictedSales: 450,
   },
   {
-    label: 'Week 2',
+    label: 'Feb',
     itemName: 'Copper Wiring',
     actualSkuInventory: 605,
     actualSales: 440,
     predictedSales: 470,
   },
   {
-    label: 'Week 3',
+    label: 'Mar',
     itemName: 'Copper Wiring',
     actualSkuInventory: 590,
     actualSales: 455,
     predictedSales: 485,
   },
   {
-    label: 'Week 4',
+    label: 'Apr',
     itemName: 'Copper Wiring',
     actualSkuInventory: 562,
     actualSales: 478,
     predictedSales: 505,
   },
   {
-    label: 'Week 5',
+    label: 'May',
     itemName: 'Copper Wiring',
     actualSkuInventory: 540,
     actualSales: 502,
     predictedSales: 530,
   },
   {
-    label: 'Week 6',
+    label: 'Jun',
     itemName: 'Copper Wiring',
     actualSkuInventory: 515,
     actualSales: 525,
     predictedSales: 555,
   },
   {
-    label: 'Week 1',
+    label: 'Jan',
     itemName: 'Safety Helmets',
     actualSkuInventory: 480,
     actualSales: 280,
     predictedSales: 295,
   },
   {
-    label: 'Week 2',
+    label: 'Feb',
     itemName: 'Safety Helmets',
     actualSkuInventory: 460,
     actualSales: 305,
     predictedSales: 320,
   },
   {
-    label: 'Week 3',
+    label: 'Mar',
     itemName: 'Safety Helmets',
     actualSkuInventory: 440,
     actualSales: 330,
     predictedSales: 340,
   },
   {
-    label: 'Week 4',
+    label: 'Apr',
     itemName: 'Safety Helmets',
     actualSkuInventory: 422,
     actualSales: 342,
     predictedSales: 360,
   },
   {
-    label: 'Week 5',
+    label: 'May',
     itemName: 'Safety Helmets',
     actualSkuInventory: 400,
     actualSales: 360,
     predictedSales: 382,
   },
   {
-    label: 'Week 6',
+    label: 'Jun',
     itemName: 'Safety Helmets',
     actualSkuInventory: 385,
     actualSales: 378,
@@ -137,21 +140,38 @@ const inventoryOverviewData: InventoryOverviewPoint[] = [
 ];
 
 const Home = () => {
-  const pendingCount = purchaseRequests.filter(
+  const [sessionUser, setSessionUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    setSessionUser(getUserSession());
+  }, []);
+
+  const personalRequests = useMemo(() => {
+    if (!sessionUser?.name) {
+      return purchaseRequests;
+    }
+
+    const normalizedName = sessionUser.name.trim().toLowerCase();
+    return purchaseRequests.filter(
+      (item) => item.requester.trim().toLowerCase() === normalizedName
+    );
+  }, [sessionUser]);
+
+  const totalRequests = personalRequests.length;
+  const personalPendingCount = personalRequests.filter(
     (item) => item.status === 'Pending Approval'
   ).length;
-  const inReviewCount = purchaseRequests.filter(
+  const inReviewCount = personalRequests.filter(
     (item) => item.status === 'In Review'
   ).length;
-  const approvedCount = purchaseRequests.filter(
+  const approvedCount = personalRequests.filter(
     (item) => item.status === 'Approved'
   ).length;
-  const totalSpend = purchaseRequests.reduce(
-    (sum, item) => sum + item.amount,
-    0
-  );
-  const latestSnapshot =
-    inventoryOverviewData[inventoryOverviewData.length - 1];
+  const waitingApprovalCount = purchaseRequests.filter(
+    (item) => item.status === 'Pending Approval'
+  ).length;
+
+  const isManager = sessionUser?.role === 'MANAGER';
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-7xl flex-col gap-4">
@@ -165,20 +185,30 @@ const Home = () => {
           className="grid gap-3 md:p-5"
         >
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
+            <DashboardMetricCard label="Total Requests" value={totalRequests} />
             <DashboardMetricCard
-              label="Total Requests"
-              value={purchaseRequests.length}
+              label="Pending Approval"
+              value={personalPendingCount}
+              description="Your requests waiting for approval."
             />
             <DashboardMetricCard
-              label="Budget Exposure"
-              value={`RM ${totalSpend.toLocaleString()}`}
+              label={isManager ? 'Waiting Approval' : 'In Review'}
+              value={isManager ? waitingApprovalCount : inReviewCount}
+              description={
+                isManager
+                  ? 'Requests pending manager action.'
+                  : 'Your requests currently in review.'
+              }
             />
             <DashboardMetricCard
-              label="Pending / Review"
-              value={pendingCount + inReviewCount}
-              description={`${pendingCount} pending and ${inReviewCount} in review.`}
+              label="Approved"
+              value={approvedCount}
+              description={
+                isManager
+                  ? 'Your approved requests as requester.'
+                  : 'Your requests that are approved.'
+              }
             />
-            <DashboardMetricCard label="Approved" value={approvedCount} />
           </div>
         </Card>
 

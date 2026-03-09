@@ -1,7 +1,11 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
 import { ApiError } from '../utils/apiClient';
-import { registerUser, type UserRole } from '../utils/authApi';
+import {
+  mapUserRoleToBackendRoleName,
+  registerUser,
+  type UserRole,
+} from '../utils/authApi';
 import { getUserSession } from '../utils/localStorage';
 import {
   managedUsers as initialManagedUsers,
@@ -13,7 +17,7 @@ import {
   searchUsers,
 } from '../utils/userManagementApi';
 
-const roleOptions: UserRole[] = ['ADMIN', 'MANAGER', 'EMPLOYEE'];
+const roleOptions: UserRole[] = ['ADMIN', 'MANAGER', 'WAREHOUSE', 'EMPLOYEE'];
 
 type RoleDropdownProps = {
   value: UserRole;
@@ -181,7 +185,7 @@ export default function UsersPage() {
       await modifyUserRole({
         admin_id: sessionUser.user_id,
         user_id: editingUserId,
-        new_role_name: editDraft.role,
+        new_role_name: mapUserRoleToBackendRoleName(editDraft.role),
       });
 
       setUsers((currentUsers) =>
@@ -239,7 +243,7 @@ export default function UsersPage() {
         admin_id: sessionUser.user_id,
         email: normalizedEmail,
         name: normalizedName,
-        role_name: newUserRole,
+        role_name: mapUserRoleToBackendRoleName(newUserRole),
       });
 
       const refreshed = await searchUsers();

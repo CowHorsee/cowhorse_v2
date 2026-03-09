@@ -1,11 +1,9 @@
-# Cowhorse Procurement System
+# Procurement Planning Intelligence System
 
-Cowhorse is a procurement workflow application for improving employee operational efficiency. The repository is split into:
+PPIS is a procurement workflow application for improving employee operational efficiency. 
 
-- `frontend/`: a Next.js static-export app used as the main user interface
-- `api/`: an Azure Functions app used for procurement, user, and agent endpoints
-
-The current frontend includes a dashboard landing page, purchase request views, auth pages, and a backend-ready inventory overview chart template.
+Web App: [https://purple-bay-035486b10.1.azurestaticapps.net/](https://purple-bay-035486b10.1.azurestaticapps.net/)
+Video Demo: [https://drive.google.com/drive/folders/1JlMNmcbt-FT_4eGmE7nfPHqVxtKSyeKa](https://drive.google.com/drive/folders/1WM2kjVe83BovGnE2CfAtJxl1H_H_KHrk?usp=drive_link)
 
 ## Architecture
 

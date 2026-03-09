@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ReactNode, useState } from 'react';
 import Card from './atoms/Card';
-import type { AuthUser } from '../utils/authApi';
+import type { AuthUser } from '../utils/api/authApi';
 import { getSidebarTabsForUser } from '../utils/rbac';
 
 type AppShellProps = {

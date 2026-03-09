@@ -1,4 +1,4 @@
-import type { UserRole } from '../authApi';
+import type { UserRole } from '../api/authApi';
 
 export type ManagedUser = {
   user_id: string;
@@ -31,5 +31,11 @@ export const managedUsers: ManagedUser[] = [
     name: 'Sara Lim',
     email: 'sara.lim@cowhorse.com',
     role: 'EMPLOYEE',
+  },
+  {
+    user_id: 'USR-005',
+    name: 'Haziq Rahman',
+    email: 'haziq.rahman@cowhorse.com',
+    role: 'WAREHOUSE',
   },
 ];

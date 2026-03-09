@@ -7,7 +7,7 @@ import { saveUserSession } from '../utils/localStorage';
 import {
   prototypeUsers,
   type PrototypeUserCredential,
-} from '../utils/prototypeUsers';
+} from '../utils/mockdata/prototypeUsers';
 
 function roleTone(role: PrototypeUserCredential['role']) {
   if (role === 'ADMIN') {

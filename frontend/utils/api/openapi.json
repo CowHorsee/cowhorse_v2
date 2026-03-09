@@ -1,0 +1,1073 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "CowHorse API",
+    "version": "1.0.0",
+    "description": "Auto-generated OpenAPI documentation. Markdown supported in descriptions (CommonMark)."
+  },
+  "paths": {
+    "/api/data-loader/run": {
+      "post": {
+        "summary": "Migrate CSV datasets to Azure Table Storage",
+        "description": "Iterates through all CSV files in api/dataset/ and uploads them to Azure Storage Tables using batch transactions and DBHelper mappings.",
+        "operationId": "runDataLoader",
+        "tags": [
+          "Maintenance"
+        ],
+        "responses": {
+          "200": {
+            "description": "Datasets loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Data migration complete"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Row counts per table",
+                      "example": {
+                        "user": "Loaded 50 rows.",
+                        "item": "Loaded 200 rows."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to load datasets or connection string missing"
+          }
+        }
+      }
+    },
+    "/api/user/login": {
+      "post": {
+        "summary": "Login user",
+        "description": "Authenticates a user by email and password. Returns the user's role and unique ID upon successful authentication.",
+        "operationId": "post_api_login",
+        "tags": [
+          "User Management"
+        ],
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "example": "Procurement Manager"
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Login Successful"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials provided"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's registered email address"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "description": "User's password"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/register": {
+      "post": {
+        "summary": "Register user",
+        "description": "Creates a new user profile in the system. Requires an admin user's ID for authorization.",
+        "operationId": "post_api_register",
+        "tags": [
+          "User Management"
+        ],
+        "responses": {
+          "200": {
+            "description": "User registered successfully"
+          },
+          "403": {
+            "description": "Permission denied: admin_id not authorized to create users"
+          },
+          "400": {
+            "description": "Invalid input or email already registered"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "admin_id",
+                  "email",
+                  "name",
+                  "role_name"
+                ],
+                "properties": {
+                  "admin_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the administrator performing the registration"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "New user's email address"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Full name of the new user"
+                  },
+                  "role_name": {
+                    "type": "string",
+                    "enum": [
+                      "Procurement Officer",
+                      "Procurement Manager",
+                      "Warehouse Personnel",
+                      "Supplier",
+                      "Admin"
+                    ],
+                    "description": "Assigned role"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Optional initial password. If omitted, a random one will be generated and emailed."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/forget_password": {
+      "post": {
+        "summary": "Reset user password",
+        "description": "Initiates a password reset for the specified user. Generates a new temporary password and sends it via email.",
+        "operationId": "post_api_forget_password",
+        "tags": [
+          "User Management"
+        ],
+        "responses": {
+          "200": {
+            "description": "Temporary password generated and email notification triggered"
+          },
+          "400": {
+            "description": "User not found or operation failed"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user_id"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Unique ID of the user requiring a reset"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/modify_role": {
+      "post": {
+        "summary": "Modify user role",
+        "description": "Updates the role of an existing user. Requires authorized administrator credentials.",
+        "operationId": "post_api_modify_role",
+        "tags": [
+          "User Management"
+        ],
+        "responses": {
+          "200": {
+            "description": "User role updated successfully"
+          },
+          "403": {
+            "description": "Authorization failed for admin_id"
+          },
+          "400": {
+            "description": "Invalid user_id or role name"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "admin_id",
+                  "user_id",
+                  "new_role_name"
+                ],
+                "properties": {
+                  "admin_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the administrator performing the update"
+                  },
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the target user"
+                  },
+                  "new_role_name": {
+                    "type": "string",
+                    "enum": [
+                      "Procurement Officer",
+                      "Procurement Manager",
+                      "Warehouse Personnel",
+                      "Supplier",
+                      "Admin"
+                    ],
+                    "description": "New role to assign"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/change_password": {
+      "post": {
+        "summary": "Change user password",
+        "description": "Allows a user to self-update their password by providing their current credentials.",
+        "operationId": "post_api_change_password",
+        "tags": [
+          "User Management"
+        ],
+        "responses": {
+          "200": {
+            "description": "Password updated successfully"
+          },
+          "401": {
+            "description": "Incorrect old password"
+          },
+          "400": {
+            "description": "User not found"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user_id",
+                  "old_password",
+                  "new_password"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the user changing the password"
+                  },
+                  "old_password": {
+                    "type": "string",
+                    "description": "Current password for verification"
+                  },
+                  "new_password": {
+                    "type": "string",
+                    "description": "New password to set"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/search_user": {
+      "get": {
+        "summary": "Search users",
+        "description": "Retrieves user profiles based on optional filters like email, name, or role. Join with dim_role is performed internally.",
+        "operationId": "get_api_search_user",
+        "tags": [
+          "User Management"
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching users retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "user_id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "role_name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "type": "string",
+            "description": "Filter by exact email match"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "type": "string",
+            "description": "Partial match on user's name"
+          },
+          {
+            "name": "role_name",
+            "in": "query",
+            "type": "string",
+            "description": "Filter by role name (e.g., Supplier)"
+          }
+        ]
+      }
+    },
+    "/api/pr/create_pr": {
+      "post": {
+        "summary": "Create purchase request",
+        "description": "Submits a new purchase request for procurement. Triggers automated PDF generation and manager notification upon success.",
+        "operationId": "post_api_create_pr",
+        "tags": [
+          "Purchase Request"
+        ],
+        "responses": {
+          "200": {
+            "description": "PR created and notifications triggered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pr_id": {
+                      "type": "string",
+                      "example": "PR_202603_00001"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "example": 2,
+                      "description": "2 = Pending Review"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid items or incomplete request body"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user_id",
+                  "proc_item",
+                  "justification"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the procurement officer creating the request"
+                  },
+                  "proc_item": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer"
+                    },
+                    "description": "Mapping of item names to requested quantities",
+                    "example": {
+                      "Elba Built-in Gas Hob": 10,
+                      "Faber Chimney Hood": 5
+                    }
+                  },
+                  "justification": {
+                    "type": "string",
+                    "description": "Business reason for the procurement request"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pr/accept_pr_suggestion": {
+      "post": {
+        "summary": "Accept AI PR suggestion",
+        "description": "Converts an AI-generated procurement suggestion (Status 1) into a standard Purchase Request (Status 2) by associating it with a responsible officer.",
+        "operationId": "post_api_accept_pr_suggestion",
+        "tags": [
+          "Purchase Request"
+        ],
+        "responses": {
+          "200": {
+            "description": "AI suggestion accepted and converted to standard PR"
+          },
+          "400": {
+            "description": "PR is not a suggestion or invalid IDs provided"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "pr_id",
+                  "officer_id"
+                ],
+                "properties": {
+                  "pr_id": {
+                    "type": "string",
+                    "description": "ID of the AI suggestion (PR_...) to accept"
+                  },
+                  "officer_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the officer taking responsibility for the request"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pr/modify_pr": {
+      "post": {
+        "summary": "Modify purchase request",
+        "description": "Updates the items or justification of a PR. Rules: Officers can only modify AI suggestions (Status 1). Managers can modify submitted requests (Status 2).",
+        "operationId": "post_api_modify_pr",
+        "tags": [
+          "Purchase Request"
+        ],
+        "responses": {
+          "200": {
+            "description": "PR updated successfully and audit log recorded"
+          },
+          "400": {
+            "description": "Modification not allowed due to current status or role restrictions"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user_id",
+                  "pr_id",
+                  "proc_item",
+                  "justification"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the user performing the modification"
+                  },
+                  "pr_id": {
+                    "type": "string",
+                    "description": "ID of the target PR"
+                  },
+                  "proc_item": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer"
+                    },
+                    "description": "New item mapping (replaces old items)"
+                  },
+                  "justification": {
+                    "type": "string",
+                    "description": "Updated justification text"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pr/get_pr_ticket": {
+      "get": {
+        "summary": "Get PR tickets",
+        "description": "Retrieves a list of PR tickets with enriched status names and creator role info for the dashboard view.",
+        "operationId": "get_api_get_pr_ticket",
+        "tags": [
+          "Purchase Request"
+        ],
+        "responses": {
+          "200": {
+            "description": "Enriched tickets retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "type": "string",
+            "description": "Filter by creator (required for Officers to see their own)"
+          },
+          {
+            "name": "pr_id",
+            "in": "query",
+            "type": "string",
+            "description": "Optional specific PR ID filter"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "integer",
+            "description": "Filter by status_id (1=AI, 2=Pending, 3=Rejected, 4=Approved)"
+          }
+        ]
+      }
+    },
+    "/api/pr/get_pr_details": {
+      "get": {
+        "summary": "Get PR details",
+        "description": "Retrieves the full structural data for a PR, including header and all bridged line items.",
+        "operationId": "get_api_get_pr_details",
+        "tags": [
+          "Purchase Request"
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed PR data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "header": {
+                      "type": "object"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized to view this PR"
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "ID for authorization check"
+          },
+          {
+            "name": "pr_id",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "ID of the PR to retrieve"
+          }
+        ]
+      }
+    },
+    "/api/pr/review_pr": {
+      "post": {
+        "summary": "Review purchase request",
+        "description": "Allows a Manager to Approve or Reject a PR. Status 2 -> (4 or 3).",
+        "operationId": "post_api_review_pr",
+        "tags": [
+          "Purchase Request"
+        ],
+        "responses": {
+          "200": {
+            "description": "PR status updated and reviewer logged"
+          },
+          "403": {
+            "description": "User is not a Manager"
+          },
+          "400": {
+            "description": "PR is not in a pending state or invalid ID"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "pr_id",
+                  "decision",
+                  "manager_id"
+                ],
+                "properties": {
+                  "pr_id": {
+                    "type": "string",
+                    "description": "ID of the PR to review"
+                  },
+                  "decision": {
+                    "type": "string",
+                    "enum": [
+                      "approve",
+                      "reject"
+                    ],
+                    "description": "Manager's decision"
+                  },
+                  "manager_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Manager performing the review"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pr/procurement_alert": {
+      "post": {
+        "summary": "Trigger procurement alert (AI)",
+        "description": "Simulates an AI detecting low stock. If predicted demand vs current stock exceeds 80%, an automated PR suggestion (Status 1) is created and Officers are notified.",
+        "operationId": "post_api_procurement_alert",
+        "tags": [
+          "Purchase Request"
+        ],
+        "responses": {
+          "200": {
+            "description": "Alert processed. May return standard PR result or notification of sufficient stock.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "description": "Standard PR result if triggered"
+                    },
+                    {
+                      "type": "string",
+                      "example": "Stock level sufficient. No PR triggered."
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "item_name",
+                  "predicted_demand",
+                  "justification"
+                ],
+                "properties": {
+                  "item_name": {
+                    "type": "string",
+                    "description": "Name of the item to check"
+                  },
+                  "predicted_demand": {
+                    "type": "number",
+                    "description": "Expected demand quantity"
+                  },
+                  "justification": {
+                    "type": "string",
+                    "description": "AI-generated reasoning for the alert"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/po/create_po": {
+      "post": {
+        "summary": "Create purchase order",
+        "description": "Generates one or more Purchase Orders from a single Purchase Request. If the PR contains items from multiple suppliers, separate POs are created automatically. Triggers PDF generation and supplier notification.",
+        "operationId": "post_api_create_po",
+        "tags": [
+          "Purchase Order"
+        ],
+        "responses": {
+          "200": {
+            "description": "PO(s) created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "PO_202603_00001",
+                    "PO_202603_00002"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed: items not found or unauthorized PR access"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "pr_id",
+                  "proc_item",
+                  "user_id"
+                ],
+                "properties": {
+                  "pr_id": {
+                    "type": "string",
+                    "description": "ID of the source Purchase Request"
+                  },
+                  "proc_item": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "item_name": {
+                          "type": "string"
+                        },
+                        "quantity": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "description": "List of items and quantities to include in the order(s)"
+                  },
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the officer issuing the PO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/po/get_po_ticket": {
+      "get": {
+        "summary": "Get PO tickets",
+        "description": "Retrieves a list of Purchase Order tickets with enriched status information. Suppliers only see their own orders; Officers see all.",
+        "operationId": "get_api_get_po_ticket",
+        "tags": [
+          "Purchase Order"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of PO summary tickets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "ID for role-based filtering"
+          }
+        ]
+      }
+    },
+    "/api/po/get_po_details": {
+      "get": {
+        "summary": "Get PO details",
+        "description": "Retrieves the full structural data for a PO including header info and specific itemized line items.",
+        "operationId": "get_api_get_po_details",
+        "tags": [
+          "Purchase Order"
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed PO data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "header": {
+                      "type": "object"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied for this po_id"
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "ID for authorization check"
+          },
+          {
+            "name": "po_id",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "ID of the PO to retrieve"
+          }
+        ]
+      }
+    },
+    "/api/po/update_po_status": {
+      "post": {
+        "summary": "Update PO status",
+        "description": "Allows a Supplier to update the status of an order (e.g., 'Awaiting Warehouse', 'Shipped'). Rules vary by current status.",
+        "operationId": "post_api_update_po_status",
+        "tags": [
+          "Purchase Order"
+        ],
+        "responses": {
+          "200": {
+            "description": "PO status successfully transitioned"
+          },
+          "400": {
+            "description": "Invalid status transition or unauthorized supplier"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "supplier_id",
+                  "po_id",
+                  "status_name"
+                ],
+                "properties": {
+                  "supplier_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the supplier performing the update"
+                  },
+                  "po_id": {
+                    "type": "string",
+                    "description": "ID of the PO"
+                  },
+                  "status_name": {
+                    "type": "string",
+                    "enum": [
+                      "Awaiting Warehouse",
+                      "Shipped",
+                      "Delivered"
+                    ],
+                    "description": "Target status name"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/warehouse/count_inventory": {
+      "get": {
+        "summary": "Count inventory",
+        "description": "Retrieves the current stock level for a specific item or all items from the warehouse stock table.",
+        "operationId": "get_api_count_inventory",
+        "tags": [
+          "Warehouse"
+        ],
+        "responses": {
+          "200": {
+            "description": "Stock levels retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "integer",
+                      "description": "Quantity if item_name provided"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "description": "Full stock list if item_name omitted"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "item_name",
+            "in": "query",
+            "type": "string",
+            "description": "Optional name of a specific item to count"
+          }
+        ]
+      }
+    },
+    "/api/warehouse/update_inventory": {
+      "post": {
+        "summary": "Update inventory from CSV",
+        "description": "Processes an incoming stock CSV file (e.g., from a delivery) and updates the warehouse stock quantities in Azure Table Storage.",
+        "operationId": "post_api_update_inventory",
+        "tags": [
+          "Warehouse"
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory successfully updated and stock levels reconciled"
+          },
+          "400": {
+            "description": "CSV file not found or invalid format"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "incoming_csv_path"
+                ],
+                "properties": {
+                  "incoming_csv_path": {
+                    "type": "string",
+                    "description": "Absolute path to the delivery/warehouse CSV file"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Card, { CardHeader } from '../components/atoms/Card';
 import { useRouter } from 'next/router';
-import type { UserRole } from '../utils/authApi';
-// import { ApiError } from '../utils/apiClient';
-// import { registerUser } from '../utils/authApi';
+import type { UserRole } from '../utils/api/authApi';
+// import { ApiError } from '../utils/api/apiClient';
+// import { registerUser } from '../utils/api/authApi';
 // import { getUserSession } from '../utils/localStorage';
 
 export default function RegisterPage() {
@@ -117,6 +117,7 @@ export default function RegisterPage() {
           >
             <option value="EMPLOYEE">Employee</option>
             <option value="MANAGER">Manager</option>
+            <option value="WAREHOUSE">Warehouse</option>
             <option value="ADMIN">Admin</option>
           </select>
 

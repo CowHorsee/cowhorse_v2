@@ -1,4 +1,4 @@
-import type { AuthUser } from './authApi';
+import type { AuthUser } from '../api/authApi';
 
 export type PrototypeUserCredential = AuthUser & {
   password: string;
@@ -25,5 +25,12 @@ export const prototypeUsers: PrototypeUserCredential[] = [
     email: 'daniel.lee@cowhorse.dev',
     role: 'EMPLOYEE',
     password: 'Demo@Employee123',
+  },
+  {
+    user_id: 'proto-warehouse-01',
+    name: 'Nurul Huda',
+    email: 'nurul.huda@cowhorse.dev',
+    role: 'WAREHOUSE',
+    password: 'Demo@Warehouse123',
   },
 ];

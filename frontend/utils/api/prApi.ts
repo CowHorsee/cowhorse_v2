@@ -2,7 +2,7 @@ import { apiRequest } from './apiClient';
 import type {
   PurchaseRequest,
   PurchaseRequestStatus,
-} from './mockdata/purchaseRequestsData';
+} from '../mockdata/purchaseRequestsData';
 
 type PrTicketRow = {
   pr_id?: string;

@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { getUserSession } from '../../utils/localStorage';
-// import { getPrDetails, mergeDetailsIntoPurchaseRequest } from '../../utils/prApi';
+// import { getPrDetails, mergeDetailsIntoPurchaseRequest } from '../../utils/api/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -58,8 +58,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
           className="mb-1"
           titleClassName="text-lg"
         />
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-        </div>
+        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between"></div>
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-slate-600">Requester</p>
           <strong className="font-semibold text-brand-blue">
@@ -73,18 +72,18 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
           </strong>
         </div>
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Item  1 </p>
+          <p className="text-sm text-slate-600">Item 1 </p>
           <strong className="font-semibold text-brand-blue">
             Faber Chimney Hood - 99
           </strong>
         </div>
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Item  2 </p>
+          <p className="text-sm text-slate-600">Item 2 </p>
           <strong className="font-semibold text-brand-blue">
             Elba Built-in Gas Hob - 19
           </strong>
         </div>
-                <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-slate-600">Total Amount (RM)</p>
           <strong className="font-semibold text-brand-blue">
             {purchaseRequest.amount.toLocaleString()}

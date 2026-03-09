@@ -1,4 +1,4 @@
-import type { AuthUser } from './authApi';
+import type { AuthUser } from './api/authApi';
 
 const USER_STORAGE_KEY = 'cowhorse.auth.user';
 

@@ -1,20 +1,20 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
-import type { UserRole } from '../utils/authApi';
+import type { UserRole } from '../utils/api/authApi';
 import {
   managedUsers as initialManagedUsers,
   type ManagedUser,
 } from '../utils/mockdata/usersData';
-// import { ApiError } from '../utils/apiClient';
-// import { registerUser } from '../utils/authApi';
+// import { ApiError } from '../utils/api/apiClient';
+// import { registerUser } from '../utils/api/authApi';
 // import { getUserSession } from '../utils/localStorage';
 // import {
 //   mapSearchUserRowToUserRecord,
 //   modifyUserRole,
 //   searchUsers,
-// } from '../utils/userManagementApi';
+// } from '../utils/api/userManagementApi';
 
-const roleOptions: UserRole[] = ['ADMIN', 'MANAGER', 'EMPLOYEE'];
+const roleOptions: UserRole[] = ['ADMIN', 'MANAGER', 'WAREHOUSE', 'EMPLOYEE'];
 
 type RoleDropdownProps = {
   value: UserRole;

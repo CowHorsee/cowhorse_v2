@@ -3,12 +3,12 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { getUserSession } from '../../../utils/localStorage';
-// import { ApiError } from '../../../utils/apiClient';
+// import { ApiError } from '../../../utils/api/apiClient';
 // import {
 //   getPrDetails,
 //   mergeDetailsIntoPurchaseRequest,
 //   reviewPr,
-// } from '../../../utils/prApi';
+// } from '../../../utils/api/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,

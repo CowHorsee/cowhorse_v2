@@ -1,4 +1,4 @@
-import type { AuthUser, UserRole } from './authApi';
+import type { AuthUser, UserRole } from './api/authApi';
 
 type RouteMatchMode = 'exact' | 'prefix';
 
@@ -11,7 +11,7 @@ export type AppRouteConfig = {
   matchMode?: RouteMatchMode;
 };
 
-const ALL_ROLES: UserRole[] = ['ADMIN', 'EMPLOYEE', 'MANAGER'];
+const ALL_ROLES: UserRole[] = ['ADMIN', 'EMPLOYEE', 'MANAGER', 'WAREHOUSE'];
 
 /**
  * Central RBAC config for navigation and route access.
@@ -38,7 +38,7 @@ export const appRouteConfig: AppRouteConfig[] = [
     href: '/pr',
     label: 'Purchase Requests',
     iconPath: '/clipboard-text.svg',
-    allowedRoles: ['ADMIN', 'EMPLOYEE'],
+    allowedRoles: ['ADMIN', 'EMPLOYEE', 'WAREHOUSE'],
     showInSidebar: true,
     matchMode: 'prefix',
   },
@@ -46,7 +46,7 @@ export const appRouteConfig: AppRouteConfig[] = [
     href: '/inventory',
     label: 'Inventory',
     iconPath: '/box.svg',
-    allowedRoles: ['ADMIN'],
+    allowedRoles: ['ADMIN', 'WAREHOUSE'],
     showInSidebar: true,
     matchMode: 'prefix',
   },

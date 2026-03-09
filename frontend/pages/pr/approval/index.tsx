@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
 // import { getUserSession } from '../../../utils/localStorage';
-// import { getPrTickets, mapTicketToPurchaseRequest } from '../../../utils/prApi';
+// import { getPrTickets, mapTicketToPurchaseRequest } from '../../../utils/api/prApi';
 
 const approvableStatuses = new Set(['Pending Approval', 'In Review']);
 

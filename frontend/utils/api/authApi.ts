@@ -1,6 +1,6 @@
 import { apiRequest } from './apiClient';
 
-export type UserRole = 'ADMIN' | 'EMPLOYEE' | 'MANAGER';
+export type UserRole = 'ADMIN' | 'EMPLOYEE' | 'MANAGER' | 'WAREHOUSE';
 
 export type AuthUser = {
   user_id: string;
@@ -34,6 +34,10 @@ export function mapBackendRole(roleName: string): UserRole {
 
   if (normalized.includes('admin')) {
     return 'ADMIN';
+  }
+
+  if (normalized.includes('warehouse')) {
+    return 'WAREHOUSE';
   }
 
   if (normalized.includes('manager')) {

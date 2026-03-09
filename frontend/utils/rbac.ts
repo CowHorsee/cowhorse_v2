@@ -12,7 +12,6 @@ export type AppRouteConfig = {
 };
 
 const ALL_ROLES: UserRole[] = ['ADMIN', 'EMPLOYEE', 'MANAGER', 'WAREHOUSE'];
-const ALL_ROLES: UserRole[] = ['ADMIN', 'EMPLOYEE', 'MANAGER', 'WAREHOUSE'];
 
 /**
  * Central RBAC config for navigation and route access.

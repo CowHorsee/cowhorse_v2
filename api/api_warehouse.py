@@ -11,7 +11,7 @@ bp = func.Blueprint(name='warehouse_api', url_prefix='/api/warehouse')
     summary="Count inventory",
     description="Retrieves the current stock level for a specific item or all items from the warehouse stock table.",
     tags=["Warehouse"],
-    route="count_inventory",
+    route="/api/warehouse/count_inventory",
     method="GET",
     parameters=[
         {"name": "item_name", "in": "query", "type": "string", "description": "Optional name of a specific item to count"}
@@ -39,7 +39,7 @@ def api_count_inventory(req: func.HttpRequest) -> func.HttpResponse:
     summary="Update inventory from CSV",
     description="Processes an incoming stock CSV file (e.g., from a delivery) and updates the warehouse stock quantities in Azure Table Storage.",
     tags=["Warehouse"],
-    route="update_inventory",
+    route="/api/warehouse/update_inventory",
     method="POST",
     request_body={"type": "object", "required": ["incoming_csv_path"], "properties": {
         "incoming_csv_path": {"type": "string", "description": "Absolute path to the delivery/warehouse CSV file"}

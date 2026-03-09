@@ -11,7 +11,7 @@ bp = func.Blueprint(name='user_v2', url_prefix='/api/user')
     summary="Login user",
     description="Authenticates a user by email and password. Returns the user's role and unique ID upon successful authentication.",
     tags=["User Management"],
-    route="login",
+    route="/api/user/login",
     method="POST",
     request_body={"type": "object", "required": ["email", "password"], "properties": {
         "email": {"type": "string", "format": "email", "description": "User's registered email address"},
@@ -45,7 +45,7 @@ def api_login(req: func.HttpRequest) -> func.HttpResponse:
     summary="Register user",
     description="Creates a new user profile in the system. Requires an admin user's ID for authorization.",
     tags=["User Management"],
-    route="register",
+    route="/api/user/register",
     method="POST",
     request_body={"type": "object", "required": ["admin_id", "email", "name", "role_name"], "properties": {
         "admin_id": {"type": "string", "format": "uuid", "description": "ID of the administrator performing the registration"},
@@ -74,7 +74,7 @@ def api_register(req: func.HttpRequest) -> func.HttpResponse:
     summary="Reset user password",
     description="Initiates a password reset for the specified user. Generates a new temporary password and sends it via email.",
     tags=["User Management"],
-    route="forget_password",
+    route="/api/user/forget_password",
     method="POST",
     request_body={"type": "object", "required": ["user_id"], "properties": {
         "user_id": {"type": "string", "format": "uuid", "description": "Unique ID of the user requiring a reset"}
@@ -97,7 +97,7 @@ def api_forget_password(req: func.HttpRequest) -> func.HttpResponse:
     summary="Modify user role",
     description="Updates the role of an existing user. Requires authorized administrator credentials.",
     tags=["User Management"],
-    route="modify_role",
+    route="/api/user/modify_role",
     method="POST",
     request_body={"type": "object", "required": ["admin_id", "user_id", "new_role_name"], "properties": {
         "admin_id": {"type": "string", "format": "uuid", "description": "ID of the administrator performing the update"},
@@ -123,7 +123,7 @@ def api_modify_role(req: func.HttpRequest) -> func.HttpResponse:
     summary="Change user password",
     description="Allows a user to self-update their password by providing their current credentials.",
     tags=["User Management"],
-    route="change_password",
+    route="/api/user/change_password",
     method="POST",
     request_body={"type": "object", "required": ["user_id", "old_password", "new_password"], "properties": {
         "user_id": {"type": "string", "format": "uuid", "description": "ID of the user changing the password"},
@@ -149,7 +149,7 @@ def api_change_password(req: func.HttpRequest) -> func.HttpResponse:
     summary="Search users",
     description="Retrieves user profiles based on optional filters like email, name, or role. Join with dim_role is performed internally.",
     tags=["User Management"],
-    route="search_user",
+    route="/api/user/search_user",
     method="GET",
     parameters=[
         {"name": "email", "in": "query", "type": "string", "description": "Filter by exact email match"},

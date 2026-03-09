@@ -49,7 +49,7 @@ export function getPrTickets(params: { user_id?: string; pr_id?: string; status?
   }
 
   const suffix = query.toString() ? `?${query.toString()}` : '';
-  return apiRequest<PrTicketRow[]>(`/api/get_pr_ticket${suffix}`);
+  return apiRequest<PrTicketRow[]>(`/api/pr/get_pr_ticket${suffix}`);
 }
 
 export function getPrDetails(params: { user_id?: string; pr_id: string }) {

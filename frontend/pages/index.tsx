@@ -193,7 +193,7 @@ const Home = () => {
             />
             <DashboardMetricCard
               label="Pending / Review"
-              value={pendingCount + inReviewCount}
+              value={personalPendingCount + inReviewCount}
             />
           </div>
         </Card>

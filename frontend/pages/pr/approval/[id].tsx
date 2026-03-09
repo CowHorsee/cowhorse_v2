@@ -26,6 +26,7 @@ export default function ManagerApprovalPage({
   const router = useRouter();
   const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
   const [decision, setDecision] = useState<ApprovalDecision>(null);
+  const [managerComment, setManagerComment] = useState('');
   const [decisionMessage, setDecisionMessage] = useState('');
 
   useEffect(() => {

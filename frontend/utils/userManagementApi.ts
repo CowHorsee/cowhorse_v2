@@ -1,4 +1,4 @@
-import { apiRequest } from './apiClient';
+import { apiRequest } from './api/apiClient';
 import {
   mapBackendRole,
   type BackendRoleName,

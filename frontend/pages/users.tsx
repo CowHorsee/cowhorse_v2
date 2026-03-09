@@ -15,7 +15,6 @@ import {
 // } from '../utils/api/userManagementApi';
 
 const roleOptions: UserRole[] = ['ADMIN', 'MANAGER', 'WAREHOUSE', 'EMPLOYEE'];
-const roleOptions: UserRole[] = ['ADMIN', 'MANAGER', 'WAREHOUSE', 'EMPLOYEE'];
 
 type RoleDropdownProps = {
   value: UserRole;
@@ -91,7 +90,6 @@ function RoleDropdown({ value, onChange, compact = false }: RoleDropdownProps) {
 
 export default function UsersPage() {
   const [users, setUsers] = useState<ManagedUser[]>(initialManagedUsers);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [newUserName, setNewUserName] = useState('');
@@ -191,18 +189,18 @@ export default function UsersPage() {
     //   return;
     // }
 
-      setUsers((currentUsers) =>
-        currentUsers.map((user) =>
-          user.user_id === editingUserId
-            ? {
-                ...user,
-                name: normalizedName,
-                email: normalizedEmail,
-                role: editDraft.role,
-              }
-            : user
-        )
-      );
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
+        user.user_id === editingUserId
+          ? {
+              ...user,
+              name: normalizedName,
+              email: normalizedEmail,
+              role: editDraft.role,
+            }
+          : user
+      )
+    );
 
     setFeedbackMessage(`User ${editingUserId} updated (mock mode).`);
     setEditingUserId(null);

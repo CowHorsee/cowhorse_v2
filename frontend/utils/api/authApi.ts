@@ -49,7 +49,7 @@ export function mapBackendRole(roleName: string): UserRole {
 
 /** Calls the backend registration endpoint and returns backend message text. */
 export function registerUser(payload: RegisterPayload) {
-  return apiRequest<string>('/api/user/api_register', {
+  return apiRequest<string>('/api/user/register', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

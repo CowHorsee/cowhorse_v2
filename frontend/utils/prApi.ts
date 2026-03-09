@@ -1,4 +1,4 @@
-import { apiRequest } from './apiClient';
+import { apiRequest } from './api/apiClient';
 import type { PurchaseRequest, PurchaseRequestStatus } from './mockdata/purchaseRequestsData';
 
 export type PrStatusFilter = 1 | 2 | 3 | 4;

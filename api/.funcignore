@@ -4,5 +4,10 @@ __azurite_db*__.json
 __blobstorage__
 __queuestorage__
 local.settings.json
+.env
 test
+test_case
 .venv
+__pycache__
+.pytest_cache
+test_case

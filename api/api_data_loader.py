@@ -7,7 +7,7 @@ from azure.data.tables import TableServiceClient
 import azure.functions as func
 from azure_functions_openapi.decorator import openapi
 
-bp = func.Blueprint(name='data_loader', url_prefix='/api/data-loader')
+bp = func.Blueprint(name='data_loader', url_prefix='/data-loader')
 
 from sharedlib.db_helper.db_ops import DBHelper, sanitize_key
 

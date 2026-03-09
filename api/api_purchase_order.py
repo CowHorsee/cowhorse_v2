@@ -4,7 +4,7 @@ import azure.functions as func
 from azure_functions_openapi.decorator import openapi
 from scripts.purchase_order import create_po, get_po_ticket, get_po_details, update_po_status
 
-bp = func.Blueprint(name='purchase_order_api', url_prefix='/api/po')
+bp = func.Blueprint(name='purchase_order_api', url_prefix='/po')
 
 import asyncio
 from sharedlib.pdf_helper.pdf import generate_po_doc

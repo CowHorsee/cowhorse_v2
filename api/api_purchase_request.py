@@ -7,7 +7,7 @@ from scripts.purchase_request import (
     get_pr_ticket, get_pr_details, review_pr, procurement_alert
 )
 
-bp = func.Blueprint(name='purchase_request_api', url_prefix='/api/pr')
+bp = func.Blueprint(name='purchase_request_api', url_prefix='/pr')
 
 import asyncio
 from sharedlib.pdf_helper.pdf import generate_pr_doc

@@ -4,7 +4,7 @@ import azure.functions as func
 from azure_functions_openapi.decorator import openapi
 from scripts.uat_warehouse_management import count_inventory, update_inventory
 
-bp = func.Blueprint(name='warehouse_api', url_prefix='/api/warehouse')
+bp = func.Blueprint(name='warehouse_api', url_prefix='/warehouse')
 
 @bp.route(route="count_inventory", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 @openapi(

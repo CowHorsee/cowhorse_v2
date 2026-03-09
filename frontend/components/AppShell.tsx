@@ -48,9 +48,6 @@ export default function AppShell({ children, user }: AppShellProps) {
                   <p className="font-heading text-2xl font-bold tracking-[0.22em] text-white">
                     PPIS
                   </p>
-                  <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-100/65">
-                    Procurement Platform
-                  </p>
                 </div>
               </div>
             </div>

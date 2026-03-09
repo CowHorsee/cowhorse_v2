@@ -309,7 +309,7 @@ export default function InventoryOverviewChart({
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-              Overview {activePoint.label}
+              Overview (Unit)
             </p>
             <div className="mt-3 space-y-2.5">
               {chartSeries.map((series) => (

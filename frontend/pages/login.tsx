@@ -161,9 +161,6 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-12 max-w-xl md:mt-20">
-              <p className="text-xs font-extrabold uppercase tracking-[0.32em] text-white/55">
-                Control Center
-              </p>
               <h1 className="mt-4 font-heading text-4xl font-semibold leading-tight md:text-5xl md:leading-[1.05]">
                 Turn purchasing operations into a sharper system of record.
               </h1>
@@ -173,10 +170,6 @@ export default function LoginPage() {
                   |
                 </span>
               </div>
-              <p className="mt-6 max-w-lg text-sm leading-7 text-white/70 md:text-base">
-                PPIS keeps procurement teams aligned across requests, stock
-                visibility, and approvals with one clean operational workspace.
-              </p>
             </div>
           </div>
 

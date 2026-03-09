@@ -12,7 +12,7 @@ from azure_functions_openapi.swagger_ui import render_swagger_ui
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 #app.register_blueprint(loader_blueprint)
-#app.register_blueprint(user_v2_blueprint)
+#app.register_blueprint(user_v2_blueprint)  
 #app.register_blueprint(pr_api_blueprint)
 #app.register_blueprint(po_api_blueprint)
 #app.register_blueprint(warehouse_api_blueprint)

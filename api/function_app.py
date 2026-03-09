@@ -10,7 +10,7 @@ from api_purchase_request import bp as pr_api_blueprint
 from api_purchase_order import bp as po_api_blueprint
 from api_warehouse import bp as warehouse_api_blueprint
 
-app = func.FunctionApp()
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 app.register_blueprint(loader_blueprint)
 app.register_blueprint(user_v2_blueprint)
 app.register_blueprint(pr_api_blueprint)

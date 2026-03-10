@@ -148,7 +148,7 @@ export default function UsersPage() {
           setErrorMessage(
             error instanceof ApiError
               ? error.message
-              : 'Unable to load users from the API.',
+              : 'Unable to load users from the API.'
           );
           setUsers(fallbackUsers);
         }
@@ -224,8 +224,8 @@ export default function UsersPage() {
         currentUsers.map((user) =>
           user.user_id === editingUserId
             ? { ...user, role: editDraft.role }
-            : user,
-        ),
+            : user
+        )
       );
       setFeedbackMessage(`User ${editingUserId} role updated.`);
       setEditingUserId(null);
@@ -234,7 +234,7 @@ export default function UsersPage() {
       setErrorMessage(
         error instanceof ApiError
           ? error.message
-          : 'Unable to update the selected role.',
+          : 'Unable to update the selected role.'
       );
     } finally {
       setIsSubmitting(false);
@@ -283,7 +283,7 @@ export default function UsersPage() {
       setErrorMessage(
         error instanceof ApiError
           ? error.message
-          : 'Unable to create the user right now.',
+          : 'Unable to create the user right now.'
       );
     } finally {
       setIsSubmitting(false);

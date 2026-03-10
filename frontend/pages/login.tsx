@@ -59,10 +59,10 @@ export default function LoginPage() {
 
         setIsDeleting(false);
         setPhraseIndex(
-          (currentIndex) => (currentIndex + 1) % heroPhrases.length,
+          (currentIndex) => (currentIndex + 1) % heroPhrases.length
         );
       },
-      !isDeleting && typingComplete ? 1400 : isDeleting ? 45 : 85,
+      !isDeleting && typingComplete ? 1400 : isDeleting ? 45 : 85
     );
 
     return () => {
@@ -78,14 +78,12 @@ export default function LoginPage() {
     const animateCounters = (now: number) => {
       const progress = Math.min(
         (now - animationStart) / animationDurationMs,
-        1,
+        1
       );
       const easedProgress = 1 - Math.pow(1 - progress, 3);
 
       setCounters(
-        statItems.map((statItem) =>
-          Math.round(statItem.target * easedProgress),
-        ),
+        statItems.map((statItem) => Math.round(statItem.target * easedProgress))
       );
 
       if (progress < 1) {

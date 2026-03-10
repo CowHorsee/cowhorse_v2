@@ -37,10 +37,10 @@ export default function RecentPurchaseRequestsPanel({
                 {item.department} - {item.requester}
               </p>
               <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-slate-400">
-                {item.status} · RM {item.amount.toLocaleString()}
+                {item.status} - RM {item.amount.toLocaleString()}
               </p>
             </div>
-            <Link href={`/pr/${item.id}`}>
+            <Link href={`/pr/details?id=${encodeURIComponent(item.id)}`}>
               <a className="inline-flex items-center rounded-full border border-brand-blue px-4 py-2 text-sm font-bold text-brand-blue transition hover:bg-brand-blue hover:text-brand-white">
                 Details
               </a>

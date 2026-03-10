@@ -11,8 +11,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isSessionReady, setIsSessionReady] = useState(false);
-  const isAuthPage =
-    router.pathname === '/login' || router.pathname === '/register';
+  const isLoginPage = router.pathname === '/login';
 
   useEffect(() => {
     setCurrentUser(getUserSession());
@@ -20,7 +19,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   }, [router.asPath]);
 
   useEffect(() => {
-    if (!router.isReady || isAuthPage || !isSessionReady) {
+    if (!router.isReady || isLoginPage || !isSessionReady) {
       return;
     }
 
@@ -32,9 +31,9 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     if (!canAccessPath(router.pathname, currentUser)) {
       router.replace(getDefaultRouteForUser(currentUser));
     }
-  }, [currentUser, isAuthPage, isSessionReady, router, router.pathname]);
+  }, [currentUser, isLoginPage, isSessionReady, router, router.pathname]);
 
-  if (isAuthPage) {
+  if (isLoginPage) {
     return <Component {...pageProps} />;
   }
 

@@ -11,3 +11,4 @@ test_case
 __pycache__
 .pytest_cache
 test_case
+venv

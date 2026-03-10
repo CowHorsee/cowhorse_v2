@@ -1,9 +1,8 @@
-import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import { useToast } from '../components/ToastProvider';
 import { ApiError } from '../utils/apiClient';
-import { loginUser, mapBackendRole } from '../utils/authApi';
+import { loginUser } from '../utils/authApi';
 import { saveUserSession } from '../utils/localStorage';
 
 const heroPhrases = [
@@ -60,10 +59,10 @@ export default function LoginPage() {
 
         setIsDeleting(false);
         setPhraseIndex(
-          (currentIndex) => (currentIndex + 1) % heroPhrases.length
+          (currentIndex) => (currentIndex + 1) % heroPhrases.length,
         );
       },
-      !isDeleting && typingComplete ? 1400 : isDeleting ? 45 : 85
+      !isDeleting && typingComplete ? 1400 : isDeleting ? 45 : 85,
     );
 
     return () => {
@@ -79,12 +78,14 @@ export default function LoginPage() {
     const animateCounters = (now: number) => {
       const progress = Math.min(
         (now - animationStart) / animationDurationMs,
-        1
+        1,
       );
       const easedProgress = 1 - Math.pow(1 - progress, 3);
 
       setCounters(
-        statItems.map((statItem) => Math.round(statItem.target * easedProgress))
+        statItems.map((statItem) =>
+          Math.round(statItem.target * easedProgress),
+        ),
       );
 
       if (progress < 1) {
@@ -109,20 +110,19 @@ export default function LoginPage() {
     setLoginError('');
 
     try {
-      const response = await loginUser({ email, password });
-
-      saveUserSession({
-        user_id: response.user_id,
-        role: mapBackendRole(response.role),
-        email,
-        name: email.split('@')[0] || response.user_id,
+      const response = await loginUser({
+        email: email.trim(),
+        password,
       });
+
+      saveUserSession(response.user);
 
       showToast({
         title: 'Signed in',
         description: response.message || 'Opening the PPIS dashboard.',
         variant: 'success',
       });
+
       await router.push('/');
     } catch (error) {
       const message =
@@ -243,7 +243,7 @@ export default function LoginPage() {
 
               <button
                 type="button"
-                onClick={handleLogin}
+                onClick={() => void handleLogin()}
                 disabled={isSubmitting}
                 className="mt-6 flex w-full items-center justify-center gap-3 rounded-[20px] bg-brand-blue px-5 py-4 text-sm font-bold text-white shadow-[0_20px_45px_rgba(39,36,92,0.28)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#1f1b4b] disabled:cursor-not-allowed disabled:opacity-80"
               >

@@ -193,7 +193,9 @@ export default function PoSplitWorkspace({
               Open new PO
             </button>
 
-            <Link href={`/pr/${purchaseRequest.id}`}>
+            <Link
+              href={`/pr/details?id=${encodeURIComponent(purchaseRequest.id)}`}
+            >
               <a className="inline-flex items-center justify-center rounded-[22px] border border-slate-500/30 px-4 py-4 text-sm font-bold text-slate-700 transition hover:border-brand-red hover:text-brand-red">
                 Back to PR detail
               </a>

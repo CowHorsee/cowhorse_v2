@@ -1,15 +1,65 @@
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
-import { purchaseRequests } from '../../utils/mockdata/purchaseRequestsData';
+import { ApiError } from '../../utils/apiClient';
+import { getUserSession } from '../../utils/localStorage';
+import { listPrByUser } from '../../utils/prApi';
+import {
+  purchaseRequests as fallbackRequests,
+  type PurchaseRequest,
+} from '../../utils/mockdata/purchaseRequestsData';
 
 export default function PrPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [requests, setRequests] = useState<PurchaseRequest[]>(fallbackRequests);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadRequests() {
+      const sessionUser = getUserSession();
+      if (!sessionUser?.user_id) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setErrorMessage('');
+
+      try {
+        const apiRequests = await listPrByUser(sessionUser.user_id);
+        if (isMounted && apiRequests.length) {
+          setRequests(apiRequests);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(
+            error instanceof ApiError
+              ? error.message
+              : 'Unable to load purchase requests from the API.'
+          );
+          setRequests(fallbackRequests);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadRequests();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredRequests = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return purchaseRequests.filter((request) => {
+    return requests.filter((request) => {
       if (!normalizedSearch) {
         return true;
       }
@@ -21,9 +71,9 @@ export default function PrPage() {
         request.status.toLowerCase().includes(normalizedSearch)
       );
     });
-  }, [searchTerm]);
+  }, [requests, searchTerm]);
 
-  const pendingCount = purchaseRequests.filter(
+  const pendingCount = requests.filter(
     (request) => request.status === 'Pending Approval'
   ).length;
 
@@ -43,7 +93,7 @@ export default function PrPage() {
               Total Requests
             </p>
             <p className="mt-2 text-3xl font-semibold text-brand-blue">
-              {purchaseRequests.length}
+              {requests.length}
             </p>
           </Card>
           <Card variant="soft" padding="md">
@@ -54,7 +104,25 @@ export default function PrPage() {
               {pendingCount}
             </p>
           </Card>
+          <Link href="/pr/create">
+            <a className="rounded-2xl border border-brand-blue/20 bg-brand-blue/5 p-4 transition hover:border-brand-red hover:bg-brand-red/5">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                Create Request
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-brand-blue">
+                + New PR
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Submit a live purchase request to the API.
+              </p>
+            </a>
+          </Link>
         </div>
+        {errorMessage ? (
+          <p className="mt-3 text-sm font-medium text-brand-red">
+            {errorMessage}
+          </p>
+        ) : null}
       </Card>
 
       <Card variant="surface" padding="lg">
@@ -80,13 +148,22 @@ export default function PrPage() {
             <thead className="bg-slate-50">
               <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
                 <th className="px-4 py-3">PR ID</th>
-                <th className="px-4 py-3">Amount</th>
+                <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Details</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredRequests.length ? (
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-4 py-8 text-center text-slate-500"
+                  >
+                    Loading purchase requests...
+                  </td>
+                </tr>
+              ) : filteredRequests.length ? (
                 filteredRequests.map((request) => (
                   <tr key={request.id}>
                     <td className="px-4 py-3 font-semibold text-brand-blue">
@@ -101,7 +178,11 @@ export default function PrPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <Link href={`/pr/${request.id}`}>
+                      <Link
+                        href={`/pr/details?id=${encodeURIComponent(
+                          request.id
+                        )}`}
+                      >
                         <a className="text-sm font-bold text-brand-blue transition hover:text-brand-red">
                           View
                         </a>
@@ -112,7 +193,7 @@ export default function PrPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={4}
                     className="px-4 py-8 text-center text-slate-500"
                   >
                     No purchase requests match the current search.

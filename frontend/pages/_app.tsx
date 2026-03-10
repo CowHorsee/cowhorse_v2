@@ -12,9 +12,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isSessionReady, setIsSessionReady] = useState(false);
-  const isAuthPage = ['/login', '/register', '/prototype-users'].includes(
-    router.pathname
-  );
+  const isPublicPage = ['/login', '/prototype-users'].includes(router.pathname);
 
   useEffect(() => {
     setCurrentUser(getUserSession());
@@ -22,21 +20,21 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   }, [router.asPath]);
 
   useEffect(() => {
-    if (!router.isReady || isAuthPage || !isSessionReady) {
+    if (!router.isReady || isPublicPage || !isSessionReady) {
       return;
     }
 
     if (!currentUser) {
-      router.replace('/login');
+      void router.replace('/login');
       return;
     }
 
     if (!canAccessPath(router.pathname, currentUser)) {
-      router.replace(getDefaultRouteForUser(currentUser));
+      void router.replace(getDefaultRouteForUser(currentUser));
     }
-  }, [currentUser, isAuthPage, isSessionReady, router, router.pathname]);
+  }, [currentUser, isPublicPage, isSessionReady, router, router.pathname]);
 
-  if (isAuthPage) {
+  if (isPublicPage) {
     return (
       <ToastProvider>
         <Component {...pageProps} />

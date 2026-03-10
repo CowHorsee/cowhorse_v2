@@ -1,14 +1,14 @@
-import { useState } from 'react';
 import Link from 'next/link';
-import Card, { CardHeader } from '../components/atoms/Card';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
+import Card, { CardHeader } from '../components/atoms/Card';
 import { useToast } from '../components/ToastProvider';
-import { ApiError } from '../utils/apiClient';
 import {
   mapUserRoleToBackendRoleName,
   registerUser,
   type UserRole,
 } from '../utils/authApi';
+import { ApiError } from '../utils/apiClient';
 import { getUserSession } from '../utils/localStorage';
 
 export default function RegisterPage() {
@@ -37,25 +37,26 @@ export default function RegisterPage() {
     setSuccessMessage('');
     setIsSubmitting(true);
 
+    const sessionUser = getUserSession();
+    if (!sessionUser?.user_id) {
+      setErrorMessage('Admin session required before creating a user.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      const sessionUser = getUserSession();
-
-      if (!sessionUser?.user_id) {
-        throw new Error('Admin session is required to register a user.');
-      }
-
       const response = await registerUser({
         admin_id: sessionUser.user_id,
-        email: formValues.email,
-        name: formValues.name,
+        email: formValues.email.trim(),
+        name: formValues.name.trim(),
         role_name: mapUserRoleToBackendRoleName(formValues.role),
-        password: formValues.password,
+        password: formValues.password.trim() || undefined,
       });
 
-      setSuccessMessage(response);
+      setSuccessMessage(response.message);
       showToast({
         title: 'Account created',
-        description: response,
+        description: response.message,
         variant: 'success',
       });
       setFormValues({
@@ -65,13 +66,13 @@ export default function RegisterPage() {
         password: '',
       });
       setTimeout(() => {
-        router.push('/login');
+        void router.push('/users');
       }, 800);
     } catch (error) {
       const message =
         error instanceof ApiError
           ? error.message
-          : 'Unable to create your account right now.';
+          : 'Unable to create the user right now.';
 
       setErrorMessage(message);
       showToast({
@@ -85,15 +86,15 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-brand-blue p-6">
+    <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl items-center justify-center p-6">
       <Card
         variant="surface"
         padding="lg"
         className="w-full max-w-md bg-brand-white shadow-surface"
       >
         <CardHeader
-          subtitle="Create account"
-          title="Register"
+          subtitle="Admin tools"
+          title="Create User"
           className="mb-0"
           titleClassName="text-3xl"
         />
@@ -104,7 +105,7 @@ export default function RegisterPage() {
           <input
             id="name"
             type="text"
-            placeholder="Your full name"
+            placeholder="User full name"
             value={formValues.name}
             onChange={(event) => updateField('name', event.target.value)}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
@@ -119,7 +120,7 @@ export default function RegisterPage() {
           <input
             id="email"
             type="email"
-            placeholder="you@company.com"
+            placeholder="user@company.com"
             value={formValues.email}
             onChange={(event) => updateField('email', event.target.value)}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
@@ -147,12 +148,12 @@ export default function RegisterPage() {
             htmlFor="password"
             className="mt-2 text-sm font-bold text-brand-blue"
           >
-            Password
+            Temporary Password (Optional)
           </label>
           <input
             id="password"
             type="password"
-            placeholder="At least 8 characters"
+            placeholder="Leave blank if backend handles this"
             value={formValues.password}
             onChange={(event) => updateField('password', event.target.value)}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
@@ -172,16 +173,16 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mt-4 rounded-lg bg-brand-red px-4 py-2.5 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]"
+            className="mt-4 rounded-lg bg-brand-red px-4 py-2.5 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d] disabled:cursor-not-allowed disabled:opacity-80"
           >
-            {isSubmitting ? 'Creating Account...' : 'Create Account'}
+            {isSubmitting ? 'Creating User...' : 'Create User'}
           </button>
         </form>
         <p className="mt-4 text-sm text-slate-600">
-          Already have an account?{' '}
-          <Link href="/login">
+          Back to{' '}
+          <Link href="/users">
             <a className="font-bold text-brand-blue hover:text-brand-red">
-              Sign in
+              User Management
             </a>
           </Link>
         </p>

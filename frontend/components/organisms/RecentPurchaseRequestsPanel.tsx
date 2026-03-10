@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Card, { CardHeader } from '../atoms/Card';
+import { buttonClassName } from '../atoms/Button';
 import type { PurchaseRequest } from '../../utils/mockdata/purchaseRequestsData';
 
 type RecentPurchaseRequestsPanelProps = {
@@ -41,7 +42,13 @@ export default function RecentPurchaseRequestsPanel({
               </p>
             </div>
             <Link href={`/pr/${item.id}`}>
-              <a className="inline-flex items-center rounded-full border border-brand-blue px-4 py-2 text-sm font-bold text-brand-blue transition hover:bg-brand-blue hover:text-brand-white">
+              <a
+                className={buttonClassName({
+                  variant: 'outline',
+                  size: 'sm',
+                  className: 'rounded-full',
+                })}
+              >
                 Details
               </a>
             </Link>

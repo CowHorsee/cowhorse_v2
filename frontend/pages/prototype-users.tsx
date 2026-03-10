@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
+import Button from '../components/atoms/Button';
 import { useToast } from '../components/ToastProvider';
 import { saveUserSession } from '../utils/localStorage';
 import {
@@ -83,16 +84,17 @@ export default function PrototypeUsersPage() {
                   </p>
                 </div>
 
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => loginAsUser(user)}
                   disabled={selectedUserId === user.user_id}
-                  className="rounded-xl bg-brand-blue px-5 py-3 text-sm font-bold text-white transition hover:bg-[#1f1b4b] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="rounded-xl px-5 py-3 font-bold hover:bg-[#1f1b4b]"
                 >
                   {selectedUserId === user.user_id
                     ? 'Signing In...'
                     : 'Log In as User'}
-                </button>
+                </Button>
               </div>
             </Card>
           ))}

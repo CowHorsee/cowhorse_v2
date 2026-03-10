@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import Button, { buttonClassName } from '../atoms/Button';
 import PurchaseOrderList from '../molecules/PurchaseOrderList';
 import type { PurchaseRequest } from '../../utils/mockdata/purchaseRequestsData';
 import type {
@@ -185,16 +186,25 @@ export default function PoSplitWorkspace({
           </div>
 
           <div className="mt-6 grid gap-3">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={createNewPo}
-              className="inline-flex items-center justify-center rounded-[22px] bg-brand-blue px-4 py-4 text-sm font-bold text-white transition hover:bg-[#1d1a45]"
+              fullWidth
+              className="rounded-[22px] px-4 py-4 font-bold hover:bg-[#1d1a45]"
             >
               Open new PO
-            </button>
+            </Button>
 
             <Link href={`/pr/${purchaseRequest.id}`}>
-              <a className="inline-flex items-center justify-center rounded-[22px] border border-slate-500/30 px-4 py-4 text-sm font-bold text-slate-700 transition hover:border-brand-red hover:text-brand-red">
+              <a
+                className={buttonClassName({
+                  variant: 'outline',
+                  fullWidth: true,
+                  className:
+                    'rounded-[22px] border-slate-500/30 px-4 py-4 font-bold text-slate-700 hover:border-brand-red hover:text-brand-red',
+                })}
+              >
                 Back to PR detail
               </a>
             </Link>
@@ -356,8 +366,9 @@ export default function PoSplitWorkspace({
                             <p className="font-heading text-2xl font-semibold text-brand-blue">
                               {formatCurrency(getItemTotal(item))}
                             </p>
-                            <button
+                            <Button
                               type="button"
+                              variant="secondary"
                               onClick={() =>
                                 selectedPo
                                   ? moveItemToPo(item.id, selectedPo.id)
@@ -366,14 +377,14 @@ export default function PoSplitWorkspace({
                               disabled={
                                 !selectedPo || Boolean(supplierMismatch)
                               }
-                              className="inline-flex rounded-full bg-brand-blue px-4 py-2 text-sm font-bold text-white transition hover:bg-[#1d1a45] disabled:cursor-not-allowed disabled:bg-slate-400"
+                              className="rounded-full px-4 py-2 font-bold hover:bg-[#1d1a45] disabled:bg-slate-400"
                             >
                               {!selectedPo
                                 ? 'Create or select a PO'
                                 : supplierMismatch
                                 ? 'Supplier mismatch'
                                 : `Move to ${selectedPo.reference}`}
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       </article>

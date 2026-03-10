@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import Button from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { getUserSession } from '../../../utils/localStorage';
 // import { ApiError } from '../../../utils/api/apiClient';
@@ -191,20 +192,21 @@ export default function ManagerApprovalPage({
         </div>
 
         <div className="mt-5 flex flex-wrap justify-center gap-3">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => handleDecision('approve')}
-            className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
           >
             Approve
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => handleDecision('reject')}
-            className="inline-flex items-center rounded-lg bg-brand-red px-4 py-2 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]"
+            className="rounded-lg px-4 py-2"
           >
             Reject
-          </button>
+          </Button>
         </div>
 
         {decision ? (

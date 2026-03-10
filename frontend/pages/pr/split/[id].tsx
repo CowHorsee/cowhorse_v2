@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import Button, { buttonClassName } from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import {
   purchaseRequests,
@@ -232,14 +233,9 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                className="rounded-lg bg-brand-red px-4 py-2 text-sm font-bold text-white transition hover:bg-[#ad2d2d]"
-              >
-                Save Split Draft
-              </button>
+              <Button type="button">Save Split Draft</Button>
               <Link href={`/pr/${purchaseRequest.id}`}>
-                <a className="rounded-lg border border-brand-blue px-4 py-2 text-sm font-bold text-brand-blue transition hover:bg-brand-blue hover:text-white">
+                <a className={buttonClassName({ variant: 'outline' })}>
                   Back to PR details
                 </a>
               </Link>

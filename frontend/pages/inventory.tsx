@@ -1,5 +1,6 @@
 import { type ChangeEvent, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
+import Button, { buttonClassName } from '../components/atoms/Button';
 import {
   inventoryItems as initialInventoryItems,
   type InventoryItem,
@@ -107,6 +108,8 @@ function parseInventoryCsv(content: string): CsvParseResult {
     const location =
       getValueByAliases(row, ['location', 'warehouse', 'zone']) || 'Unassigned';
     const unit = getValueByAliases(row, ['unit', 'uom']) || 'pcs';
+    const unitPrice =
+      Number(getValueByAliases(row, ['unitprice', 'price'])) || 0;
     const lastUpdated =
       getValueByAliases(row, ['lastupdated', 'updatedat', 'updated']) ||
       new Date().toISOString().slice(0, 16).replace('T', ' ');
@@ -126,6 +129,7 @@ function parseInventoryCsv(content: string): CsvParseResult {
       location,
       currentStock,
       unit,
+      unitPrice,
       lastUpdated,
     });
   });
@@ -251,17 +255,17 @@ export default function InventoryPage() {
             <div className="mt-2 flex flex-wrap gap-2">
               <label
                 htmlFor="inventory-csv"
-                className="inline-flex cursor-pointer items-center rounded-xl bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-red"
+                className={buttonClassName({
+                  variant: 'secondary',
+                  size: 'md',
+                  className: 'cursor-pointer',
+                })}
               >
                 Upload warehouse CSV
               </label>
-              <button
-                type="button"
-                onClick={handleCsvExport}
-                className="inline-flex items-center rounded-xl border border-brand-blue px-4 py-2 text-sm font-semibold text-brand-blue transition hover:border-brand-red hover:text-brand-red"
-              >
+              <Button variant="outline" onClick={handleCsvExport}>
                 Export full table CSV
-              </button>
+              </Button>
             </div>
             <input
               id="inventory-csv"

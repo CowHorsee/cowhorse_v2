@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
+import Button from '../components/atoms/Button';
 import type { UserRole } from '../utils/api/authApi';
 import {
   managedUsers as initialManagedUsers,
@@ -14,7 +15,7 @@ import {
 //   searchUsers,
 // } from '../utils/api/userManagementApi';
 
-const roleOptions: UserRole[] = ['ADMIN', 'MANAGER', 'WAREHOUSE', 'EMPLOYEE'];
+const roleOptions: UserRole[] = ['ADMIN'];
 
 type RoleDropdownProps = {
   value: UserRole;
@@ -94,7 +95,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserRole, setNewUserRole] = useState<UserRole>('EMPLOYEE');
+  const [newUserRole, setNewUserRole] = useState<UserRole>('ADMIN');
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<{
@@ -196,7 +197,7 @@ export default function UsersPage() {
               ...user,
               name: normalizedName,
               email: normalizedEmail,
-              role: editDraft.role,
+              role: 'ADMIN',
             }
           : user
       )
@@ -251,13 +252,13 @@ export default function UsersPage() {
       user_id: nextId,
       name: normalizedName,
       email: normalizedEmail,
-      role: newUserRole,
+      role: 'ADMIN',
     };
 
     setUsers((currentUsers) => [nextUser, ...currentUsers]);
     setNewUserName('');
     setNewUserEmail('');
-    setNewUserRole('EMPLOYEE');
+    setNewUserRole('ADMIN');
     setFeedbackMessage(`User ${normalizedName} added (mock mode).`);
   }
 
@@ -305,12 +306,7 @@ export default function UsersPage() {
                 className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
               />
               <RoleDropdown value={newUserRole} onChange={setNewUserRole} />
-              <button
-                type="submit"
-                className="rounded-lg bg-brand-red px-4 py-2 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]"
-              >
-                Add User
-              </button>
+              <Button type="submit">Add User</Button>
             </form>
             {feedbackMessage ? (
               <p className="mt-2 text-xs font-semibold text-brand-blue">
@@ -410,10 +406,11 @@ export default function UsersPage() {
                     </td>
                     <td className="px-4 py-3">
                       {editingUserId === user.user_id ? (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={confirmEditingRow}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
+                          className="h-9 w-9 rounded-lg border border-emerald-300 bg-emerald-50 p-0 text-emerald-700 hover:bg-emerald-100"
                           aria-label={`Confirm edits for ${user.name}`}
                           title="Confirm"
                         >
@@ -428,12 +425,13 @@ export default function UsersPage() {
                           >
                             <path d="M20 6L9 17l-5-5" />
                           </svg>
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
                           type="button"
+                          variant="outline"
                           onClick={() => startEditingRow(user)}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-brand-blue transition hover:border-brand-blue hover:bg-slate-50"
+                          className="h-9 w-9 rounded-lg border-slate-300 p-0 text-brand-blue hover:border-brand-blue hover:bg-slate-50"
                           aria-label={`Edit ${user.name}`}
                           title="Edit"
                         >
@@ -449,7 +447,7 @@ export default function UsersPage() {
                             <path d="M12 20h9" />
                             <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
                           </svg>
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>

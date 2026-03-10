@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import Button from '../components/atoms/Button';
 import { saveUserSession } from '../utils/localStorage';
 
 const heroPhrases = [
@@ -24,8 +25,6 @@ function LoadingSpinner() {
 export default function LoginPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [typedPhrase, setTypedPhrase] = useState('');
@@ -107,28 +106,28 @@ export default function LoginPage() {
   }
 
   async function handleLogin() {
-    if (!email || !password) {
-      setLoginError('Email and password are required.');
-      return;
-    }
-
     setIsSubmitting(true);
     setLoginError('');
 
     try {
-      const email = formValues.email || 'guest@cowhorse.local';
+      const email = formValues.email.trim() || 'guest@cowhorse.local';
 
       saveUserSession({
         user_id: `local-${Date.now()}`,
         name: email.split('@')[0] || 'Guest User',
         email,
-        role: 'MANAGER',
+        role: 'ADMIN',
       });
 
       await router.push('/');
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function handleBypassLogin() {
+    setFormValues({ email: '', password: '' });
+    void handleLogin();
   }
 
   return (
@@ -230,15 +229,26 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   onClick={handleLogin}
                   disabled={isSubmitting}
-                  className="mt-6 flex w-full items-center justify-center gap-3 rounded-[20px] bg-brand-blue px-5 py-4 text-sm font-bold text-white shadow-[0_20px_45px_rgba(39,36,92,0.28)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#1f1b4b] disabled:cursor-not-allowed disabled:opacity-80"
+                  fullWidth
+                  className="mt-6 rounded-[20px] px-5 py-4 font-bold shadow-[0_20px_45px_rgba(39,36,92,0.28)] duration-200 hover:-translate-y-0.5 hover:bg-[#1f1b4b]"
                 >
                   {isSubmitting ? <LoadingSpinner /> : null}
                   <span>{isSubmitting ? 'Signing In...' : 'Log In'}</span>
-                </button>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleBypassLogin}
+                  disabled={isSubmitting}
+                  fullWidth
+                  className="mt-3 rounded-[20px] border-brand-blue/30 px-5 py-3 font-bold hover:bg-brand-blue/5"
+                >
+                  Bypass Login
+                </Button>
               </div>
 
               <div className="mt-5 flex items-center justify-between gap-4 rounded-[20px] bg-brand-blue/[0.03] px-4 py-3">

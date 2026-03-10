@@ -1,13 +1,31 @@
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useRouter } from 'next/router';
+import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { purchaseRequests } from '../../utils/mockdata/purchaseRequestsData';
+import { getCreatedPurchaseRequests } from '../../utils/localStorage';
 // import { getUserSession } from '../../utils/localStorage';
 // import { getPrTickets, mapTicketToPurchaseRequest } from '../../utils/api/prApi';
 
 export default function PrPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [requests] = useState(purchaseRequests);
+  const [requests, setRequests] = useState(purchaseRequests);
+
+  useEffect(() => {
+    const createdRows = getCreatedPurchaseRequests();
+    if (!createdRows.length) {
+      setRequests(purchaseRequests);
+      return;
+    }
+
+    const baseRows = purchaseRequests.filter(
+      (baseRow) =>
+        !createdRows.some((createdRow) => createdRow.id === baseRow.id)
+    );
+
+    setRequests([...createdRows, ...baseRows]);
+  }, [router.asPath]);
   // useEffect(() => {
   //   async function loadRequests() {
   //     const sessionUser = getUserSession();
@@ -78,6 +96,25 @@ export default function PrPage() {
               {pendingCount}
             </p>
           </Card>
+          <Link href="/pr/create">
+            <a className="block">
+              <Card
+                variant="soft"
+                padding="md"
+                className="h-full border border-brand-red/20 transition hover:border-brand-red"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                  Create Purchase Request
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-brand-blue">
+                  + Create PR
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Add a new request with multiple items.
+                </p>
+              </Card>
+            </a>
+          </Link>
         </div>
       </Card>
 

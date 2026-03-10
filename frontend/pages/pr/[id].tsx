@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
+import { buttonClassName } from '../../components/atoms/Button';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { getUserSession } from '../../utils/localStorage';
 // import { getPrDetails, mergeDetailsIntoPurchaseRequest } from '../../utils/api/prApi';
@@ -92,7 +93,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
 
         <div className="mt-5 flex flex-wrap gap-3">
           <Link href={`/pr/split/${purchaseRequest.id}`}>
-            <a className="inline-flex items-center rounded-lg bg-brand-red px-4 py-2 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]">
+            <a className={buttonClassName({ variant: 'primary' })}>
               Send For Approval
             </a>
           </Link>

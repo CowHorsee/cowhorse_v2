@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Card, { CardHeader } from '../components/atoms/Card';
+import Button from '../components/atoms/Button';
 import { useRouter } from 'next/router';
 import type { UserRole } from '../utils/api/authApi';
 // import { ApiError } from '../utils/api/apiClient';
@@ -12,7 +13,7 @@ export default function RegisterPage() {
   const [formValues, setFormValues] = useState({
     name: '',
     email: '',
-    role: 'EMPLOYEE' as UserRole,
+    role: 'ADMIN' as UserRole,
     password: '',
   });
   const [errorMessage, setErrorMessage] = useState('');
@@ -49,7 +50,7 @@ export default function RegisterPage() {
       setFormValues({
         name: '',
         email: '',
-        role: 'EMPLOYEE',
+        role: 'ADMIN',
         password: '',
       });
       setTimeout(() => {
@@ -115,9 +116,6 @@ export default function RegisterPage() {
             onChange={(event) => updateField('role', event.target.value)}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
           >
-            <option value="EMPLOYEE">Employee</option>
-            <option value="MANAGER">Manager</option>
-            <option value="WAREHOUSE">Warehouse</option>
             <option value="ADMIN">Admin</option>
           </select>
 
@@ -147,13 +145,9 @@ export default function RegisterPage() {
             </p>
           ) : null}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-4 rounded-lg bg-brand-red px-4 py-2.5 text-sm font-bold text-brand-white transition hover:bg-[#ad2d2d]"
-          >
+          <Button type="submit" disabled={isSubmitting} className="mt-4">
             {isSubmitting ? 'Creating Account...' : 'Create Account'}
-          </button>
+          </Button>
         </form>
         <p className="mt-4 text-sm text-slate-600">
           Already have an account?{' '}

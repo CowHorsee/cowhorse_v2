@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
+import Button from '../components/atoms/Button';
 import type { AuthUser } from '../utils/api/authApi';
 import { clearUserSession, getUserSession } from '../utils/localStorage';
 
@@ -47,13 +48,9 @@ export default function ProfilePage() {
           </p>
 
           <div className="mt-6 flex justify-center">
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-brand-blue transition hover:border-brand-blue"
-            >
+            <Button variant="outline" onClick={handleSignOut}>
               Sign Out
-            </button>
+            </Button>
           </div>
         </Card>
       </section>

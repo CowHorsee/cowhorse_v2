@@ -1,4 +1,4 @@
-import { apiRequest } from './api/apiClient';
+import { apiRequest, readApiEnvelope } from './api/apiClient';
 import type { PurchaseRequest, PurchaseRequestStatus } from './mockdata/purchaseRequestsData';
 
 function readRecord(value: unknown) {
@@ -89,17 +89,25 @@ export function normalizePurchaseRequest(value: unknown): PurchaseRequest {
 }
 
 function normalizePurchaseRequestsResponse(value: unknown) {
-  if (!Array.isArray(value)) {
+  const envelope = readApiEnvelope<unknown>(value);
+  const rows = Array.isArray(envelope?.data)
+    ? envelope.data
+    : Array.isArray(value)
+      ? value
+      : [];
+
+  if (!rows.length) {
     return [];
   }
 
-  return value
+  return rows
     .map(normalizePurchaseRequest)
     .filter((request) => Boolean(request.id));
 }
 
 function normalizePurchaseRequestDetails(value: unknown) {
-  const record = readRecord(value);
+  const envelope = readApiEnvelope<unknown>(value);
+  const record = readRecord(envelope?.data) || readRecord(value);
 
   if (!record) {
     return null;
@@ -168,10 +176,14 @@ export async function createPurchaseRequest(payload: {
   proc_item: Record<string, number>;
   justification: string;
 }) {
-  return apiRequest<Record<string, unknown>>('/api/pr/create_pr', {
+  const response = await apiRequest<unknown>('/api/pr/create_pr', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+
+  const envelope = readApiEnvelope<unknown>(response);
+  const data = readRecord(envelope?.data);
+  return (data || {}) as Record<string, unknown>;
 }
 
 export const createPr = createPurchaseRequest;
@@ -180,7 +192,7 @@ export function acceptPrSuggestion(payload: {
   pr_id: string;
   officer_id: string;
 }) {
-  return apiRequest<Record<string, unknown>>('/api/pr/accept_pr_suggestion', {
+  return apiRequest<unknown>('/api/pr/accept_pr_suggestion', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -192,7 +204,7 @@ export function modifyPurchaseRequest(payload: {
   proc_item: Record<string, number>;
   justification: string;
 }) {
-  return apiRequest<Record<string, unknown>>('/api/pr/modify_pr', {
+  return apiRequest<unknown>('/api/pr/modify_pr', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -205,7 +217,7 @@ export async function reviewPurchaseRequest(payload: {
   decision: string;
   manager_id: string;
 }) {
-  return apiRequest<Record<string, unknown>>('/api/pr/review_pr', {
+  return apiRequest<unknown>('/api/pr/review_pr', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -255,7 +267,7 @@ export function sendProcurementAlert(payload: {
   predicted_demand: number;
   justification: string;
 }) {
-  return apiRequest<Record<string, unknown>>('/api/pr/procurement_alert', {
+  return apiRequest<unknown>('/api/pr/procurement_alert', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

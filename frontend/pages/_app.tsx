@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import '../styles/globals.css';
 import AppShell from '../components/AppShell';
 import { ToastProvider } from '../components/ToastProvider';
-import type { AuthUser } from '../utils/api/authApi';
+import type { AuthUser } from '../utils/authApi';
 import { getUserSession } from '../utils/localStorage';
 import { canAccessPath, getDefaultRouteForUser } from '../utils/rbac';
 

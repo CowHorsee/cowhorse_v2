@@ -35,6 +35,12 @@ type ApiRequestOptions = {
   query?: Record<string, QueryValue>;
 };
 
+export type ApiEnvelope<T> = {
+  status?: string;
+  message?: string;
+  data: T;
+};
+
 type LogLevel = 'info' | 'error';
 
 const sensitiveKeys = new Set([
@@ -129,6 +135,25 @@ function tryParseJson(text: string): JsonValue | null {
   } catch {
     return null;
   }
+}
+
+function readRecord(value: unknown) {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+export function readApiEnvelope<T>(value: unknown): ApiEnvelope<T> | null {
+  const record = readRecord(value);
+  if (!record || !('data' in record)) {
+    return null;
+  }
+
+  return {
+    status: typeof record.status === 'string' ? record.status : undefined,
+    message: typeof record.message === 'string' ? record.message : undefined,
+    data: record.data as T,
+  };
 }
 
 async function ensureApiServerHealthy(path: string) {

@@ -1,4 +1,4 @@
-import { apiRequest } from './api/apiClient';
+import { apiRequest, readApiEnvelope } from './api/apiClient';
 import {
   mapBackendRole,
   mapUserRoleToBackendRoleName,
@@ -35,11 +35,18 @@ function normalizeManagedUser(value: unknown): ManagedUser {
 }
 
 function normalizeUsersResponse(value: unknown): ManagedUser[] {
-  if (!Array.isArray(value)) {
+  const envelope = readApiEnvelope<unknown>(value);
+  const rows = Array.isArray(envelope?.data)
+    ? envelope.data
+    : Array.isArray(value)
+      ? value
+      : [];
+
+  if (!rows.length) {
     return [];
   }
 
-  return value.map(normalizeManagedUser);
+  return rows.map(normalizeManagedUser);
 }
 
 export async function listUsers(adminId: string) {
@@ -61,22 +68,30 @@ export async function searchUsers(filters: SearchUsersFilters = {}) {
 }
 
 export async function createManagedUser(payload: RegisterPayload) {
-  const response = await apiRequest<{ message?: string; user?: unknown }>(
-    '/api/user/register',
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        ...payload,
-        role_name: mapUserRoleToBackendRoleName(
-          mapBackendRole(payload.role_name),
-        ),
-      }),
-    },
-  );
+  const response = await apiRequest<unknown>('/api/user/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...payload,
+      role_name: mapUserRoleToBackendRoleName(mapBackendRole(payload.role_name)),
+    }),
+  });
+
+  const envelope = readApiEnvelope<unknown>(response);
 
   return {
-    message: response.message || 'User created successfully.',
-    user: normalizeManagedUser(response.user),
+    message:
+      envelope?.message ||
+      (typeof envelope?.data === 'string' ? envelope.data : '') ||
+      'User created successfully.',
+    user: normalizeManagedUser({
+      user_id:
+        String(payload.email || '')
+          .trim()
+          .toLowerCase() || 'unknown-user',
+      name: payload.name,
+      email: payload.email,
+      role_name: payload.role_name,
+    }),
   };
 }
 
@@ -85,22 +100,24 @@ export async function modifyUserRole(payload: {
   user_id: string;
   new_role_name: UserRole | BackendRoleName;
 }) {
-  const response = await apiRequest<{ message?: string; user?: unknown }>(
-    '/api/user/modify_role',
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        ...payload,
-        new_role_name: mapUserRoleToBackendRoleName(
-          mapBackendRole(payload.new_role_name),
-        ),
-      }),
-    },
-  );
+  const response = await apiRequest<unknown>('/api/user/modify_role', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...payload,
+      new_role_name: mapUserRoleToBackendRoleName(
+        mapBackendRole(payload.new_role_name),
+      ),
+    }),
+  });
+
+  const envelope = readApiEnvelope<unknown>(response);
 
   return {
-    message: response.message || 'User role updated successfully.',
-    user: response.user ? normalizeManagedUser(response.user) : null,
+    message:
+      envelope?.message ||
+      (typeof envelope?.data === 'string' ? envelope.data : '') ||
+      'User role updated successfully.',
+    user: null,
   };
 }
 

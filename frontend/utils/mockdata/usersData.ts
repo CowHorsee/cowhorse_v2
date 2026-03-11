@@ -1,4 +1,4 @@
-import type { UserRole } from '../api/authApi';
+import type { UserRole } from '../authApi';
 
 export type ManagedUser = {
   user_id: string;

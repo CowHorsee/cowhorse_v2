@@ -1,4 +1,4 @@
-import { apiRequest } from './api/apiClient';
+import { apiRequest, readApiEnvelope } from './api/apiClient';
 
 export type UserRole = 'ADMIN' | 'EMPLOYEE' | 'MANAGER' | 'WAREHOUSE';
 
@@ -127,19 +127,23 @@ export async function registerUser(payload: RegisterPayload) {
     }),
   });
 
-  const responseRecord = readRecord(response);
-  const rawUser = readRecord(responseRecord?.user) || {
-    user_id: responseRecord?.user_id,
+  const envelope = readApiEnvelope<unknown>(response);
+  const dataRecord = readRecord(envelope?.data);
+  const rawUser = dataRecord || {
+    user_id:
+      String(payload.email || '')
+        .trim()
+        .toLowerCase() || 'unknown-user',
     name: payload.name,
     email: payload.email,
     role_name: payload.role_name,
-    created_at: responseRecord?.created_at,
+    created_at: undefined,
   };
 
   return {
     message:
-      (typeof responseRecord?.message === 'string' && responseRecord.message) ||
-      (typeof response === 'string' && response) ||
+      envelope?.message ||
+      (typeof envelope?.data === 'string' && envelope.data) ||
       'User created successfully.',
     user: normalizeAuthUser(rawUser),
   } as AuthResponse;
@@ -152,13 +156,11 @@ export async function loginUser(payload: LoginPayload) {
     body: JSON.stringify(payload),
   });
 
-  const responseRecord = readRecord(response);
-  const rawUser = readRecord(responseRecord?.user) || responseRecord;
+  const envelope = readApiEnvelope<unknown>(response);
+  const rawUser = readRecord(envelope?.data) || readRecord(response);
 
   return {
-    message:
-      (typeof responseRecord?.message === 'string' && responseRecord.message) ||
-      'Login successful.',
+    message: envelope?.message || 'Login successful.',
     user: normalizeAuthUser({
       ...rawUser,
       email: payload.email,

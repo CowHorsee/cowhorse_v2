@@ -15,7 +15,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const isAuthPage =
     router.pathname === '/login' || router.pathname === '/register';
 
-  const isPublicPage = ['/login', '/prototype-users'].includes(router.pathname);
+  const isPublicPage = router.pathname === '/login';
 
   useEffect(() => {
     setCurrentUser(getUserSession());
@@ -28,6 +28,12 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     }
 
     if (!currentUser) {
+      const persistedUser = getUserSession();
+      if (persistedUser) {
+        setCurrentUser(persistedUser);
+        return;
+      }
+
       void router.replace('/login');
       return;
     }

@@ -1,4 +1,8 @@
-export type PurchaseRequestStatus = 'Pending Approval' | 'In Review' | 'Approved';
+export type PurchaseRequestStatus =
+  | 'Pending Approval'
+  | 'In Review'
+  | 'Approved'
+  | 'Rejected';
 
 export type PurchaseRequest = {
   id: string;

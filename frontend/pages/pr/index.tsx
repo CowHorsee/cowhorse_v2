@@ -2,51 +2,74 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
-import { purchaseRequests } from '../../utils/mockdata/purchaseRequestsData';
-import { getCreatedPurchaseRequests } from '../../utils/localStorage';
-// import { getUserSession } from '../../utils/localStorage';
-// import { getPrTickets, mapTicketToPurchaseRequest } from '../../utils/api/prApi';
+import { ApiError } from '../../utils/api/apiClient';
+import {
+  getCreatedPurchaseRequests,
+  getUserSession,
+} from '../../utils/localStorage';
+import { listPrByUser } from '../../utils/prApi';
+import {
+  purchaseRequests as fallbackRequests,
+  type PurchaseRequest,
+} from '../../utils/mockdata/purchaseRequestsData';
 
 export default function PrPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [requests, setRequests] = useState(purchaseRequests);
+  const [requests, setRequests] = useState<PurchaseRequest[]>(fallbackRequests);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const createdRows = getCreatedPurchaseRequests();
-    if (!createdRows.length) {
-      setRequests(purchaseRequests);
-      return;
+    let isMounted = true;
+
+    async function loadRequests() {
+      const sessionUser = getUserSession();
+      const createdRows = getCreatedPurchaseRequests();
+
+      setIsLoading(true);
+      setErrorMessage('');
+
+      try {
+        const apiRows = sessionUser?.user_id
+          ? await listPrByUser(sessionUser.user_id)
+          : fallbackRequests;
+
+        const baseRows = (apiRows.length ? apiRows : fallbackRequests).filter(
+          (baseRow) =>
+            !createdRows.some((createdRow) => createdRow.id === baseRow.id)
+        );
+
+        if (isMounted) {
+          setRequests([...createdRows, ...baseRows]);
+        }
+      } catch (error) {
+        const baseRows = fallbackRequests.filter(
+          (baseRow) =>
+            !createdRows.some((createdRow) => createdRow.id === baseRow.id)
+        );
+
+        if (isMounted) {
+          setErrorMessage(
+            error instanceof ApiError
+              ? error.message
+              : 'Unable to load purchase requests from the API.'
+          );
+          setRequests([...createdRows, ...baseRows]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     }
 
-    const baseRows = purchaseRequests.filter(
-      (baseRow) =>
-        !createdRows.some((createdRow) => createdRow.id === baseRow.id)
-    );
+    void loadRequests();
 
-    setRequests([...createdRows, ...baseRows]);
+    return () => {
+      isMounted = false;
+    };
   }, [router.asPath]);
-  // useEffect(() => {
-  //   async function loadRequests() {
-  //     const sessionUser = getUserSession();
-  //     try {
-  //       const rows = await getPrTickets({ user_id: sessionUser?.user_id });
-  //       if (rows.length) {
-  //         setRequests(
-  //           rows.map((row) =>
-  //             mapTicketToPurchaseRequest(
-  //               row,
-  //               purchaseRequests.find((item) => item.id === row.pr_id)
-  //             )
-  //           )
-  //         );
-  //       }
-  //     } catch {
-  //       setRequests(purchaseRequests);
-  //     }
-  //   }
-  //   loadRequests();
-  // }, []);
 
   const filteredRequests = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -116,6 +139,11 @@ export default function PrPage() {
             </a>
           </Link>
         </div>
+        {errorMessage ? (
+          <p className="mt-3 text-sm font-medium text-brand-red">
+            {errorMessage}
+          </p>
+        ) : null}
       </Card>
 
       <Card variant="surface" padding="lg">
@@ -147,7 +175,16 @@ export default function PrPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredRequests.length ? (
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-4 py-8 text-center text-slate-500"
+                  >
+                    Loading purchase requests...
+                  </td>
+                </tr>
+              ) : filteredRequests.length ? (
                 filteredRequests.map((request) => (
                   <tr key={request.id}>
                     <td className="px-4 py-3 font-semibold text-brand-blue">

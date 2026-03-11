@@ -2,11 +2,13 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Button, { buttonClassName } from '../../components/atoms/Button';
 import Card, { CardHeader } from '../../components/atoms/Card';
+import { ApiError } from '../../utils/api/apiClient';
 import {
   getCreatedPurchaseRequests,
   getUserSession,
   saveCreatedPurchaseRequest,
 } from '../../utils/localStorage';
+import { createPurchaseRequest } from '../../utils/prApi';
 import { inventoryItems } from '../../utils/mockdata/inventoryItemsData';
 import {
   purchaseRequests,
@@ -64,6 +66,7 @@ export default function CreatePrPage() {
   const [draftItems, setDraftItems] = useState<DraftItemRow[]>([]);
   const [formError, setFormError] = useState('');
   const [createdMeta, setCreatedMeta] = useState<CreatedMeta | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const itemOptions = useMemo(() => {
     const normalized = itemQuery.trim().toLowerCase();
@@ -158,7 +161,7 @@ export default function CreatePrPage() {
     );
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError('');
 
@@ -167,42 +170,87 @@ export default function CreatePrPage() {
       return;
     }
 
-    const createdDate = formatToday();
-    const existingRows = [...getCreatedPurchaseRequests(), ...purchaseRequests];
-    const nextId = getNextPrId(existingRows);
     const sessionUser = getUserSession();
-    const firstItemName = draftItems[0]?.itemName || 'Requested item';
+    if (!sessionUser?.user_id) {
+      setFormError('User session required before creating a PR.');
+      return;
+    }
 
-    const newRequest: PurchaseRequest = {
-      id: nextId,
-      title:
-        draftItems.length > 1
-          ? `${firstItemName} and ${draftItems.length - 1} more item(s)`
-          : `${firstItemName} procurement request`,
-      department: 'Operations',
-      requester: sessionUser?.name || 'Guest User',
-      vendor: 'TBD',
-      amount: totalAmount,
-      status: 'Pending Approval',
-      updatedAt: createdDate,
-      description: draftItems
-        .map(
-          (row, index) =>
-            `${index + 1}. ${row.itemName} (${
-              row.sku
-            }) - ${row.quantity.toLocaleString()} ${
-              row.unit
-            } x RM ${row.unitPrice.toLocaleString()}`
-        )
-        .join(' | '),
-    };
+    setIsSubmitting(true);
 
-    saveCreatedPurchaseRequest(newRequest);
-    setCreatedMeta({ id: nextId, date: createdDate });
-    setDraftItems([]);
-    setSelectedSku('');
-    setItemQuery('');
-    setLineQuantity('');
+    try {
+      const procItemPayload = draftItems.reduce<Record<string, number>>(
+        (acc, row) => {
+          acc[row.itemName] = (acc[row.itemName] || 0) + row.quantity;
+          return acc;
+        },
+        {}
+      );
+
+      const apiResponse = await createPurchaseRequest({
+        user_id: sessionUser.user_id,
+        proc_item: procItemPayload,
+        justification: draftItems
+          .map(
+            (row, index) =>
+              `${index + 1}. ${row.itemName} (${
+                row.sku
+              }) - ${row.quantity.toLocaleString()} ${
+                row.unit
+              } x RM ${row.unitPrice.toLocaleString()}`
+          )
+          .join(' | '),
+      });
+
+      const createdDate = formatToday();
+      const existingRows = [
+        ...getCreatedPurchaseRequests(),
+        ...purchaseRequests,
+      ];
+      const generatedId = getNextPrId(existingRows);
+      const apiPrId = String((apiResponse.pr_id as string) || '').trim();
+      const nextId = apiPrId || generatedId;
+      const firstItemName = draftItems[0]?.itemName || 'Requested item';
+
+      const newRequest: PurchaseRequest = {
+        id: nextId,
+        title:
+          draftItems.length > 1
+            ? `${firstItemName} and ${draftItems.length - 1} more item(s)`
+            : `${firstItemName} procurement request`,
+        department: 'Operations',
+        requester: sessionUser.name || 'Guest User',
+        vendor: 'TBD',
+        amount: totalAmount,
+        status: 'Pending Approval',
+        updatedAt: createdDate,
+        description: draftItems
+          .map(
+            (row, index) =>
+              `${index + 1}. ${row.itemName} (${
+                row.sku
+              }) - ${row.quantity.toLocaleString()} ${
+                row.unit
+              } x RM ${row.unitPrice.toLocaleString()}`
+          )
+          .join(' | '),
+      };
+
+      saveCreatedPurchaseRequest(newRequest);
+      setCreatedMeta({ id: nextId, date: createdDate });
+      setDraftItems([]);
+      setSelectedSku('');
+      setItemQuery('');
+      setLineQuantity('');
+    } catch (error) {
+      setFormError(
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to create the purchase request right now.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -405,7 +453,9 @@ export default function CreatePrPage() {
           ) : null}
 
           <div className="mt-5 flex flex-wrap gap-3">
-            <Button type="submit">Submit PR</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit PR'}
+            </Button>
             <Link href="/pr">
               <a className={buttonClassName({ variant: 'outline' })}>
                 Back to PR Board

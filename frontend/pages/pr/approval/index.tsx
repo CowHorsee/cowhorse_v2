@@ -1,41 +1,58 @@
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
-import { purchaseRequests } from '../../../utils/mockdata/purchaseRequestsData';
-// import { getUserSession } from '../../../utils/localStorage';
-// import { getPrTickets, mapTicketToPurchaseRequest } from '../../../utils/api/prApi';
+import { ApiError } from '../../../utils/api/apiClient';
+import { getUserSession } from '../../../utils/localStorage';
+import { getPrTickets } from '../../../utils/prApi';
+import {
+  purchaseRequests as fallbackRequests,
+  type PurchaseRequest,
+} from '../../../utils/mockdata/purchaseRequestsData';
 
 const approvableStatuses = new Set(['Pending Approval', 'In Review']);
 
 export default function PrApprovalListPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [requests] = useState(purchaseRequests);
-  // useEffect(() => {
-  //   async function loadRequests() {
-  //     const sessionUser = getUserSession();
-  //     try {
-  //       const rows = await getPrTickets({ user_id: sessionUser?.user_id });
-  //       if (rows.length) {
-  //         setRequests(
-  //           rows.map((row) =>
-  //             mapTicketToPurchaseRequest(
-  //               row,
-  //               purchaseRequests.find((item) => item.id === row.pr_id)
-  //             )
-  //           )
-  //         );
-  //       }
-  //     } catch {
-  //       setRequests(purchaseRequests);
-  //     }
-  //   }
-  //   loadRequests();
-  // }, []);
-
-  const approvals = useMemo(
-    () => requests.filter((request) => approvableStatuses.has(request.status)),
-    [requests]
+  const [approvals, setApprovals] = useState<PurchaseRequest[]>(
+    fallbackRequests.filter((request) => approvableStatuses.has(request.status))
   );
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadApprovals() {
+      const sessionUser = getUserSession();
+      if (!sessionUser?.user_id) {
+        return;
+      }
+
+      try {
+        const requests = await getPrTickets({ user_id: sessionUser.user_id });
+        const filtered = requests.filter((request) =>
+          approvableStatuses.has(request.status)
+        );
+
+        if (isMounted && filtered.length) {
+          setApprovals(filtered);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(
+            error instanceof ApiError
+              ? error.message
+              : 'Unable to load approval rows from the API.'
+          );
+        }
+      }
+    }
+
+    void loadApprovals();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredApprovals = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -74,6 +91,11 @@ export default function PrApprovalListPage() {
             </p>
           </Card>
         </div>
+        {errorMessage ? (
+          <p className="mt-3 text-sm font-medium text-brand-red">
+            {errorMessage}
+          </p>
+        ) : null}
       </Card>
 
       <Card variant="surface" padding="lg">

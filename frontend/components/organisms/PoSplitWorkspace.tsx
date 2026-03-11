@@ -196,7 +196,9 @@ export default function PoSplitWorkspace({
               Open new PO
             </Button>
 
-            <Link href={`/pr/${purchaseRequest.id}`}>
+            <Link
+              href={`/pr/details?id=${encodeURIComponent(purchaseRequest.id)}`}
+            >
               <a
                 className={buttonClassName({
                   variant: 'outline',

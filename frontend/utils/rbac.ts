@@ -13,10 +13,7 @@ export type AppRouteConfig = {
 
 const ALL_ROLES: UserRole[] = ['ADMIN', 'EMPLOYEE', 'MANAGER', 'WAREHOUSE'];
 
-/**
- * Central RBAC config for navigation and route access.
- * Update `allowedRoles` here to add or remove sidebar tabs per role.
- */
+/** Central RBAC config for navigation and route access. */
 export const appRouteConfig: AppRouteConfig[] = [
   {
     href: '/',
@@ -42,7 +39,7 @@ export const appRouteConfig: AppRouteConfig[] = [
     showInSidebar: true,
     matchMode: 'prefix',
   },
-    {
+  {
     href: '/inventory',
     label: 'Inventory',
     iconPath: '/box.svg',
@@ -50,13 +47,20 @@ export const appRouteConfig: AppRouteConfig[] = [
     showInSidebar: true,
     matchMode: 'prefix',
   },
-    {
+  {
     href: '/users',
     label: 'Users',
     iconPath: '/user.svg',
     allowedRoles: ['ADMIN'],
     showInSidebar: true,
     matchMode: 'prefix',
+  },
+  {
+    href: '/register',
+    label: 'Create User',
+    allowedRoles: ['ADMIN'],
+    showInSidebar: false,
+    matchMode: 'exact',
   },
   {
     href: '/profile',
@@ -67,24 +71,21 @@ export const appRouteConfig: AppRouteConfig[] = [
   },
 ];
 
-/** Returns true when the given role is allowed to use the route config entry. */
 export function hasRouteAccess(
   role: UserRole | null | undefined,
-  routeConfig: AppRouteConfig
+  routeConfig: AppRouteConfig,
 ) {
   return Boolean(role && routeConfig.allowedRoles.includes(role));
 }
 
-/** Returns sidebar-visible routes for the current user's role. */
 export function getSidebarTabsForUser(user: AuthUser | null) {
   return appRouteConfig.filter(
     (routeConfig) =>
       routeConfig.showInSidebar !== false &&
-      hasRouteAccess(user?.role, routeConfig)
+      hasRouteAccess(user?.role, routeConfig),
   );
 }
 
-/** Returns true when the current user role can access the provided pathname. */
 export function canAccessPath(pathname: string, user: AuthUser | null) {
   return appRouteConfig.some((routeConfig) => {
     if (!hasRouteAccess(user?.role, routeConfig)) {
@@ -99,7 +100,6 @@ export function canAccessPath(pathname: string, user: AuthUser | null) {
   });
 }
 
-/** Returns the first accessible app route to use as an RBAC-safe redirect target. */
 export function getDefaultRouteForUser(user: AuthUser | null) {
   const firstSidebarTab = getSidebarTabsForUser(user)[0];
   if (firstSidebarTab) {
@@ -107,7 +107,7 @@ export function getDefaultRouteForUser(user: AuthUser | null) {
   }
 
   const firstAllowedRoute = appRouteConfig.find((routeConfig) =>
-    hasRouteAccess(user?.role, routeConfig)
+    hasRouteAccess(user?.role, routeConfig),
   );
 
   return firstAllowedRoute?.href || '/login';

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import '../styles/globals.css';
 import AppShell from '../components/AppShell';
+import { ToastProvider } from '../components/ToastProvider';
 import type { AuthUser } from '../utils/api/authApi';
 import { getUserSession } from '../utils/localStorage';
 import { canAccessPath, getDefaultRouteForUser } from '../utils/rbac';
@@ -14,41 +15,39 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const isAuthPage =
     router.pathname === '/login' || router.pathname === '/register';
 
+  const isPublicPage = ['/login', '/prototype-users'].includes(router.pathname);
+
   useEffect(() => {
     setCurrentUser(getUserSession());
     setIsSessionReady(true);
   }, [router.asPath]);
 
   useEffect(() => {
-    if (!router.isReady || isAuthPage || !isSessionReady) {
+    if (!router.isReady || isPublicPage || !isSessionReady) {
       return;
     }
 
     if (!currentUser) {
-      router.replace('/login');
+      void router.replace('/login');
       return;
     }
 
     if (!canAccessPath(router.pathname, currentUser)) {
-      router.replace(getDefaultRouteForUser(currentUser));
+      void router.replace(getDefaultRouteForUser(currentUser));
     }
-  }, [currentUser, isAuthPage, isSessionReady, router, router.pathname]);
-
-  if (isAuthPage) {
-    return <Component {...pageProps} />;
-  }
-
-  if (
-    !isSessionReady ||
-    !currentUser ||
-    !canAccessPath(router.pathname, currentUser)
-  ) {
-    return null;
-  }
+  }, [currentUser, isPublicPage, isSessionReady, router, router.pathname]);
 
   return (
-    <AppShell user={currentUser}>
-      <Component {...pageProps} />
-    </AppShell>
+    <ToastProvider>
+      {isPublicPage ? (
+        <Component {...pageProps} />
+      ) : !isSessionReady ||
+        !currentUser ||
+        !canAccessPath(router.pathname, currentUser) ? null : (
+        <AppShell user={currentUser}>
+          <Component {...pageProps} />
+        </AppShell>
+      )}
+    </ToastProvider>
   );
 }

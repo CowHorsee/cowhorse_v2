@@ -1,6 +1,7 @@
 import fetch from 'isomorphic-unfetch';
 
 type ApiMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+type QueryValue = string | number | boolean | null | undefined;
 
 type JsonValue =
   | string
@@ -10,11 +11,15 @@ type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
+const HEALTH_PATH = '/health';
+const HEALTH_CACHE_TTL_MS = 10000;
+let lastHealthCheckAt = 0;
+let healthCheckPromise: Promise<void> | null = null;
+
 export class ApiError extends Error {
   status: number;
   payload: JsonValue | null;
 
-  /** Carries API status and parsed response payload for failed requests. */
   constructor(message: string, status: number, payload: JsonValue | null) {
     super(message);
     this.name = 'ApiError';
@@ -27,6 +32,7 @@ type ApiRequestOptions = {
   method?: ApiMethod;
   body?: string;
   headers?: Record<string, string>;
+  query?: Record<string, QueryValue>;
 };
 
 type LogLevel = 'info' | 'error';
@@ -45,17 +51,15 @@ function sanitizeValue(value: unknown): unknown {
   }
 
   if (value && typeof value === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>).map(
-      ([key, nestedValue]) => {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, nestedValue]) => {
         if (sensitiveKeys.has(key.toLowerCase())) {
           return [key, '[REDACTED]'];
         }
 
         return [key, sanitizeValue(nestedValue)];
-      }
+      })
     );
-
-    return Object.fromEntries(entries);
   }
 
   return value;
@@ -67,8 +71,7 @@ function sanitizeBody(body?: string) {
   }
 
   try {
-    const parsed = JSON.parse(body) as unknown;
-    return sanitizeValue(parsed);
+    return sanitizeValue(JSON.parse(body) as unknown);
   } catch {
     return body;
   }
@@ -79,9 +82,8 @@ function logApiEvent(
   message: string,
   details: Record<string, unknown>
 ) {
-  const timestamp = new Date().toISOString();
   const payload = {
-    timestamp,
+    timestamp: new Date().toISOString(),
     ...details,
   };
 
@@ -93,22 +95,30 @@ function logApiEvent(
   console.info(message, payload);
 }
 
-/** Returns the configured API host and leaves same-origin calls relative by default. */
+/** Returns configured API host and defaults to deployed API. */
 function getApiBaseUrl() {
-  return (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
+  return (
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    'https://web-app-procurement-hba8fbheeea3h6ge.southeastasia-01.azurewebsites.net'
+  ).replace(/\/$/, '');
 }
 
-/** Builds an absolute or same-origin URL for a frontend API request. */
-function buildUrl(path: string) {
+/** Builds an absolute URL and serializes supported query parameters. */
+function buildUrl(path: string, query?: Record<string, QueryValue>) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${getApiBaseUrl()}${normalizedPath}`;
+  const url = new URL(`${getApiBaseUrl()}${normalizedPath}`);
+
+  Object.entries(query || {}).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '') {
+      return;
+    }
+
+    url.searchParams.set(key, String(value));
+  });
+
+  return url.toString();
 }
 
-function isLiveApiEnabled() {
-  return process.env.NEXT_PUBLIC_ENABLE_API_CALLS === 'true';
-}
-
-/** Parses JSON responses safely and falls back to null for non-JSON bodies. */
 function tryParseJson(text: string): JsonValue | null {
   if (!text) {
     return null;
@@ -121,15 +131,55 @@ function tryParseJson(text: string): JsonValue | null {
   }
 }
 
-/**
- * Sends a JSON request to the backend API and throws ApiError on non-2xx responses.
- */
+async function ensureApiServerHealthy(path: string) {
+  if (path === HEALTH_PATH) {
+    return;
+  }
+
+  const now = Date.now();
+  if (lastHealthCheckAt && now - lastHealthCheckAt < HEALTH_CACHE_TTL_MS) {
+    return;
+  }
+
+  if (!healthCheckPromise) {
+    healthCheckPromise = (async () => {
+      const response = await fetch(buildUrl(HEALTH_PATH), {
+        method: 'GET',
+      });
+
+      const text = await response.text();
+      const payload = tryParseJson(text);
+      const status =
+        payload &&
+        typeof payload === 'object' &&
+        !Array.isArray(payload) &&
+        'status' in payload &&
+        typeof payload.status === 'string'
+          ? payload.status.toLowerCase()
+          : '';
+
+      if (!response.ok || status !== 'healthy') {
+        throw new ApiError('API server is not healthy.', response.status, payload);
+      }
+
+      lastHealthCheckAt = Date.now();
+    })();
+  }
+
+  try {
+    await healthCheckPromise;
+  } finally {
+    healthCheckPromise = null;
+  }
+}
+
+/** Sends JSON request and throws ApiError on non-2xx. */
 export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {}
 ): Promise<T> {
   const method = options.method || 'GET';
-  const url = buildUrl(path);
+  const url = buildUrl(path, options.query);
   const startTime = Date.now();
 
   logApiEvent('info', '[API] Request started', {
@@ -138,6 +188,8 @@ export async function apiRequest<T>(
     url,
     requestBody: sanitizeBody(options.body),
   });
+
+  await ensureApiServerHealthy(path);
 
   const response = await fetch(url, {
     method,

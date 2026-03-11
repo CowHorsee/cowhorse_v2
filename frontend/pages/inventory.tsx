@@ -1,6 +1,8 @@
-import { type ChangeEvent, useMemo, useState } from 'react';
+import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
 import Button, { buttonClassName } from '../components/atoms/Button';
+import { ApiError } from '../utils/api/apiClient';
+import { fetchInventoryCounts } from '../utils/inventoryApi';
 import {
   inventoryItems as initialInventoryItems,
   type InventoryItem,
@@ -153,11 +155,60 @@ function toCsvRow(values: Array<string | number>): string {
     .join(',');
 }
 
+function mapInventoryCountsToRows(counts: Record<string, number>) {
+  return Object.entries(counts).map(([itemName, currentStock], index) => {
+    const template = initialInventoryItems.find(
+      (item) => item.itemName.toLowerCase() === itemName.toLowerCase()
+    );
+
+    return {
+      sku: template?.sku || `API-${String(index + 1).padStart(3, '0')}`,
+      itemName,
+      location: template?.location || 'API Warehouse',
+      currentStock,
+      unit: template?.unit || 'pcs',
+      unitPrice: template?.unitPrice || 0,
+      lastUpdated: new Date().toLocaleString(),
+    } as InventoryItem;
+  });
+}
+
 export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>(initialInventoryItems);
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadMessage, setUploadMessage] = useState('');
   const [uploadError, setUploadError] = useState('');
+  const [apiMessage, setApiMessage] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInventory() {
+      try {
+        const counts = await fetchInventoryCounts();
+        const rows = mapInventoryCountsToRows(counts);
+
+        if (isMounted && rows.length) {
+          setItems(rows);
+          setApiMessage('Inventory counts loaded from the live warehouse API.');
+        }
+      } catch (error) {
+        if (isMounted) {
+          setApiMessage(
+            error instanceof ApiError
+              ? `${error.message} Showing fallback inventory data.`
+              : 'Showing fallback inventory data.'
+          );
+        }
+      }
+    }
+
+    void loadInventory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredItems = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -275,9 +326,15 @@ export default function InventoryPage() {
               className="sr-only"
             />
             <p className="mt-2 text-xs text-slate-500">
-              Required columns: sku, itemName, currentStock (supports alias
-              names).
+              Live counts come from the warehouse API. CSV upload remains local
+              because the deployed API expects a server-side file path, not a
+              browser file.
             </p>
+            {apiMessage ? (
+              <p className="mt-2 text-xs font-semibold text-brand-blue">
+                {apiMessage}
+              </p>
+            ) : null}
             {uploadMessage ? (
               <p className="mt-2 text-xs font-semibold text-emerald-700">
                 {uploadMessage}
@@ -288,6 +345,14 @@ export default function InventoryPage() {
                 {uploadError}
               </p>
             ) : null}
+          </Card>
+          <Card variant="soft" padding="md">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+              API
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-700">
+              Source: /api/warehouse/count_inventory
+            </p>
           </Card>
         </div>
       </Card>
@@ -305,7 +370,7 @@ export default function InventoryPage() {
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Type item name, SKU,"
+            placeholder="Type item name or SKU"
             className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand-blue"
           />
         </div>
@@ -341,7 +406,7 @@ export default function InventoryPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={4}
                     className="px-4 py-8 text-center text-slate-500"
                   >
                     No items match the selected filters.

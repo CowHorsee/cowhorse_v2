@@ -1,29 +1,29 @@
+import Link from 'next/link';
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import Card, { CardHeader } from '../components/atoms/Card';
 import Button from '../components/atoms/Button';
-import type { UserRole } from '../utils/api/authApi';
+import Card, { CardHeader } from '../components/atoms/Card';
+import { ApiError } from '../utils/api/apiClient';
+import type { UserRole } from '../utils/authApi';
+import { getUserSession } from '../utils/localStorage';
 import {
-  managedUsers as initialManagedUsers,
+  createManagedUser,
+  listUsers,
+  modifyUserRole,
+  searchUsers,
+} from '../utils/userManagementApi';
+import {
+  managedUsers as fallbackUsers,
   type ManagedUser,
 } from '../utils/mockdata/usersData';
-// import { ApiError } from '../utils/api/apiClient';
-// import { registerUser } from '../utils/api/authApi';
-// import { getUserSession } from '../utils/localStorage';
-// import {
-//   mapSearchUserRowToUserRecord,
-//   modifyUserRole,
-//   searchUsers,
-// } from '../utils/api/userManagementApi';
 
 const roleOptions: UserRole[] = ['ADMIN'];
 
 type RoleDropdownProps = {
   value: UserRole;
   onChange: (role: UserRole) => void;
-  compact?: boolean;
 };
 
-function RoleDropdown({ value, onChange, compact = false }: RoleDropdownProps) {
+function RoleDropdown({ value, onChange }: RoleDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -50,7 +50,7 @@ function RoleDropdown({ value, onChange, compact = false }: RoleDropdownProps) {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className={`flex w-full items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-700 shadow-sm transition hover:border-brand-blue focus:border-brand-blue focus:outline-none`}
+        className="flex w-full items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-700 shadow-sm transition hover:border-brand-blue focus:border-brand-blue focus:outline-none"
       >
         <span className="font-semibold tracking-[0.02em] text-brand-blue">
           {value}
@@ -89,24 +89,89 @@ function RoleDropdown({ value, onChange, compact = false }: RoleDropdownProps) {
   );
 }
 
+function buildSearchFilters(searchTerm: string) {
+  const trimmed = searchTerm.trim();
+  if (!trimmed) {
+    return {};
+  }
+
+  const uppercase = trimmed.toUpperCase();
+  if (roleOptions.includes(uppercase as UserRole)) {
+    return { role_name: uppercase };
+  }
+
+  if (trimmed.includes('@')) {
+    return { email: trimmed };
+  }
+
+  return { name: trimmed };
+}
+
 export default function UsersPage() {
-  const [users, setUsers] = useState<ManagedUser[]>(initialManagedUsers);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [users, setUsers] = useState<ManagedUser[]>(fallbackUsers);
   const [searchTerm, setSearchTerm] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState<UserRole>('ADMIN');
   const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<{
-    name: string;
-    email: string;
-    role: UserRole;
-  } | null>(null);
+  const [editDraft, setEditDraft] = useState<{ role: UserRole } | null>(null);
+
+  const sessionUser = getUserSession();
+  const adminId = sessionUser?.user_id || '';
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadUsers() {
+      if (!adminId) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setErrorMessage('');
+
+      try {
+        const nextUsers = searchTerm.trim()
+          ? await searchUsers(buildSearchFilters(searchTerm))
+          : await listUsers(adminId);
+
+        if (isMounted) {
+          setUsers(nextUsers.length ? nextUsers : []);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(
+            error instanceof ApiError
+              ? error.message
+              : 'Unable to load users from the API.'
+          );
+          setUsers(fallbackUsers);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [adminId, searchTerm]);
 
   const filteredUsers = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
+    if (!errorMessage) {
+      return users;
+    }
 
+    const normalizedSearch = searchTerm.trim().toLowerCase();
     return users.filter((user) => {
       if (!normalizedSearch) {
         return true;
@@ -118,148 +183,111 @@ export default function UsersPage() {
         user.role.toLowerCase().includes(normalizedSearch)
       );
     });
-  }, [users, searchTerm]);
-
-  useEffect(() => {
-    // async function loadUsers() {
-    //   setIsLoadingUsers(true);
-    //   try {
-    //     const response = await searchUsers();
-    //     const mapped = response.map((row, index) =>
-    //       mapSearchUserRowToUserRecord(row, index)
-    //     );
-    //     if (mapped.length) {
-    //       setUsers(mapped);
-    //     }
-    //   } catch {
-    //     setFeedbackMessage(
-    //       'Live user API is unavailable. Showing cached prototype users.'
-    //     );
-    //   } finally {
-    //     setIsLoadingUsers(false);
-    //   }
-    // }
-    // loadUsers();
-    setIsLoadingUsers(false);
-  }, []);
+  }, [errorMessage, searchTerm, users]);
 
   function startEditingRow(user: ManagedUser) {
     setEditingUserId(user.user_id);
-    setEditDraft({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
+    setEditDraft({ role: user.role });
+    setFeedbackMessage('');
+    setErrorMessage('');
   }
 
   async function confirmEditingRow() {
-    if (!editingUserId || !editDraft) {
+    if (!editingUserId || !editDraft || !adminId) {
       return;
     }
 
-    const normalizedName = editDraft.name.trim();
-    const normalizedEmail = editDraft.email.trim();
-
-    if (!normalizedName) {
-      setFeedbackMessage('Name is required before confirming edits.');
+    const existingUser = users.find((user) => user.user_id === editingUserId);
+    if (!existingUser) {
       return;
     }
 
-    if (!normalizedEmail || !normalizedEmail.includes('@')) {
-      setFeedbackMessage('Enter a valid email before confirming edits.');
+    if (existingUser.role === editDraft.role) {
+      setFeedbackMessage('No role change to save.');
+      setEditingUserId(null);
+      setEditDraft(null);
       return;
     }
 
-    // const sessionUser = getUserSession();
-    // if (!sessionUser?.user_id) {
-    //   setFeedbackMessage('Admin session is required to update roles.');
-    //   return;
-    // }
-    // try {
-    //   await modifyUserRole({
-    //     admin_id: sessionUser.user_id,
-    //     user_id: editingUserId,
-    //     new_role_name: editDraft.role,
-    //   });
-    // } catch (error) {
-    //   const message =
-    //     error instanceof ApiError
-    //       ? error.message
-    //       : 'Unable to update user role right now.';
-    //   setFeedbackMessage(message);
-    //   return;
-    // }
+    setIsSubmitting(true);
+    setErrorMessage('');
+    setFeedbackMessage('');
 
-    setUsers((currentUsers) =>
-      currentUsers.map((user) =>
-        user.user_id === editingUserId
-          ? {
-              ...user,
-              name: normalizedName,
-              email: normalizedEmail,
-              role: 'ADMIN',
-            }
-          : user
-      )
-    );
+    try {
+      await modifyUserRole({
+        admin_id: adminId,
+        user_id: editingUserId,
+        new_role_name: editDraft.role,
+      });
 
-    setFeedbackMessage(`User ${editingUserId} updated (mock mode).`);
-    setEditingUserId(null);
-    setEditDraft(null);
+      setUsers((currentUsers) =>
+        currentUsers.map((user) =>
+          user.user_id === editingUserId
+            ? { ...user, role: editDraft.role }
+            : user
+        )
+      );
+      setFeedbackMessage(`User ${editingUserId} role updated.`);
+      setEditingUserId(null);
+      setEditDraft(null);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to update the selected role.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   async function handleAddUser(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFeedbackMessage('');
+    setErrorMessage('');
 
     const normalizedName = newUserName.trim();
     const normalizedEmail = newUserEmail.trim();
 
+    if (!adminId) {
+      setErrorMessage('Admin session required before creating users.');
+      return;
+    }
+
     if (!normalizedName) {
-      setFeedbackMessage('User name is required.');
+      setErrorMessage('User name is required.');
       return;
     }
 
     if (!normalizedEmail || !normalizedEmail.includes('@')) {
-      setFeedbackMessage('A valid email is required.');
+      setErrorMessage('A valid email is required.');
       return;
     }
 
-    // const sessionUser = getUserSession();
-    // if (!sessionUser?.user_id) {
-    //   setFeedbackMessage('Admin session is required to add users.');
-    //   return;
-    // }
-    // try {
-    //   const response = await registerUser({
-    //     admin_id: sessionUser.user_id,
-    //     email: normalizedEmail,
-    //     name: normalizedName,
-    //     role_name: newUserRole,
-    //   });
-    //   setFeedbackMessage(response || `User ${normalizedName} added.`);
-    // } catch (error) {
-    //   const message =
-    //     error instanceof ApiError
-    //       ? error.message
-    //       : 'Unable to add user right now.';
-    //   setFeedbackMessage(message);
-    //   return;
-    // }
+    setIsSubmitting(true);
 
-    const nextId = `USR-${String(users.length + 1).padStart(3, '0')}`;
-    const nextUser: ManagedUser = {
-      user_id: nextId,
-      name: normalizedName,
-      email: normalizedEmail,
-      role: 'ADMIN',
-    };
+    try {
+      const response = await createManagedUser({
+        admin_id: adminId,
+        name: normalizedName,
+        email: normalizedEmail,
+        role_name: newUserRole,
+      });
 
-    setUsers((currentUsers) => [nextUser, ...currentUsers]);
-    setNewUserName('');
-    setNewUserEmail('');
-    setNewUserRole('ADMIN');
-    setFeedbackMessage(`User ${normalizedName} added (mock mode).`);
+      setUsers((currentUsers) => [response.user, ...currentUsers]);
+      setNewUserName('');
+      setNewUserEmail('');
+      setNewUserRole('ADMIN');
+      setFeedbackMessage(response.message);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to create the user right now.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -278,15 +306,24 @@ export default function UsersPage() {
               Total Users
             </p>
             <p className="mt-2 text-3xl font-semibold text-brand-blue">
-              {isLoadingUsers ? '...' : users.length}
-              {isLoadingUsers ? '...' : users.length}
+              {isLoading ? '...' : users.length}
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              Creating users calls the live admin registration API.
             </p>
           </Card>
 
           <Card variant="soft" padding="md">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-              Add New User
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                Add New User
+              </p>
+              <Link href="/register">
+                <a className="text-xs font-bold text-brand-blue transition hover:text-brand-red">
+                  Open full form
+                </a>
+              </Link>
+            </div>
             <form
               className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px_120px]"
               onSubmit={handleAddUser}
@@ -306,11 +343,18 @@ export default function UsersPage() {
                 className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
               />
               <RoleDropdown value={newUserRole} onChange={setNewUserRole} />
-              <Button type="submit">Add User</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                Add User
+              </Button>
             </form>
             {feedbackMessage ? (
               <p className="mt-2 text-xs font-semibold text-brand-blue">
                 {feedbackMessage}
+              </p>
+            ) : null}
+            {errorMessage ? (
+              <p className="mt-2 text-xs font-semibold text-brand-red">
+                {errorMessage}
               </p>
             ) : null}
           </Card>
@@ -335,6 +379,12 @@ export default function UsersPage() {
           />
         </div>
 
+        <p className="mt-3 text-xs text-slate-500">
+          The current API supports role changes. Name and email edits are not
+          wired because the OpenAPI contract does not expose an endpoint for
+          them.
+        </p>
+
         <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50">
@@ -347,58 +397,28 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredUsers.length ? (
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-8 text-center text-slate-500"
+                  >
+                    Loading users...
+                  </td>
+                </tr>
+              ) : filteredUsers.length ? (
                 filteredUsers.map((user) => (
                   <tr key={user.user_id}>
                     <td className="px-4 py-3 font-semibold text-brand-blue">
                       {user.user_id}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {editingUserId === user.user_id ? (
-                        <input
-                          type="text"
-                          value={editDraft?.name || ''}
-                          onChange={(event) =>
-                            setEditDraft((current) =>
-                              current
-                                ? { ...current, name: event.target.value }
-                                : current
-                            )
-                          }
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
-                        />
-                      ) : (
-                        user.name
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {editingUserId === user.user_id ? (
-                        <input
-                          type="email"
-                          value={editDraft?.email || ''}
-                          onChange={(event) =>
-                            setEditDraft((current) =>
-                              current
-                                ? { ...current, email: event.target.value }
-                                : current
-                            )
-                          }
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
-                        />
-                      ) : (
-                        user.email
-                      )}
-                    </td>
+                    <td className="px-4 py-3 text-slate-700">{user.name}</td>
+                    <td className="px-4 py-3 text-slate-700">{user.email}</td>
                     <td className="px-4 py-3 text-slate-700">
                       {editingUserId === user.user_id && editDraft ? (
                         <RoleDropdown
                           value={editDraft.role}
-                          onChange={(role) =>
-                            setEditDraft((current) =>
-                              current ? { ...current, role } : current
-                            )
-                          }
-                          compact
+                          onChange={(role) => setEditDraft({ role })}
                         />
                       ) : (
                         user.role
@@ -409,7 +429,8 @@ export default function UsersPage() {
                         <Button
                           type="button"
                           variant="ghost"
-                          onClick={confirmEditingRow}
+                          disabled={isSubmitting}
+                          onClick={() => void confirmEditingRow()}
                           className="h-9 w-9 rounded-lg border border-emerald-300 bg-emerald-50 p-0 text-emerald-700 hover:bg-emerald-100"
                           aria-label={`Confirm edits for ${user.name}`}
                           title="Confirm"
@@ -433,7 +454,7 @@ export default function UsersPage() {
                           onClick={() => startEditingRow(user)}
                           className="h-9 w-9 rounded-lg border-slate-300 p-0 text-brand-blue hover:border-brand-blue hover:bg-slate-50"
                           aria-label={`Edit ${user.name}`}
-                          title="Edit"
+                          title="Edit role"
                         >
                           <svg
                             viewBox="0 0 24 24"

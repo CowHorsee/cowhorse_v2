@@ -1,7 +1,10 @@
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Button from '../components/atoms/Button';
+import { useRouter } from 'next/router';
+import { useToast } from '../components/ToastProvider';
+import { ApiError } from '../utils/api/apiClient';
+import { loginUser } from '../utils/authApi';
 import { saveUserSession } from '../utils/localStorage';
 
 const heroPhrases = [
@@ -24,6 +27,7 @@ function LoadingSpinner() {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
@@ -110,16 +114,44 @@ export default function LoginPage() {
     setLoginError('');
 
     try {
-      const email = formValues.email.trim() || 'guest@cowhorse.local';
+      const normalizedEmail = formValues.email.trim();
+      const normalizedPassword = formValues.password.trim();
 
-      saveUserSession({
-        user_id: `local-${Date.now()}`,
-        name: email.split('@')[0] || 'Guest User',
-        email,
-        role: 'ADMIN',
-      });
+      if (normalizedEmail && normalizedPassword) {
+        const response = await loginUser({
+          email: normalizedEmail,
+          password: normalizedPassword,
+        });
+
+        saveUserSession(response.user);
+        showToast({
+          title: 'Signed in',
+          description: response.message || 'Opening the PPIS dashboard.',
+          variant: 'success',
+        });
+      } else {
+        const fallbackEmail = normalizedEmail || 'guest@cowhorse.local';
+
+        saveUserSession({
+          user_id: `local-${Date.now()}`,
+          name: fallbackEmail.split('@')[0] || 'Guest User',
+          email: fallbackEmail,
+          role: 'ADMIN',
+        });
+      }
 
       await router.push('/');
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to sign in right now. Please try again.';
+      setLoginError(message);
+      showToast({
+        title: 'Login failed',
+        description: message,
+        variant: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }

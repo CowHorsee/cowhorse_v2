@@ -17,11 +17,16 @@ export type AuthUser = {
   created_at?: string;
 };
 
+type AuthResponse = {
+  message: string;
+  user: AuthUser;
+};
+
 export type RegisterPayload = {
   admin_id: string;
   name: string;
   email: string;
-  role_name: BackendRoleName;
+  role_name: BackendRoleName | UserRole;
   password?: string;
 };
 
@@ -30,24 +35,16 @@ export type LoginPayload = {
   password: string;
 };
 
-export type LoginResponse = {
-  role: string;
-  user_id: string;
-  message: string;
-};
+function readRecord(value: unknown) {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
 
-export type ForgetPasswordPayload = {
-  user_id: string;
-};
-
-export type ChangePasswordPayload = {
-  user_id: string;
-  old_password: string;
-  new_password: string;
-};
-
-export function mapBackendRole(roleName: string): UserRole {
-  const normalized = roleName.trim().toLowerCase();
+export function mapBackendRole(roleName: unknown): UserRole {
+  const normalized = String(roleName || '')
+    .trim()
+    .toLowerCase();
 
   if (normalized.includes('admin')) {
     return 'ADMIN';
@@ -62,6 +59,10 @@ export function mapBackendRole(roleName: string): UserRole {
   }
 
   return 'EMPLOYEE';
+}
+
+export function normalizeRole(value: unknown): UserRole {
+  return mapBackendRole(value || 'EMPLOYEE');
 }
 
 export function mapUserRoleToBackendRoleName(role: UserRole): BackendRoleName {
@@ -80,32 +81,87 @@ export function mapUserRoleToBackendRoleName(role: UserRole): BackendRoleName {
   return 'Procurement Officer';
 }
 
-/** Calls the backend registration endpoint and returns backend message text. */
-export function registerUser(payload: RegisterPayload) {
-  return apiRequest<string>('/api/user/register', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+function normalizeRegisterRoleName(
+  roleName: BackendRoleName | UserRole,
+): BackendRoleName {
+  if (
+    roleName === 'Admin' ||
+    roleName === 'Procurement Manager' ||
+    roleName === 'Warehouse Personnel' ||
+    roleName === 'Procurement Officer' ||
+    roleName === 'Supplier'
+  ) {
+    return roleName;
+  }
+
+  return mapUserRoleToBackendRoleName(roleName);
 }
 
-/** Calls backend login endpoint and returns user_id, role and message. */
-export function loginUser(payload: LoginPayload) {
-  return apiRequest<LoginResponse>('/api/user/login', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+export function normalizeAuthUser(value: unknown): AuthUser {
+  const record = readRecord(value);
+  const email = String(record?.email || '').trim();
+  const userId =
+    String(record?.user_id || record?.id || record?.admin_id || '').trim() ||
+    'unknown-user';
+
+  return {
+    user_id: userId,
+    name:
+      String(record?.name || record?.full_name || '').trim() ||
+      email.split('@')[0] ||
+      userId,
+    email,
+    role: normalizeRole(record?.role || record?.role_name),
+    created_at:
+      typeof record?.created_at === 'string' ? record.created_at : undefined,
+  };
 }
 
-export function requestPasswordReset(payload: ForgetPasswordPayload) {
-  return apiRequest<string>('/api/user/forget_password', {
+/** Calls the backend registration endpoint and returns the created user payload. */
+export async function registerUser(payload: RegisterPayload) {
+  const response = await apiRequest<unknown>('/api/user/register', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...payload,
+      role_name: normalizeRegisterRoleName(payload.role_name),
+    }),
   });
+
+  const responseRecord = readRecord(response);
+  const rawUser = readRecord(responseRecord?.user) || {
+    user_id: responseRecord?.user_id,
+    name: payload.name,
+    email: payload.email,
+    role_name: payload.role_name,
+    created_at: responseRecord?.created_at,
+  };
+
+  return {
+    message:
+      (typeof responseRecord?.message === 'string' && responseRecord.message) ||
+      (typeof response === 'string' && response) ||
+      'User created successfully.',
+    user: normalizeAuthUser(rawUser),
+  } as AuthResponse;
 }
 
-export function changePassword(payload: ChangePasswordPayload) {
-  return apiRequest<string>('/api/user/change_password', {
+/** Calls the backend login endpoint and returns the authenticated user payload. */
+export async function loginUser(payload: LoginPayload) {
+  const response = await apiRequest<unknown>('/api/user/login', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+
+  const responseRecord = readRecord(response);
+  const rawUser = readRecord(responseRecord?.user) || responseRecord;
+
+  return {
+    message:
+      (typeof responseRecord?.message === 'string' && responseRecord.message) ||
+      'Login successful.',
+    user: normalizeAuthUser({
+      ...rawUser,
+      email: payload.email,
+    }),
+  } as AuthResponse;
 }

@@ -32,6 +32,13 @@ export const appRouteConfig: AppRouteConfig[] = [
     matchMode: 'prefix',
   },
   {
+    href: '/pr/[id]',
+    label: 'PR Details',
+    allowedRoles: ALL_ROLES,
+    showInSidebar: false,
+    matchMode: 'exact',
+  },
+  {
     href: '/pr',
     label: 'Purchase Requests',
     iconPath: '/clipboard-text.svg',

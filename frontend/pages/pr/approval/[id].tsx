@@ -3,13 +3,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Button from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
+import { ApiError } from '../../../utils/api/apiClient';
 import { getUserSession } from '../../../utils/localStorage';
-// import { ApiError } from '../../../utils/api/apiClient';
-// import {
-//   getPrDetails,
-//   mergeDetailsIntoPurchaseRequest,
-//   reviewPr,
-// } from '../../../utils/api/prApi';
+import {
+  getPrDetails,
+  normalizePurchaseRequest,
+  reviewPurchaseRequest,
+} from '../../../utils/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -29,57 +29,71 @@ export default function ManagerApprovalPage({
   const [decision, setDecision] = useState<ApprovalDecision>(null);
   const [managerComment, setManagerComment] = useState('');
   const [decisionMessage, setDecisionMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const user = getUserSession();
 
     if (user?.role !== 'MANAGER' && user?.role !== 'ADMIN') {
-      router.replace(`/pr/${purchaseRequest.id}`);
+      void router.replace(`/pr/${purchaseRequest.id}`);
     }
   }, [purchaseRequest.id, router]);
 
-  // useEffect(() => {
-  //   async function loadDetails() {
-  //     const user = getUserSession();
-  //     try {
-  //       const details = await getPrDetails({
-  //         user_id: user?.user_id,
-  //         pr_id: purchaseRequest.id,
-  //       });
-  //       setCurrentRequest(
-  //         mergeDetailsIntoPurchaseRequest(purchaseRequest, details)
-  //       );
-  //     } catch {
-  //       setCurrentRequest(purchaseRequest);
-  //     }
-  //   }
-  //   loadDetails();
-  // }, [purchaseRequest]);
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDetails() {
+      const user = getUserSession();
+      if (!user?.user_id) {
+        return;
+      }
+
+      try {
+        const details = await getPrDetails(user.user_id, purchaseRequest.id);
+        if (isMounted && details) {
+          setCurrentRequest(normalizePurchaseRequest(details));
+        }
+      } catch {
+        if (isMounted) {
+          setCurrentRequest(purchaseRequest);
+        }
+      }
+    }
+
+    void loadDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [purchaseRequest]);
 
   async function handleDecision(nextDecision: 'approve' | 'reject') {
-    // const user = getUserSession();
-    // if (!user?.user_id) {
-    //   setDecisionMessage('User session is required to submit approval.');
-    //   return;
-    // }
-    // try {
-    //   const response = await reviewPr({
-    //     pr_id: currentRequest.id,
-    //     decision: nextDecision,
-    //     manager_id: user.user_id,
-    //   });
-    //   setDecision(nextDecision === 'approve' ? 'APPROVED' : 'REJECTED');
-    //   setDecisionMessage(response || 'Decision submitted.');
-    // } catch (error) {
-    //   const message =
-    //     error instanceof ApiError
-    //       ? error.message
-    //       : 'Unable to submit review right now.';
-    //   setDecisionMessage(message);
-    // }
+    const user = getUserSession();
+    if (!user?.user_id) {
+      setDecisionMessage('User session is required to submit approval.');
+      return;
+    }
 
-    setDecision(nextDecision === 'approve' ? 'APPROVED' : 'REJECTED');
-    setDecisionMessage('Decision submitted in mock mode.');
+    setIsSubmitting(true);
+    setDecisionMessage('');
+
+    try {
+      await reviewPurchaseRequest({
+        pr_id: currentRequest.id,
+        decision: nextDecision === 'approve' ? 'APPROVED' : 'REJECTED',
+        manager_id: user.user_id,
+      });
+      setDecision(nextDecision === 'approve' ? 'APPROVED' : 'REJECTED');
+      setDecisionMessage('Decision submitted.');
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to submit review right now.';
+      setDecisionMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -195,13 +209,15 @@ export default function ManagerApprovalPage({
           <Button
             type="button"
             variant="ghost"
+            disabled={isSubmitting}
             onClick={() => handleDecision('approve')}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700"
           >
-            Approve
+            {isSubmitting ? 'Submitting...' : 'Approve'}
           </Button>
           <Button
             type="button"
+            disabled={isSubmitting}
             onClick={() => handleDecision('reject')}
             className="rounded-lg px-4 py-2"
           >

@@ -1,7 +1,10 @@
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Button, { buttonClassName } from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
+import { ApiError } from '../../../utils/api/apiClient';
+import { getUserSession } from '../../../utils/localStorage';
+import { getPrDetails, normalizePurchaseRequest } from '../../../utils/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -23,11 +26,13 @@ function formatCurrency(value: number) {
 }
 
 export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
+  const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
+  const [errorMessage, setErrorMessage] = useState('');
   const [splitLines, setSplitLines] = useState<SplitLine[]>([
     {
       id: 'PO-SPLIT-01',
-      vendor: purchaseRequest.vendor,
-      amount: Math.round(purchaseRequest.amount * 0.6),
+      vendor: currentRequest.vendor,
+      amount: Math.round(currentRequest.amount * 0.6),
       eta: '2026-04-15',
     },
     {
@@ -43,7 +48,41 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
     [splitLines]
   );
 
-  const poolAmount = Math.max(purchaseRequest.amount - allocatedTotal, 0);
+  const poolAmount = Math.max(currentRequest.amount - allocatedTotal, 0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDetails() {
+      const user = getUserSession();
+      if (!user?.user_id) {
+        return;
+      }
+
+      try {
+        const details = await getPrDetails(user.user_id, purchaseRequest.id);
+        if (isMounted && details) {
+          setCurrentRequest(normalizePurchaseRequest(details));
+          setErrorMessage('');
+        }
+      } catch (error) {
+        if (isMounted) {
+          setCurrentRequest(purchaseRequest);
+          setErrorMessage(
+            error instanceof ApiError
+              ? error.message
+              : 'Unable to load latest PR details from API.'
+          );
+        }
+      }
+    }
+
+    void loadDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [purchaseRequest]);
 
   function updateLine(lineId: string, field: keyof SplitLine, value: string) {
     setSplitLines((currentLines) =>
@@ -86,7 +125,7 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
       <Card variant="surface" padding="lg">
         <CardHeader
           subtitle="Split PR into purchase orders"
-          title={purchaseRequest.id}
+          title={currentRequest.id}
           subtitleClassName="text-brand-red"
           titleClassName="text-brand-blue"
           action={
@@ -101,14 +140,19 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
             <a className="transition hover:text-brand-blue">PR Board</a>
           </Link>
           <span className="mx-1.5 text-slate-400">/</span>
-          <Link href={`/pr/${purchaseRequest.id}`}>
+          <Link href={`/pr/${currentRequest.id}`}>
             <a className="transition hover:text-brand-blue">
-              {purchaseRequest.id}
+              {currentRequest.id}
             </a>
           </Link>
           <span className="mx-1.5 text-slate-400">/</span>
           <span className="text-brand-blue">PO Split</span>
         </div>
+        {errorMessage ? (
+          <p className="mt-3 text-sm font-medium text-brand-red">
+            {errorMessage}
+          </p>
+        ) : null}
       </Card>
 
       <div className="grid gap-4 xl:grid-cols-12">
@@ -125,7 +169,7 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
                 Title
               </p>
               <p className="mt-1 text-sm font-semibold text-slate-700">
-                {purchaseRequest.title}
+                {currentRequest.title}
               </p>
             </div>
 
@@ -135,7 +179,7 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
                   Department
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-700">
-                  {purchaseRequest.department}
+                  {currentRequest.department}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -143,7 +187,7 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
                   Requester
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-700">
-                  {purchaseRequest.requester}
+                  {currentRequest.requester}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -151,7 +195,7 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
                   Status
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-700">
-                  {purchaseRequest.status}
+                  {currentRequest.status}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -159,7 +203,7 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
                   Total Requested
                 </p>
                 <p className="mt-1 text-sm font-semibold text-brand-blue">
-                  {formatCurrency(purchaseRequest.amount)}
+                  {formatCurrency(currentRequest.amount)}
                 </p>
               </div>
             </div>
@@ -169,7 +213,7 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
                 Description
               </p>
               <p className="mt-1 text-sm leading-6 text-slate-700">
-                {purchaseRequest.description}
+                {currentRequest.description}
               </p>
             </div>
           </div>
@@ -234,7 +278,7 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Button type="button">Save Split Draft</Button>
-              <Link href={`/pr/${purchaseRequest.id}`}>
+              <Link href={`/pr/${currentRequest.id}`}>
                 <a className={buttonClassName({ variant: 'outline' })}>
                   Back to PR details
                 </a>
@@ -255,7 +299,7 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
                   Requested Total
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-700">
-                  {formatCurrency(purchaseRequest.amount)}
+                  {formatCurrency(currentRequest.amount)}
                 </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">

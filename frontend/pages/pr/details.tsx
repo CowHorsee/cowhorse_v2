@@ -25,7 +25,7 @@ export default function PrDetailsPage() {
     const user = getUserSession();
 
     if (user?.role === 'MANAGER' && prId) {
-      void router.replace(`/pr/approval?id=${encodeURIComponent(prId)}`);
+      void router.replace(`/pr/approval/${encodeURIComponent(prId)}`);
     }
   }, [prId, router]);
 

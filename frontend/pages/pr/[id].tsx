@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { buttonClassName } from '../../components/atoms/Button';
 import Card, { CardHeader } from '../../components/atoms/Card';
+import { ApiError } from '../../utils/api/apiClient';
 import { getUserSession } from '../../utils/localStorage';
-// import { getPrDetails, mergeDetailsIntoPurchaseRequest } from '../../utils/api/prApi';
+import { getPrDetails, normalizePurchaseRequest } from '../../utils/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -16,30 +17,50 @@ type PrDetailsPageProps = {
 
 export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
   const router = useRouter();
+  const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const user = getUserSession();
 
     if (user?.role === 'MANAGER') {
-      router.replace(`/pr/approval/${purchaseRequest.id}`);
+      void router.replace(`/pr/approval/${purchaseRequest.id}`);
     }
   }, [purchaseRequest.id, router]);
 
-  // useEffect(() => {
-  //   async function loadDetails() {
-  //     const user = getUserSession();
-  //     try {
-  //       const details = await getPrDetails({
-  //         user_id: user?.user_id,
-  //         pr_id: purchaseRequest.id,
-  //       });
-  //       setCurrentRequest(mergeDetailsIntoPurchaseRequest(purchaseRequest, details));
-  //     } catch {
-  //       setCurrentRequest(purchaseRequest);
-  //     }
-  //   }
-  //   loadDetails();
-  // }, [purchaseRequest]);
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDetails() {
+      const user = getUserSession();
+      if (!user?.user_id) {
+        return;
+      }
+
+      try {
+        const details = await getPrDetails(user.user_id, purchaseRequest.id);
+        if (isMounted && details) {
+          setCurrentRequest(normalizePurchaseRequest(details));
+          setErrorMessage('');
+        }
+      } catch (error) {
+        if (isMounted) {
+          setCurrentRequest(purchaseRequest);
+          setErrorMessage(
+            error instanceof ApiError
+              ? error.message
+              : 'Unable to load latest PR details from API.'
+          );
+        }
+      }
+    }
+
+    void loadDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [purchaseRequest]);
 
   return (
     <div className="mx-auto w-full max-w-7xl">
@@ -50,26 +71,31 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
               <a className="transition hover:text-brand-blue">PR Board</a>
             </Link>
             <span className="mx-1.5 text-slate-400">/</span>
-            <span className="text-brand-blue">{purchaseRequest.id}</span>
+            <span className="text-brand-blue">{currentRequest.id}</span>
           </div>
         </div>
 
         <CardHeader
-          title={purchaseRequest.description}
+          title={currentRequest.description}
           className="mb-1"
           titleClassName="text-lg"
         />
+        {errorMessage ? (
+          <p className="mb-3 text-sm font-medium text-brand-red">
+            {errorMessage}
+          </p>
+        ) : null}
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between"></div>
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-slate-600">Requester</p>
           <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.requester}
+            {currentRequest.requester}
           </strong>
         </div>
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-slate-600">Status</p>
           <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.status}
+            {currentRequest.status}
           </strong>
         </div>
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
@@ -87,12 +113,12 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
         <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-slate-600">Total Amount (RM)</p>
           <strong className="font-semibold text-brand-blue">
-            {purchaseRequest.amount.toLocaleString()}
+            {currentRequest.amount.toLocaleString()}
           </strong>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link href={`/pr/split/${purchaseRequest.id}`}>
+          <Link href={`/pr/split/${currentRequest.id}`}>
             <a className={buttonClassName({ variant: 'primary' })}>
               Send For Approval
             </a>

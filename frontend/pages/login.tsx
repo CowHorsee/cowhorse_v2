@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Button from '../components/atoms/Button';
 import { useRouter } from 'next/router';
@@ -117,28 +116,27 @@ export default function LoginPage() {
       const normalizedEmail = formValues.email.trim();
       const normalizedPassword = formValues.password.trim();
 
-      if (normalizedEmail && normalizedPassword) {
-        const response = await loginUser({
-          email: normalizedEmail,
-          password: normalizedPassword,
-        });
-
-        saveUserSession(response.user);
+      if (!normalizedEmail || !normalizedPassword) {
+        setLoginError('Email and password are required.');
         showToast({
-          title: 'Signed in',
-          description: response.message || 'Opening the PPIS dashboard.',
-          variant: 'success',
+          title: 'Login failed',
+          description: 'Email and password are required.',
+          variant: 'error',
         });
-      } else {
-        const fallbackEmail = normalizedEmail || 'guest@cowhorse.local';
-
-        saveUserSession({
-          user_id: `local-${Date.now()}`,
-          name: fallbackEmail.split('@')[0] || 'Guest User',
-          email: fallbackEmail,
-          role: 'ADMIN',
-        });
+        return;
       }
+
+      const response = await loginUser({
+        email: normalizedEmail,
+        password: normalizedPassword,
+      });
+
+      saveUserSession(response.user);
+      showToast({
+        title: 'Signed in',
+        description: response.message || 'Opening the PPIS dashboard.',
+        variant: 'success',
+      });
 
       await router.push('/');
     } catch (error) {
@@ -155,11 +153,6 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  function handleBypassLogin() {
-    setFormValues({ email: '', password: '' });
-    void handleLogin();
   }
 
   return (
@@ -271,32 +264,17 @@ export default function LoginPage() {
                   {isSubmitting ? <LoadingSpinner /> : null}
                   <span>{isSubmitting ? 'Signing In...' : 'Log In'}</span>
                 </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={handleBypassLogin}
-                  disabled={isSubmitting}
-                  fullWidth
-                  className="mt-3 rounded-[20px] border-brand-blue/30 px-5 py-3 font-bold hover:bg-brand-blue/5"
-                >
-                  Bypass Login
-                </Button>
               </div>
 
-              <div className="mt-5 flex items-center justify-between gap-4 rounded-[20px] bg-brand-blue/[0.03] px-4 py-3">
+              <div className="mt-5 rounded-[20px] bg-brand-blue/[0.03] px-4 py-3">
                 <div>
                   <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-blue/45">
                     Need Access?
                   </p>
                   <p className="mt-1 text-sm font-semibold text-brand-blue">
-                    Request an account from an admin.
+                    Contact your admin to be added from User Management.
                   </p>
                 </div>
-                <Link href="/register">
-                  <a className="rounded-full bg-brand-red/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-red transition hover:bg-brand-red/20">
-                    Register
-                  </a>
-                </Link>
               </div>
             </div>
           </div>

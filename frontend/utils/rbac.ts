@@ -1,4 +1,5 @@
 import type { AuthUser, UserRole } from './authApi';
+import { USER_ROLES, USER_ROLE_VALUES } from './constants';
 
 type RouteMatchMode = 'exact' | 'prefix';
 
@@ -11,7 +12,7 @@ export type AppRouteConfig = {
   matchMode?: RouteMatchMode;
 };
 
-const ALL_ROLES: UserRole[] = ['ADMIN', 'EMPLOYEE', 'MANAGER', 'WAREHOUSE'];
+const ALL_ROLES: UserRole[] = USER_ROLE_VALUES;
 
 /** Central RBAC config for navigation and route access. */
 export const appRouteConfig: AppRouteConfig[] = [
@@ -27,7 +28,7 @@ export const appRouteConfig: AppRouteConfig[] = [
     href: '/pr/approval',
     label: 'PR Approvals',
     iconPath: '/clipboard-text.svg',
-    allowedRoles: ['MANAGER'],
+    allowedRoles: [USER_ROLES.MANAGER],
     showInSidebar: true,
     matchMode: 'prefix',
   },
@@ -42,7 +43,11 @@ export const appRouteConfig: AppRouteConfig[] = [
     href: '/pr',
     label: 'Purchase Requests',
     iconPath: '/clipboard-text.svg',
-    allowedRoles: ['ADMIN', 'EMPLOYEE', 'WAREHOUSE'],
+    allowedRoles: [
+      USER_ROLES.ADMIN,
+      USER_ROLES.EMPLOYEE,
+      USER_ROLES.WAREHOUSE,
+    ],
     showInSidebar: true,
     matchMode: 'prefix',
   },
@@ -50,7 +55,7 @@ export const appRouteConfig: AppRouteConfig[] = [
     href: '/inventory',
     label: 'Inventory',
     iconPath: '/box.svg',
-    allowedRoles: ['ADMIN', 'WAREHOUSE'],
+    allowedRoles: [USER_ROLES.ADMIN, USER_ROLES.WAREHOUSE],
     showInSidebar: true,
     matchMode: 'prefix',
   },
@@ -58,14 +63,14 @@ export const appRouteConfig: AppRouteConfig[] = [
     href: '/users',
     label: 'Users',
     iconPath: '/user.svg',
-    allowedRoles: ['ADMIN'],
+    allowedRoles: [USER_ROLES.ADMIN],
     showInSidebar: true,
     matchMode: 'prefix',
   },
   {
     href: '/register',
     label: 'Create User',
-    allowedRoles: ['ADMIN'],
+    allowedRoles: [USER_ROLES.ADMIN],
     showInSidebar: false,
     matchMode: 'exact',
   },

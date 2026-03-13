@@ -1,6 +1,7 @@
 import { apiRequest, readApiEnvelope } from './api/apiClient';
+import { USER_ROLES, type UserRole } from './constants';
 
-export type UserRole = 'ADMIN' | 'EMPLOYEE' | 'MANAGER' | 'WAREHOUSE';
+export type { UserRole } from './constants';
 
 export type BackendRoleName =
   | 'Procurement Officer'
@@ -47,34 +48,34 @@ export function mapBackendRole(roleName: unknown): UserRole {
     .toLowerCase();
 
   if (normalized.includes('admin')) {
-    return 'ADMIN';
+    return USER_ROLES.ADMIN;
   }
 
   if (normalized.includes('warehouse')) {
-    return 'WAREHOUSE';
+    return USER_ROLES.WAREHOUSE;
   }
 
   if (normalized.includes('manager')) {
-    return 'MANAGER';
+    return USER_ROLES.MANAGER;
   }
 
-  return 'EMPLOYEE';
+  return USER_ROLES.EMPLOYEE;
 }
 
 export function normalizeRole(value: unknown): UserRole {
-  return mapBackendRole(value || 'EMPLOYEE');
+  return mapBackendRole(value || USER_ROLES.EMPLOYEE);
 }
 
 export function mapUserRoleToBackendRoleName(role: UserRole): BackendRoleName {
-  if (role === 'ADMIN') {
+  if (role === USER_ROLES.ADMIN) {
     return 'Admin';
   }
 
-  if (role === 'MANAGER') {
+  if (role === USER_ROLES.MANAGER) {
     return 'Procurement Manager';
   }
 
-  if (role === 'WAREHOUSE') {
+  if (role === USER_ROLES.WAREHOUSE) {
     return 'Warehouse Personnel';
   }
 

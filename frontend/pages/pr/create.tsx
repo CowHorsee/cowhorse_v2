@@ -8,7 +8,7 @@ import {
   getUserSession,
   saveCreatedPurchaseRequest,
 } from '../../utils/localStorage';
-import { createPurchaseRequest } from '../../utils/prApi';
+import { createPurchaseRequest } from '../../utils/api/prApi';
 import { inventoryItems } from '../../utils/mockdata/inventoryItemsData';
 import {
   purchaseRequests,

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { ApiError } from '../../utils/api/apiClient';
 import { getUserSession } from '../../utils/localStorage';
-import { getPrDetails, normalizePurchaseRequest } from '../../utils/prApi';
+import { getPrDetails, normalizePurchaseRequest } from '../../utils/api/prApi';
 import {
   purchaseRequests as fallbackRequests,
   type PurchaseRequest,

@@ -3,8 +3,9 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { ApiError } from '../../utils/api/apiClient';
+import { USER_ROLES } from '../../utils/constants';
 import { getUserSession } from '../../utils/localStorage';
-import { getPrDetails, normalizePurchaseRequest } from '../../utils/prApi';
+import { getPrDetails, normalizePurchaseRequest } from '../../utils/api/prApi';
 import {
   purchaseRequests as fallbackRequests,
   type PurchaseRequest,
@@ -24,7 +25,7 @@ export default function PrDetailsPage() {
   useEffect(() => {
     const user = getUserSession();
 
-    if (user?.role === 'MANAGER' && prId) {
+    if (user?.role === USER_ROLES.MANAGER && prId) {
       void router.replace(`/pr/approval/${encodeURIComponent(prId)}`);
     }
   }, [prId, router]);

@@ -6,7 +6,8 @@ import DashboardChart, {
   type InventoryOverviewPoint,
 } from '../components/organisms/DashboardChart';
 import RecentPurchaseRequestsPanel from '../components/organisms/RecentPurchaseRequestsPanel';
-import type { AuthUser } from '../utils/authApi';
+import { USER_ROLES } from '../utils/constants';
+import type { AuthUser } from '../utils/api/authApi';
 import { getUserSession } from '../utils/localStorage';
 import { purchaseRequests } from '../utils/mockdata/purchaseRequestsData';
 
@@ -171,7 +172,7 @@ const Home = () => {
     (item) => item.status === 'Pending Approval'
   ).length;
 
-  const isManager = sessionUser?.role === 'MANAGER';
+  const isManager = sessionUser?.role === USER_ROLES.MANAGER;
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-7xl flex-col gap-4">

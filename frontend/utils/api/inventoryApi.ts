@@ -1,4 +1,4 @@
-import { apiRequest, readApiEnvelope } from './api/apiClient';
+import { apiRequest, readApiEnvelope } from './apiClient';
 
 export async function fetchInventoryCounts(itemName?: string) {
   const response = await apiRequest<unknown>('/api/warehouse/count_inventory', {

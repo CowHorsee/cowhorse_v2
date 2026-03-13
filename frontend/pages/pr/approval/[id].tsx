@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Button from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { ApiError } from '../../../utils/api/apiClient';
+import { USER_ROLES } from '../../../utils/constants';
 import { getUserSession } from '../../../utils/localStorage';
 import {
   getPrDetails,
@@ -34,7 +35,7 @@ export default function ManagerApprovalPage({
   useEffect(() => {
     const user = getUserSession();
 
-    if (user?.role !== 'MANAGER' && user?.role !== 'ADMIN') {
+    if (user?.role !== USER_ROLES.MANAGER && user?.role !== USER_ROLES.ADMIN) {
       void router.replace(`/pr/${purchaseRequest.id}`);
     }
   }, [purchaseRequest.id, router]);

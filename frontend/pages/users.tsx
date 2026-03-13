@@ -3,7 +3,8 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../components/atoms/Button';
 import Card, { CardHeader } from '../components/atoms/Card';
 import { ApiError } from '../utils/api/apiClient';
-import type { UserRole } from '../utils/authApi';
+import type { UserRole } from '../utils/api/authApi';
+import { USER_ROLES } from '../utils/constants';
 import { getUserSession } from '../utils/localStorage';
 import {
   createManagedUser,
@@ -16,7 +17,7 @@ import {
   type ManagedUser,
 } from '../utils/mockdata/usersData';
 
-const roleOptions: UserRole[] = ['ADMIN'];
+const roleOptions: UserRole[] = [USER_ROLES.ADMIN];
 
 type RoleDropdownProps = {
   value: UserRole;
@@ -112,7 +113,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserRole, setNewUserRole] = useState<UserRole>('ADMIN');
+  const [newUserRole, setNewUserRole] = useState<UserRole>(USER_ROLES.ADMIN);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -277,7 +278,7 @@ export default function UsersPage() {
       setUsers((currentUsers) => [response.user, ...currentUsers]);
       setNewUserName('');
       setNewUserEmail('');
-      setNewUserRole('ADMIN');
+      setNewUserRole(USER_ROLES.ADMIN);
       setFeedbackMessage(response.message);
     } catch (error) {
       setErrorMessage(

@@ -1,4 +1,5 @@
 import type { UserRole } from '../authApi';
+import { USER_ROLES } from '../constants';
 
 export type ManagedUser = {
   user_id: string;
@@ -12,30 +13,30 @@ export const managedUsers: ManagedUser[] = [
     user_id: 'USR-001',
     name: 'Ashley Chan',
     email: 'ashley.chan@cowhorse.com',
-    role: 'ADMIN',
+    role: USER_ROLES.ADMIN,
   },
   {
     user_id: 'USR-002',
     name: 'Aina Sofea',
     email: 'aina.sofea@cowhorse.com',
-    role: 'ADMIN',
+    role: USER_ROLES.ADMIN,
   },
   {
     user_id: 'USR-003',
     name: 'Daniel Tan',
     email: 'daniel.tan@cowhorse.com',
-    role: 'ADMIN',
+    role: USER_ROLES.ADMIN,
   },
   {
     user_id: 'USR-004',
     name: 'Sara Lim',
     email: 'sara.lim@cowhorse.com',
-    role: 'ADMIN',
+    role: USER_ROLES.ADMIN,
   },
   {
     user_id: 'USR-005',
     name: 'Haziq Rahman',
     email: 'haziq.rahman@cowhorse.com',
-    role: 'ADMIN',
+    role: USER_ROLES.ADMIN,
   },
 ];

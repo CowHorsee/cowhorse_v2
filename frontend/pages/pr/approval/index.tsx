@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { ApiError } from '../../../utils/api/apiClient';
 import { getUserSession } from '../../../utils/localStorage';
-import { getPrTickets } from '../../../utils/prApi';
+import { getPrTickets } from '../../../utils/api/prApi';
 import {
   purchaseRequests as fallbackRequests,
   type PurchaseRequest,

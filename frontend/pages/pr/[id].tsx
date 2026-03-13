@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { buttonClassName } from '../../components/atoms/Button';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { ApiError } from '../../utils/api/apiClient';
+import { USER_ROLES } from '../../utils/constants';
 import { getUserSession } from '../../utils/localStorage';
-import { getPrDetails, normalizePurchaseRequest } from '../../utils/prApi';
+import { getPrDetails, normalizePurchaseRequest } from '../../utils/api/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,
@@ -23,7 +24,7 @@ export default function PrDetailsPage({ purchaseRequest }: PrDetailsPageProps) {
   useEffect(() => {
     const user = getUserSession();
 
-    if (user?.role === 'MANAGER') {
+    if (user?.role === USER_ROLES.MANAGER) {
       void router.replace(`/pr/approval/${purchaseRequest.id}`);
     }
   }, [purchaseRequest.id, router]);

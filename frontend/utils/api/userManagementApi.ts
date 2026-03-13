@@ -1,4 +1,4 @@
-import { apiRequest, readApiEnvelope } from './api/apiClient';
+import { apiRequest, readApiEnvelope } from './apiClient';
 import {
   mapBackendRole,
   mapUserRoleToBackendRoleName,
@@ -6,8 +6,8 @@ import {
   type BackendRoleName,
   type RegisterPayload,
   type UserRole,
-} from './authApi';
-import type { ManagedUser } from './mockdata/usersData';
+} from '../authApi';
+import type { ManagedUser } from '../mockdata/usersData';
 
 type SearchUserRow = {
   user_id?: string;

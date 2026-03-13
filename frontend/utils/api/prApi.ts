@@ -1,5 +1,8 @@
-import { apiRequest, readApiEnvelope } from './api/apiClient';
-import type { PurchaseRequest, PurchaseRequestStatus } from './mockdata/purchaseRequestsData';
+import { apiRequest, readApiEnvelope } from './apiClient';
+import type {
+  PurchaseRequest,
+  PurchaseRequestStatus,
+} from '../mockdata/purchaseRequestsData';
 
 function readRecord(value: unknown) {
   return value && typeof value === 'object' && !Array.isArray(value)

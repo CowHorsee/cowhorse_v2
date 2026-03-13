@@ -7,7 +7,7 @@ import {
   getCreatedPurchaseRequests,
   getUserSession,
 } from '../../utils/localStorage';
-import { listPrByUser } from '../../utils/prApi';
+import { listPrByUser } from '../../utils/api/prApi';
 import {
   purchaseRequests as fallbackRequests,
   type PurchaseRequest,

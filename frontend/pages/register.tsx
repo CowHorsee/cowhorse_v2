@@ -9,6 +9,7 @@ import {
   type UserRole,
 } from '../utils/authApi';
 import { ApiError } from '../utils/api/apiClient';
+import { USER_ROLES } from '../utils/constants';
 import { getUserSession } from '../utils/localStorage';
 
 export default function RegisterPage() {
@@ -16,7 +17,7 @@ export default function RegisterPage() {
   const [formValues, setFormValues] = useState({
     name: '',
     email: '',
-    role: 'ADMIN' as UserRole,
+    role: USER_ROLES.ADMIN as UserRole,
     password: '',
   });
   const [errorMessage, setErrorMessage] = useState('');
@@ -56,7 +57,7 @@ export default function RegisterPage() {
       setFormValues({
         name: '',
         email: '',
-        role: 'ADMIN',
+        role: USER_ROLES.ADMIN,
         password: '',
       });
       setTimeout(() => {
@@ -126,7 +127,7 @@ export default function RegisterPage() {
             onChange={(event) => updateField('role', event.target.value)}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
           >
-            <option value="ADMIN">Admin</option>
+            <option value={USER_ROLES.ADMIN}>Admin</option>
           </select>
 
           <label

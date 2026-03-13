@@ -301,16 +301,13 @@ export default function UsersPage() {
           titleClassName="text-brand-blue"
         />
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-[1fr_3fr]">
           <Card variant="soft" padding="md">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
               Total Users
             </p>
             <p className="mt-2 text-3xl font-semibold text-brand-blue">
               {isLoading ? '...' : users.length}
-            </p>
-            <p className="mt-2 text-xs text-slate-500">
-              Creating users calls the live admin registration API.
             </p>
           </Card>
 
@@ -319,11 +316,6 @@ export default function UsersPage() {
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
                 Add New User
               </p>
-              <Link href="/register">
-                <a className="text-xs font-bold text-brand-blue transition hover:text-brand-red">
-                  Open full form
-                </a>
-              </Link>
             </div>
             <form
               className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px_120px]"
@@ -379,12 +371,6 @@ export default function UsersPage() {
             className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand-blue"
           />
         </div>
-
-        <p className="mt-3 text-xs text-slate-500">
-          The current API supports role changes. Name and email edits are not
-          wired because the OpenAPI contract does not expose an endpoint for
-          them.
-        </p>
 
         <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
           <table className="min-w-full divide-y divide-slate-200 text-sm">

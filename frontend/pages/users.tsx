@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../components/atoms/Button';
 import Card, { CardHeader } from '../components/atoms/Card';
+import { useToast } from '../components/ToastProvider';
 import { ApiError } from '../utils/api/apiClient';
 import type { UserRole } from '../utils/api/authApi';
-import { USER_ROLES } from '../utils/constants';
+import { USER_ROLE_VALUES, USER_ROLES } from '../utils/constants';
 import { getUserSession } from '../utils/localStorage';
 import {
   createManagedUser,
@@ -17,7 +18,7 @@ import {
   type ManagedUser,
 } from '../utils/mockdata/usersData';
 
-const roleOptions: UserRole[] = [USER_ROLES.ADMIN];
+const roleOptions: UserRole[] = USER_ROLE_VALUES;
 
 type RoleDropdownProps = {
   value: UserRole;
@@ -109,6 +110,7 @@ function buildSearchFilters(searchTerm: string) {
 }
 
 export default function UsersPage() {
+  const { showToast } = useToast();
   const [users, setUsers] = useState<ManagedUser[]>(fallbackUsers);
   const [searchTerm, setSearchTerm] = useState('');
   const [newUserName, setNewUserName] = useState('');
@@ -205,6 +207,11 @@ export default function UsersPage() {
 
     if (existingUser.role === editDraft.role) {
       setFeedbackMessage('No role change to save.');
+      showToast({
+        title: 'No changes',
+        description: 'The selected user role is unchanged.',
+        variant: 'info',
+      });
       setEditingUserId(null);
       setEditDraft(null);
       return;
@@ -229,14 +236,24 @@ export default function UsersPage() {
         )
       );
       setFeedbackMessage(`User ${editingUserId} role updated.`);
+      showToast({
+        title: 'Role updated',
+        description: `User ${editingUserId} role updated successfully.`,
+        variant: 'success',
+      });
       setEditingUserId(null);
       setEditDraft(null);
     } catch (error) {
-      setErrorMessage(
+      const message =
         error instanceof ApiError
           ? error.message
-          : 'Unable to update the selected role.'
-      );
+          : 'Unable to update the selected role.';
+      setErrorMessage(message);
+      showToast({
+        title: 'Role update failed',
+        description: message,
+        variant: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -252,16 +269,31 @@ export default function UsersPage() {
 
     if (!adminId) {
       setErrorMessage('Admin session required before creating users.');
+      showToast({
+        title: 'Create user failed',
+        description: 'Admin session required before creating users.',
+        variant: 'error',
+      });
       return;
     }
 
     if (!normalizedName) {
       setErrorMessage('User name is required.');
+      showToast({
+        title: 'Create user failed',
+        description: 'User name is required.',
+        variant: 'error',
+      });
       return;
     }
 
     if (!normalizedEmail || !normalizedEmail.includes('@')) {
       setErrorMessage('A valid email is required.');
+      showToast({
+        title: 'Create user failed',
+        description: 'A valid email is required.',
+        variant: 'error',
+      });
       return;
     }
 
@@ -280,12 +312,22 @@ export default function UsersPage() {
       setNewUserEmail('');
       setNewUserRole(USER_ROLES.ADMIN);
       setFeedbackMessage(response.message);
+      showToast({
+        title: 'User created',
+        description: response.message,
+        variant: 'success',
+      });
     } catch (error) {
-      setErrorMessage(
+      const message =
         error instanceof ApiError
           ? error.message
-          : 'Unable to create the user right now.'
-      );
+          : 'Unable to create the user right now.';
+      setErrorMessage(message);
+      showToast({
+        title: 'Create user failed',
+        description: message,
+        variant: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }

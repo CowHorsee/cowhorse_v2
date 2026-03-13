@@ -1,5 +1,5 @@
-import { apiRequest, readApiEnvelope } from './api/apiClient';
-import { USER_ROLES, type UserRole } from './constants';
+import { apiRequest, readApiEnvelope } from './apiClient';
+import { USER_ROLES, type UserRole } from '../constants';
 
 export type { UserRole } from './constants';
 

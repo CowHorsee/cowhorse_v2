@@ -6,7 +6,7 @@ import {
   type BackendRoleName,
   type RegisterPayload,
   type UserRole,
-} from '../authApi';
+} from './authApi';
 import type { ManagedUser } from '../mockdata/usersData';
 
 type SearchUserRow = {

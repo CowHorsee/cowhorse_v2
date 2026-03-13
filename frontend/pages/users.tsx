@@ -11,7 +11,7 @@ import {
   listUsers,
   modifyUserRole,
   searchUsers,
-} from '../utils/userManagementApi';
+} from '../utils/api/userManagementApi';
 import {
   managedUsers as fallbackUsers,
   type ManagedUser,

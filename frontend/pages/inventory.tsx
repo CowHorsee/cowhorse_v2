@@ -2,7 +2,7 @@ import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
 import Button, { buttonClassName } from '../components/atoms/Button';
 import { ApiError } from '../utils/api/apiClient';
-import { fetchInventoryCounts } from '../utils/inventoryApi';
+import { fetchInventoryCounts } from '../utils/api/inventoryApi';
 import {
   inventoryItems as initialInventoryItems,
   type InventoryItem,
@@ -290,7 +290,7 @@ export default function InventoryPage() {
           titleClassName="text-brand-blue"
         />
 
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-[1fr_2fr]">
           <Card variant="soft" padding="md">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
               Total Items
@@ -325,11 +325,6 @@ export default function InventoryPage() {
               onChange={handleCsvUpload}
               className="sr-only"
             />
-            <p className="mt-2 text-xs text-slate-500">
-              Live counts come from the warehouse API. CSV upload remains local
-              because the deployed API expects a server-side file path, not a
-              browser file.
-            </p>
             {apiMessage ? (
               <p className="mt-2 text-xs font-semibold text-brand-blue">
                 {apiMessage}
@@ -345,14 +340,6 @@ export default function InventoryPage() {
                 {uploadError}
               </p>
             ) : null}
-          </Card>
-          <Card variant="soft" padding="md">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-              API
-            </p>
-            <p className="mt-2 text-sm font-semibold text-slate-700">
-              Source: /api/warehouse/count_inventory
-            </p>
           </Card>
         </div>
       </Card>

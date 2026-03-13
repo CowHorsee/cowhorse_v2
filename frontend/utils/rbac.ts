@@ -1,4 +1,4 @@
-import type { AuthUser, UserRole } from './authApi';
+import type { AuthUser, UserRole } from './api/authApi';
 import { USER_ROLES, USER_ROLE_VALUES } from './constants';
 
 type RouteMatchMode = 'exact' | 'prefix';

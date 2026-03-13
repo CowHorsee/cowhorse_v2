@@ -10,7 +10,7 @@ import {
   getPrDetails,
   normalizePurchaseRequest,
   reviewPurchaseRequest,
-} from '../../../utils/prApi';
+} from '../../../utils/api/prApi';
 import {
   purchaseRequests,
   type PurchaseRequest,

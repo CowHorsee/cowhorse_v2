@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ReactNode, useState } from 'react';
 import Card from './atoms/Card';
-import type { AuthUser } from '../utils/authApi';
+import type { AuthUser } from '../utils/api/authApi';
 import { getSidebarTabsForUser } from '../utils/rbac';
 
 type AppShellProps = {
@@ -23,11 +23,22 @@ function formatRoleLabel(role: AuthUser['role']) {
   return role.charAt(0) + role.slice(1).toLowerCase();
 }
 
+function isSidebarRouteMatch(pathname: string, href: string) {
+  if (href === '/') {
+    return pathname === '/';
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export default function AppShell({ children, user }: AppShellProps) {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navItems = getSidebarTabsForUser(user);
   const userInitials = user ? getUserInitials(user.name) : 'NA';
+  const activeHref = navItems
+    .filter((item) => isSidebarRouteMatch(router.pathname, item.href))
+    .sort((left, right) => right.href.length - left.href.length)[0]?.href;
 
   return (
     <div className="min-h-screen bg-app">
@@ -71,9 +82,7 @@ export default function AppShell({ children, user }: AppShellProps) {
         <nav className="mt-6 flex-1">
           <ul className="grid gap-2">
             {navItems.map((item) => {
-              const isActive =
-                router.pathname === item.href ||
-                (item.href !== '/' && router.pathname.startsWith(item.href));
+              const isActive = item.href === activeHref;
               return (
                 <li key={item.href}>
                   <Link href={item.href}>

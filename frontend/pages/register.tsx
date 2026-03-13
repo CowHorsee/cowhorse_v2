@@ -7,7 +7,7 @@ import {
   mapUserRoleToBackendRoleName,
   registerUser,
   type UserRole,
-} from '../utils/authApi';
+} from '../utils/api/authApi';
 import { ApiError } from '../utils/api/apiClient';
 import { USER_ROLES } from '../utils/constants';
 import { getUserSession } from '../utils/localStorage';

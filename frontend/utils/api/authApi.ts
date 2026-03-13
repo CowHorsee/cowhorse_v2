@@ -1,7 +1,7 @@
 import { apiRequest, readApiEnvelope } from './apiClient';
 import { USER_ROLES, type UserRole } from '../constants';
 
-export type { UserRole } from './constants';
+export type { UserRole } from '../constants';
 
 export type BackendRoleName =
   | 'Procurement Officer'

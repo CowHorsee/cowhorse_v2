@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
 import Button from '../components/atoms/Button';
-import type { AuthUser } from '../utils/authApi';
+import type { AuthUser } from '../utils/api/authApi';
 import { clearUserSession, getUserSession } from '../utils/localStorage';
 
 export default function ProfilePage() {

@@ -3,7 +3,7 @@ import Button from '../components/atoms/Button';
 import { useRouter } from 'next/router';
 import { useToast } from '../components/ToastProvider';
 import { ApiError } from '../utils/api/apiClient';
-import { loginUser } from '../utils/authApi';
+import { loginUser } from '../utils/api/authApi';
 import { saveUserSession } from '../utils/localStorage';
 
 const heroPhrases = [

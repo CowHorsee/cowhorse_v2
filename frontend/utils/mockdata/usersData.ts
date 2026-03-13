@@ -1,4 +1,4 @@
-import type { UserRole } from '../authApi';
+import type { UserRole } from '../api/authApi';
 import { USER_ROLES } from '../constants';
 
 export type ManagedUser = {

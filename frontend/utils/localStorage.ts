@@ -1,4 +1,4 @@
-import type { AuthUser } from './authApi';
+import type { AuthUser } from './api/authApi';
 import type { PurchaseRequest } from './mockdata/purchaseRequestsData';
 
 const USER_STORAGE_KEY = 'cowhorse.auth.user';

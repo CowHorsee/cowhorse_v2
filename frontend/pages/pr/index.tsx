@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Button from '../../components/atoms/Button';
+import Button, { ButtonAnchor } from '../../components/atoms/Button';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
@@ -108,11 +108,11 @@ export default function PrPage() {
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
               Create Purchase Request
             </p>
-            <a href = "/pr/create">
-              <Button variant="primary" className="mt-4">
+            <Link href="/pr/create" passHref>
+              <ButtonAnchor variant="primary" className="mt-4">
                 Create New
-              </Button>
-            </a>
+              </ButtonAnchor>
+            </Link>
           </Card>
         </div>
         {errorMessage ? (

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
 import DashboardMetricCard from '../components/molecules/DashboardMetricCard';
@@ -141,11 +142,18 @@ const inventoryOverviewData: InventoryOverviewPoint[] = [
 ];
 
 const Home = () => {
+  const router = useRouter();
   const [sessionUser, setSessionUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    setSessionUser(getUserSession());
-  }, []);
+    const user = getUserSession();
+    if (!user) {
+      void router.replace('/login');
+      return;
+    }
+
+    setSessionUser(user);
+  }, [router]);
 
   const personalRequests = useMemo(() => {
     if (!sessionUser?.name) {

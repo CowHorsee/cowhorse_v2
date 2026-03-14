@@ -109,9 +109,9 @@ export default function PrPage() {
               Create Purchase Request
             </p>
             <a href = "/pr/create">
-            <Button variant="primary" className="mt-4">
-              Create New
-            </Button>
+              <Button variant="primary" className="mt-4">
+                Create New
+              </Button>
             </a>
           </Card>
         </div>

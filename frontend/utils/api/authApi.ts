@@ -1,4 +1,4 @@
-import { apiRequest, readApiEnvelope } from './apiClient';
+import { ApiError, apiRequest, readApiEnvelope } from './apiClient';
 import { USER_ROLES, type UserRole } from '../constants';
 
 export type { UserRole } from '../constants';
@@ -158,13 +158,24 @@ export async function loginUser(payload: LoginPayload) {
   });
 
   const envelope = readApiEnvelope<unknown>(response);
+  const normalizedStatus = envelope?.status?.trim().toLowerCase();
+
+  if (normalizedStatus && normalizedStatus !== 'success' && normalizedStatus !== 'ok') {
+    throw new ApiError(envelope?.message || 'Login failed.', 400, null);
+  }
+
   const rawUser = readRecord(envelope?.data) || readRecord(response);
+  const normalizedUser = normalizeAuthUser({
+    ...rawUser,
+    email: payload.email,
+  });
+
+  if (!normalizedUser.user_id || normalizedUser.user_id === 'unknown-user') {
+    throw new ApiError(envelope?.message || 'Login failed.', 400, null);
+  }
 
   return {
     message: envelope?.message || 'Login successful.',
-    user: normalizeAuthUser({
-      ...rawUser,
-      email: payload.email,
-    }),
+    user: normalizedUser,
   } as AuthResponse;
 }

@@ -340,28 +340,6 @@ export default function CreatePrPage() {
                 placeholder="e.g. 12"
                 className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand-blue"
               />
-              <p className="mt-2 text-xs text-slate-500">
-                Unit price:{' '}
-                <span className="font-semibold text-slate-700">
-                  {selectedItem
-                    ? `RM ${selectedItem.unitPrice.toLocaleString()} / ${
-                        selectedItem.unit
-                      }`
-                    : 'Select an item'}
-                </span>
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Line total:{' '}
-                <span className="font-semibold text-slate-700">
-                  {selectedItem &&
-                  lineQuantity.trim() &&
-                  !Number.isNaN(Number(lineQuantity))
-                    ? `RM ${(
-                        Number(lineQuantity) * selectedItem.unitPrice
-                      ).toLocaleString()}`
-                    : 'RM 0'}
-                </span>
-              </p>
             </div>
 
             <Button variant="outline" onClick={handleAddItem}>

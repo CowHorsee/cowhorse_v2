@@ -23,6 +23,10 @@ type AuthResponse = {
   user: AuthUser;
 };
 
+type MessageResponse = {
+  message: string;
+};
+
 export type RegisterPayload = {
   admin_id: string;
   name: string;
@@ -34,6 +38,16 @@ export type RegisterPayload = {
 export type LoginPayload = {
   email: string;
   password: string;
+};
+
+export type ForgotPasswordPayload = {
+  user_id: string;
+};
+
+export type ChangePasswordPayload = {
+  user_id: string;
+  old_password: string;
+  new_password: string;
 };
 
 function readRecord(value: unknown) {
@@ -178,4 +192,44 @@ export async function loginUser(payload: LoginPayload) {
     message: envelope?.message || 'Login successful.',
     user: normalizedUser,
   } as AuthResponse;
+}
+
+export async function forgotPassword(payload: ForgotPasswordPayload) {
+  const response = await apiRequest<unknown>('/api/user/forget_password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  const envelope = readApiEnvelope<unknown>(response);
+  const normalizedStatus = envelope?.status?.trim().toLowerCase();
+  if (normalizedStatus && normalizedStatus !== 'success' && normalizedStatus !== 'ok') {
+    throw new ApiError(envelope?.message || 'Unable to reset password.', 400, null);
+  }
+
+  return {
+    message:
+      envelope?.message ||
+      (typeof envelope?.data === 'string' ? envelope.data : '') ||
+      'Password reset successful.',
+  } as MessageResponse;
+}
+
+export async function changePassword(payload: ChangePasswordPayload) {
+  const response = await apiRequest<unknown>('/api/user/change_password', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  const envelope = readApiEnvelope<unknown>(response);
+  const normalizedStatus = envelope?.status?.trim().toLowerCase();
+  if (normalizedStatus && normalizedStatus !== 'success' && normalizedStatus !== 'ok') {
+    throw new ApiError(envelope?.message || 'Unable to change password.', 400, null);
+  }
+
+  return {
+    message:
+      envelope?.message ||
+      (typeof envelope?.data === 'string' ? envelope.data : '') ||
+      'Password changed successfully.',
+  } as MessageResponse;
 }

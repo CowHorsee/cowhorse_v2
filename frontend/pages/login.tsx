@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import Button from '../components/atoms/Button';
 import { useRouter } from 'next/router';
 import { useToast } from '../components/ToastProvider';
 import { ApiError } from '../utils/api/apiClient';
-import { loginUser } from '../utils/api/authApi';
+import { forgotPassword, loginUser } from '../utils/api/authApi';
 import { saveUserSession } from '../utils/localStorage';
 
 const heroPhrases = [
@@ -28,7 +28,9 @@ export default function LoginPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [forgotUserId, setForgotUserId] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [typedPhrase, setTypedPhrase] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -155,6 +157,47 @@ export default function LoginPage() {
     }
   }
 
+  function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void handleLogin();
+  }
+
+  async function handleForgotPassword() {
+    const normalizedUserId = forgotUserId.trim();
+    if (!normalizedUserId) {
+      showToast({
+        title: 'Reset failed',
+        description: 'User ID is required to reset password.',
+        variant: 'error',
+      });
+      return;
+    }
+
+    setIsResettingPassword(true);
+
+    try {
+      const response = await forgotPassword({ user_id: normalizedUserId });
+      showToast({
+        title: 'Password reset sent',
+        description: response.message,
+        variant: 'success',
+      });
+      setForgotUserId('');
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : 'Unable to process forgot password right now.';
+      showToast({
+        title: 'Reset failed',
+        description: message,
+        variant: 'error',
+      });
+    } finally {
+      setIsResettingPassword(false);
+    }
+  }
+
   return (
     <div
       className="min-h-screen bg-brand-white px-4 py-6 md:px-6 md:py-8"
@@ -233,7 +276,7 @@ export default function LoginPage() {
                   Use the secure entry point below to continue to the dashboard.
                 </p>
 
-                <div className="mt-4 space-y-3">
+                <form className="mt-4 space-y-3" onSubmit={handleLoginSubmit}>
                   <input
                     type="email"
                     value={formValues.email}
@@ -252,18 +295,18 @@ export default function LoginPage() {
                     placeholder="Password"
                     className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
                   />
-                </div>
 
-                <Button
-                  variant="secondary"
-                  onClick={handleLogin}
-                  disabled={isSubmitting}
-                  fullWidth
-                  className="mt-6 rounded-[20px] px-5 py-4 font-bold shadow-[0_20px_45px_rgba(39,36,92,0.28)] duration-200 hover:-translate-y-0.5 hover:bg-[#1f1b4b]"
-                >
-                  {isSubmitting ? <LoadingSpinner /> : null}
-                  <span>{isSubmitting ? 'Signing In...' : 'Log In'}</span>
-                </Button>
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    disabled={isSubmitting}
+                    fullWidth
+                    className="mt-6 rounded-[20px] px-5 py-4 font-bold shadow-[0_20px_45px_rgba(39,36,92,0.28)] duration-200 hover:-translate-y-0.5 hover:bg-[#1f1b4b]"
+                  >
+                    {isSubmitting ? <LoadingSpinner /> : null}
+                    <span>{isSubmitting ? 'Signing In...' : 'Log In'}</span>
+                  </Button>
+                </form>
               </div>
 
               <div className="mt-5 rounded-[20px] bg-brand-blue/[0.03] px-4 py-3">
@@ -274,6 +317,32 @@ export default function LoginPage() {
                   <p className="mt-1 text-sm font-semibold text-brand-blue">
                     Contact your admin to be added from User Management.
                   </p>
+                </div>
+              </div>
+
+              <div className="mt-3 rounded-[20px] border border-slate-200 bg-white px-4 py-3">
+                <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-blue/45">
+                  Forgot Password
+                </p>
+                <p className="mt-1 text-sm text-slate-600">
+                  Enter your user ID to request a password reset.
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <input
+                    type="text"
+                    value={forgotUserId}
+                    onChange={(event) => setForgotUserId(event.target.value)}
+                    placeholder="e.g. U001"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={handleForgotPassword}
+                    disabled={isResettingPassword}
+                    className="whitespace-nowrap"
+                  >
+                    {isResettingPassword ? 'Submitting...' : 'Reset'}
+                  </Button>
                 </div>
               </div>
             </div>

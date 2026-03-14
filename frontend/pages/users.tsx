@@ -20,6 +20,10 @@ import {
 
 const roleOptions: UserRole[] = USER_ROLE_VALUES;
 
+function formatRoleLabel(role: UserRole) {
+  return role.charAt(0) + role.slice(1).toLowerCase();
+}
+
 type RoleDropdownProps = {
   value: UserRole;
   onChange: (role: UserRole) => void;
@@ -55,7 +59,7 @@ function RoleDropdown({ value, onChange }: RoleDropdownProps) {
         className="flex w-full items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-700 shadow-sm transition hover:border-brand-blue focus:border-brand-blue focus:outline-none"
       >
         <span className="font-semibold tracking-[0.02em] text-brand-blue">
-          {value}
+          {formatRoleLabel(value)}
         </span>
         <span
           className={`text-xs text-slate-500 transition-transform ${
@@ -82,7 +86,7 @@ function RoleDropdown({ value, onChange }: RoleDropdownProps) {
                   : 'text-slate-700 hover:bg-slate-50'
               }`}
             >
-              {role}
+              {formatRoleLabel(role)}
             </button>
           ))}
         </div>
@@ -450,7 +454,7 @@ export default function UsersPage() {
                           onChange={(role) => setEditDraft({ role })}
                         />
                       ) : (
-                        user.role
+                        formatRoleLabel(user.role)
                       )}
                     </td>
                     <td className="px-4 py-3">

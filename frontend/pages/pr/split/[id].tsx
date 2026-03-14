@@ -1,17 +1,11 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Button, { buttonClassName } from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { ApiError } from '../../../utils/api/apiClient';
 import { getUserSession } from '../../../utils/localStorage';
-import {
-  getPrDetails,
-  normalizePurchaseRequest,
-} from '../../../utils/api/prApi';
-import {
-  purchaseRequests,
-  type PurchaseRequest,
-} from '../../../utils/mockdata/purchaseRequestsData';
+import { getPrDetails, type PurchaseRequest } from '../../../utils/api/prApi';
 
 type SplitLine = {
   id: string;
@@ -20,62 +14,93 @@ type SplitLine = {
   eta: string;
 };
 
-type PrSplitPageProps = {
-  purchaseRequest: PurchaseRequest;
-};
-
 function formatCurrency(value: number) {
   return `RM ${value.toLocaleString()}`;
 }
 
-export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
-  const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
+export default function PrSplitPage() {
+  const router = useRouter();
+  const prId = useMemo(() => {
+    const rawId = router.query.id;
+    return typeof rawId === 'string' ? rawId : '';
+  }, [router.query.id]);
+
+  const [currentRequest, setCurrentRequest] = useState<PurchaseRequest | null>(
+    null
+  );
   const [errorMessage, setErrorMessage] = useState('');
-  const [splitLines, setSplitLines] = useState<SplitLine[]>([
-    {
-      id: 'PO-SPLIT-01',
-      vendor: currentRequest.vendor,
-      amount: Math.round(currentRequest.amount * 0.6),
-      eta: '2026-04-15',
-    },
-    {
-      id: 'PO-SPLIT-02',
-      vendor: 'Alt Vendor Sdn Bhd',
-      amount: Math.round(purchaseRequest.amount * 0.25),
-      eta: '2026-04-22',
-    },
-  ]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [splitLines, setSplitLines] = useState<SplitLine[]>([]);
 
   const allocatedTotal = useMemo(
     () => splitLines.reduce((total, line) => total + line.amount, 0),
     [splitLines]
   );
 
-  const poolAmount = Math.max(currentRequest.amount - allocatedTotal, 0);
+  const poolAmount = Math.max(
+    (currentRequest?.amount || 0) - allocatedTotal,
+    0
+  );
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadDetails() {
-      const user = getUserSession();
-      if (!user?.user_id) {
+      if (!prId) {
+        setIsLoading(false);
         return;
       }
 
+      const user = getUserSession();
+      if (!user?.user_id) {
+        setErrorMessage(
+          'User session required before loading this purchase request.'
+        );
+        setCurrentRequest(null);
+        setSplitLines([]);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setErrorMessage('');
+
       try {
-        const details = await getPrDetails(user.user_id, purchaseRequest.id);
-        if (isMounted && details) {
-          setCurrentRequest(normalizePurchaseRequest(details));
-          setErrorMessage('');
+        const details = await getPrDetails(user.user_id, prId);
+        if (!isMounted || !details) {
+          return;
         }
+
+        setCurrentRequest(details);
+        setSplitLines([
+          {
+            id: 'PO-SPLIT-01',
+            vendor: details.vendor,
+            amount: Math.round(details.amount * 0.6),
+            eta: '2026-04-15',
+          },
+          {
+            id: 'PO-SPLIT-02',
+            vendor: 'Alt Vendor Sdn Bhd',
+            amount: Math.round(details.amount * 0.25),
+            eta: '2026-04-22',
+          },
+        ]);
       } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        setCurrentRequest(null);
+        setSplitLines([]);
+        setErrorMessage(
+          error instanceof ApiError
+            ? error.message
+            : 'Unable to load latest PR details from API.'
+        );
+      } finally {
         if (isMounted) {
-          setCurrentRequest(purchaseRequest);
-          setErrorMessage(
-            error instanceof ApiError
-              ? error.message
-              : 'Unable to load latest PR details from API.'
-          );
+          setIsLoading(false);
         }
       }
     }
@@ -85,7 +110,7 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
     return () => {
       isMounted = false;
     };
-  }, [purchaseRequest]);
+  }, [prId]);
 
   function updateLine(lineId: string, field: keyof SplitLine, value: string) {
     setSplitLines((currentLines) =>
@@ -121,6 +146,33 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
         eta: '',
       },
     ]);
+  }
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto w-full max-w-7xl">
+        <Card variant="surface" padding="lg">
+          <p className="text-sm text-slate-500">Loading purchase request...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!currentRequest) {
+    return (
+      <div className="mx-auto w-full max-w-7xl">
+        <Card variant="surface" padding="lg">
+          <p className="text-sm font-medium text-brand-red">
+            {errorMessage || 'Purchase request not found.'}
+          </p>
+          <Link href="/pr">
+            <a className="mt-4 inline-flex text-sm font-bold text-brand-blue hover:text-brand-red">
+              Back to PR Board
+            </a>
+          </Link>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -327,31 +379,4 @@ export default function PrSplitPage({ purchaseRequest }: PrSplitPageProps) {
       </div>
     </div>
   );
-}
-
-export async function getStaticPaths() {
-  const paths = purchaseRequests.map((item) => ({ params: { id: item.id } }));
-
-  return {
-    paths,
-    fallback: false,
-  };
-}
-
-export async function getStaticProps({ params }: { params: { id: string } }) {
-  const purchaseRequest = purchaseRequests.find(
-    (item) => item.id === params.id
-  );
-
-  if (!purchaseRequest) {
-    return {
-      notFound: true,
-    };
-  }
-
-  return {
-    props: {
-      purchaseRequest,
-    },
-  };
 }

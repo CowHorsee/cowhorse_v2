@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { ApiError } from '../../utils/api/apiClient';
 import { getUserSession } from '../../utils/localStorage';
-import { getPrDetails, normalizePurchaseRequest } from '../../utils/api/prApi';
 import {
-  purchaseRequests as fallbackRequests,
+  getPrDetails,
+  normalizePurchaseRequest,
   type PurchaseRequest,
-} from '../../utils/mockdata/purchaseRequestsData';
+} from '../../utils/api/prApi';
 
 export default function PrSplitPage() {
   const router = useRouter();
@@ -31,13 +31,12 @@ export default function PrSplitPage() {
       }
 
       const sessionUser = getUserSession();
-      const fallbackRequest = fallbackRequests.find((item) => item.id === prId);
 
       setIsLoading(true);
       setErrorMessage('');
 
       if (!sessionUser?.user_id) {
-        setPurchaseRequest(fallbackRequest || null);
+        setPurchaseRequest(null);
         setIsLoading(false);
         return;
       }
@@ -46,9 +45,7 @@ export default function PrSplitPage() {
         const response = await getPrDetails(sessionUser.user_id, prId);
         if (isMounted) {
           setPurchaseRequest(
-            response
-              ? normalizePurchaseRequest(response)
-              : fallbackRequest || null
+            response ? normalizePurchaseRequest(response) : null
           );
         }
       } catch (error) {
@@ -58,7 +55,7 @@ export default function PrSplitPage() {
               ? error.message
               : 'Unable to load this purchase request.'
           );
-          setPurchaseRequest(fallbackRequest || null);
+          setPurchaseRequest(null);
         }
       } finally {
         if (isMounted) {

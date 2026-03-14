@@ -1,8 +1,21 @@
 import { apiRequest, readApiEnvelope } from './apiClient';
-import type {
-  PurchaseRequest,
-  PurchaseRequestStatus,
-} from '../mockdata/purchaseRequestsData';
+export type PurchaseRequestStatus =
+  | 'Pending Approval'
+  | 'In Review'
+  | 'Approved'
+  | 'Rejected';
+
+export type PurchaseRequest = {
+  id: string;
+  title: string;
+  department: string;
+  requester: string;
+  vendor: string;
+  amount: number;
+  status: PurchaseRequestStatus;
+  updatedAt: string;
+  description: string;
+};
 
 function readRecord(value: unknown) {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -122,6 +135,29 @@ function normalizePurchaseRequestDetails(value: unknown) {
   return normalizePurchaseRequest(nested || record);
 }
 
+export type PrDetailItem = {
+  itemId: string;
+  quantity: number;
+  docId: string;
+};
+
+export function normalizePrDetailItems(value: unknown): PrDetailItem[] {
+  const envelope = readApiEnvelope<unknown>(value);
+  const payload = readRecord(envelope?.data) || readRecord(value);
+  const rows = Array.isArray(payload?.items) ? payload.items : [];
+
+  return rows
+    .map((row) => {
+      const record = readRecord(row);
+      return {
+        itemId: String(record?.item_id || '').trim(),
+        quantity: Number(record?.quantity || 0),
+        docId: String(record?.doc_id || '').trim(),
+      };
+    })
+    .filter((item) => Boolean(item.itemId));
+}
+
 export async function getPrTickets(
   userIdOrParams:
     | string
@@ -172,6 +208,21 @@ export async function getPrDetails(
   });
 
   return normalizePurchaseRequestDetails(response);
+}
+
+export async function getPrDetailsPayload(
+  userIdOrParams: string | { user_id: string; pr_id: string },
+  prId?: string,
+) {
+  const query =
+    typeof userIdOrParams === 'string'
+      ? { user_id: userIdOrParams, pr_id: prId }
+      : { user_id: userIdOrParams.user_id, pr_id: userIdOrParams.pr_id };
+
+  return apiRequest<unknown>('/api/pr/get_pr_details', {
+    method: 'GET',
+    query,
+  });
 }
 
 export async function createPurchaseRequest(payload: {

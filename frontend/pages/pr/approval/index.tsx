@@ -3,19 +3,13 @@ import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { ApiError } from '../../../utils/api/apiClient';
 import { getUserSession } from '../../../utils/localStorage';
-import { getPrTickets } from '../../../utils/api/prApi';
-import {
-  purchaseRequests as fallbackRequests,
-  type PurchaseRequest,
-} from '../../../utils/mockdata/purchaseRequestsData';
+import { getPrTickets, type PurchaseRequest } from '../../../utils/api/prApi';
 
 const approvableStatuses = new Set(['Pending Approval', 'In Review']);
 
 export default function PrApprovalListPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [approvals, setApprovals] = useState<PurchaseRequest[]>(
-    fallbackRequests.filter((request) => approvableStatuses.has(request.status))
-  );
+  const [approvals, setApprovals] = useState<PurchaseRequest[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
@@ -33,7 +27,7 @@ export default function PrApprovalListPage() {
           approvableStatuses.has(request.status)
         );
 
-        if (isMounted && filtered.length) {
+        if (isMounted) {
           setApprovals(filtered);
         }
       } catch (error) {
@@ -43,6 +37,7 @@ export default function PrApprovalListPage() {
               ? error.message
               : 'Unable to load approval rows from the API.'
           );
+          setApprovals([]);
         }
       }
     }

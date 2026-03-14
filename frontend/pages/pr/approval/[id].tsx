@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { ApiError } from '../../../utils/api/apiClient';
@@ -8,55 +8,77 @@ import { USER_ROLES } from '../../../utils/constants';
 import { getUserSession } from '../../../utils/localStorage';
 import {
   getPrDetails,
-  normalizePurchaseRequest,
   reviewPurchaseRequest,
-} from '../../../utils/api/prApi';
-import {
-  purchaseRequests,
   type PurchaseRequest,
-} from '../../../utils/mockdata/purchaseRequestsData';
-
-type ManagerApprovalPageProps = {
-  purchaseRequest: PurchaseRequest;
-};
+} from '../../../utils/api/prApi';
 
 type ApprovalDecision = 'APPROVED' | 'REJECTED' | null;
 
-export default function ManagerApprovalPage({
-  purchaseRequest,
-}: ManagerApprovalPageProps) {
+export default function ManagerApprovalPage() {
   const router = useRouter();
-  const [currentRequest, setCurrentRequest] = useState(purchaseRequest);
+  const prId = useMemo(() => {
+    const rawId = router.query.id;
+    return typeof rawId === 'string' ? rawId : '';
+  }, [router.query.id]);
+  const [currentRequest, setCurrentRequest] = useState<PurchaseRequest | null>(
+    null
+  );
   const [decision, setDecision] = useState<ApprovalDecision>(null);
   const [managerComment, setManagerComment] = useState('');
   const [decisionMessage, setDecisionMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const user = getUserSession();
 
     if (user?.role !== USER_ROLES.MANAGER && user?.role !== USER_ROLES.ADMIN) {
-      void router.replace(`/pr/${purchaseRequest.id}`);
+      if (prId) {
+        void router.replace(`/pr/${prId}`);
+      }
     }
-  }, [purchaseRequest.id, router]);
+  }, [prId, router]);
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadDetails() {
-      const user = getUserSession();
-      if (!user?.user_id) {
+      if (!prId) {
+        setIsLoading(false);
         return;
       }
 
+      const user = getUserSession();
+      if (!user?.user_id) {
+        setCurrentRequest(null);
+        setErrorMessage(
+          'User session required to review this purchase request.'
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setErrorMessage('');
+
       try {
-        const details = await getPrDetails(user.user_id, purchaseRequest.id);
-        if (isMounted && details) {
-          setCurrentRequest(normalizePurchaseRequest(details));
-        }
-      } catch {
+        const details = await getPrDetails(user.user_id, prId);
         if (isMounted) {
-          setCurrentRequest(purchaseRequest);
+          setCurrentRequest(details);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setCurrentRequest(null);
+          setErrorMessage(
+            error instanceof ApiError
+              ? error.message
+              : 'Unable to load this purchase request.'
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
         }
       }
     }
@@ -66,11 +88,11 @@ export default function ManagerApprovalPage({
     return () => {
       isMounted = false;
     };
-  }, [purchaseRequest]);
+  }, [prId]);
 
   async function handleDecision(nextDecision: 'approve' | 'reject') {
     const user = getUserSession();
-    if (!user?.user_id) {
+    if (!user?.user_id || !currentRequest) {
       setDecisionMessage('User session is required to submit approval.');
       return;
     }
@@ -97,6 +119,33 @@ export default function ManagerApprovalPage({
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="mx-auto w-full max-w-7xl">
+        <Card variant="surface" padding="lg">
+          <p className="text-sm text-slate-500">Loading purchase request...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!currentRequest) {
+    return (
+      <div className="mx-auto w-full max-w-7xl">
+        <Card variant="surface" padding="lg">
+          <p className="text-sm font-medium text-brand-red">
+            {errorMessage || 'Purchase request not found.'}
+          </p>
+          <Link href="/pr/approval">
+            <a className="mt-4 inline-flex text-sm font-bold text-brand-blue hover:text-brand-red">
+              Back to PR Approvals
+            </a>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-7xl">
       <Card variant="surface" padding="lg">
@@ -106,9 +155,9 @@ export default function ManagerApprovalPage({
               <a className="transition hover:text-brand-blue">PR Board</a>
             </Link>
             <span className="mx-1.5 text-slate-400">/</span>
-            <Link href={`/pr/${purchaseRequest.id}`}>
+            <Link href={`/pr/${currentRequest.id}`}>
               <a className="transition hover:text-brand-blue">
-                {purchaseRequest.id}
+                {currentRequest.id}
               </a>
             </Link>
           </div>
@@ -116,7 +165,7 @@ export default function ManagerApprovalPage({
 
         <CardHeader
           subtitle="Purchase request details"
-          title={purchaseRequest.id}
+          title={currentRequest.id}
           action={
             <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
               {currentRequest.status}
@@ -238,31 +287,4 @@ export default function ManagerApprovalPage({
       </Card>
     </div>
   );
-}
-
-export async function getStaticPaths() {
-  const paths = purchaseRequests.map((item) => ({ params: { id: item.id } }));
-
-  return {
-    paths,
-    fallback: false,
-  };
-}
-
-export async function getStaticProps({ params }: { params: { id: string } }) {
-  const purchaseRequest = purchaseRequests.find(
-    (item) => item.id === params.id
-  );
-
-  if (!purchaseRequest) {
-    return {
-      notFound: true,
-    };
-  }
-
-  return {
-    props: {
-      purchaseRequest,
-    },
-  };
 }

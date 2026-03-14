@@ -2,11 +2,21 @@ import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
 import Button, { buttonClassName } from '../components/atoms/Button';
 import { ApiError } from '../utils/api/apiClient';
-import { fetchInventoryCounts } from '../utils/api/inventoryApi';
 import {
-  inventoryItems as initialInventoryItems,
-  type InventoryItem,
-} from '../utils/mockdata/inventoryItemsData';
+  fetchInventoryCounts,
+  fetchInventoryItems,
+  type WarehouseInventoryRow,
+} from '../utils/api/inventoryApi';
+
+type InventoryItem = {
+  sku: string;
+  itemName: string;
+  location: string;
+  currentStock: number;
+  unit: string;
+  unitPrice: number;
+  lastUpdated: string;
+};
 
 type CsvParseResult = {
   rows: InventoryItem[];
@@ -157,24 +167,32 @@ function toCsvRow(values: Array<string | number>): string {
 
 function mapInventoryCountsToRows(counts: Record<string, number>) {
   return Object.entries(counts).map(([itemName, currentStock], index) => {
-    const template = initialInventoryItems.find(
-      (item) => item.itemName.toLowerCase() === itemName.toLowerCase()
-    );
-
     return {
-      sku: template?.sku || `API-${String(index + 1).padStart(3, '0')}`,
+      sku: `API-${String(index + 1).padStart(3, '0')}`,
       itemName,
-      location: template?.location || 'API Warehouse',
+      location: 'API Warehouse',
       currentStock,
-      unit: template?.unit || 'pcs',
-      unitPrice: template?.unitPrice || 0,
+      unit: 'pcs',
+      unitPrice: 0,
       lastUpdated: new Date().toLocaleString(),
     } as InventoryItem;
   });
 }
 
+function mapWarehouseRowsToInventoryItems(rows: WarehouseInventoryRow[]) {
+  return rows.map((row, index) => ({
+    sku: row.itemId || `API-${String(index + 1).padStart(3, '0')}`,
+    itemName: row.itemName,
+    location: 'API Warehouse',
+    currentStock: row.currentStock,
+    unit: row.unit || 'pcs',
+    unitPrice: row.unitPrice,
+    lastUpdated: new Date().toLocaleString(),
+  }));
+}
+
 export default function InventoryPage() {
-  const [items, setItems] = useState<InventoryItem[]>(initialInventoryItems);
+  const [items, setItems] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadMessage, setUploadMessage] = useState('');
   const [uploadError, setUploadError] = useState('');
@@ -185,8 +203,10 @@ export default function InventoryPage() {
 
     async function loadInventory() {
       try {
-        const counts = await fetchInventoryCounts();
-        const rows = mapInventoryCountsToRows(counts);
+        const warehouseRows = await fetchInventoryItems();
+        const rows = warehouseRows.length
+          ? mapWarehouseRowsToInventoryItems(warehouseRows)
+          : mapInventoryCountsToRows(await fetchInventoryCounts());
 
         if (isMounted && rows.length) {
           setItems(rows);
@@ -196,9 +216,10 @@ export default function InventoryPage() {
         if (isMounted) {
           setApiMessage(
             error instanceof ApiError
-              ? `${error.message} Showing fallback inventory data.`
-              : 'Showing fallback inventory data.'
+              ? error.message
+              : 'Unable to load inventory from API.'
           );
+          setItems([]);
         }
       }
     }

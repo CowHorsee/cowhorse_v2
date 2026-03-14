@@ -5,11 +5,11 @@ import Card, { CardHeader } from '../../components/atoms/Card';
 import { ApiError } from '../../utils/api/apiClient';
 import { USER_ROLES } from '../../utils/constants';
 import { getUserSession } from '../../utils/localStorage';
-import { getPrDetails, normalizePurchaseRequest } from '../../utils/api/prApi';
 import {
-  purchaseRequests as fallbackRequests,
+  getPrDetails,
+  normalizePurchaseRequest,
   type PurchaseRequest,
-} from '../../utils/mockdata/purchaseRequestsData';
+} from '../../utils/api/prApi';
 
 export default function PrDetailsPage() {
   const router = useRouter();
@@ -40,13 +40,12 @@ export default function PrDetailsPage() {
       }
 
       const sessionUser = getUserSession();
-      const fallbackRequest = fallbackRequests.find((item) => item.id === prId);
 
       setIsLoading(true);
       setErrorMessage('');
 
       if (!sessionUser?.user_id) {
-        setPurchaseRequest(fallbackRequest || null);
+        setPurchaseRequest(null);
         setIsLoading(false);
         return;
       }
@@ -55,9 +54,7 @@ export default function PrDetailsPage() {
         const response = await getPrDetails(sessionUser.user_id, prId);
         if (isMounted) {
           setPurchaseRequest(
-            response
-              ? normalizePurchaseRequest(response)
-              : fallbackRequest || null
+            response ? normalizePurchaseRequest(response) : null
           );
         }
       } catch (error) {
@@ -67,7 +64,7 @@ export default function PrDetailsPage() {
               ? error.message
               : 'Unable to load this purchase request.'
           );
-          setPurchaseRequest(fallbackRequest || null);
+          setPurchaseRequest(null);
         }
       } finally {
         if (isMounted) {

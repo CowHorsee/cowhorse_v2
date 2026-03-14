@@ -3,17 +3,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Button, { buttonClassName } from '../../components/atoms/Button';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { ApiError } from '../../utils/api/apiClient';
-import {
-  getCreatedPurchaseRequests,
-  getUserSession,
-  saveCreatedPurchaseRequest,
-} from '../../utils/localStorage';
+import { getUserSession } from '../../utils/localStorage';
 import { createPurchaseRequest } from '../../utils/api/prApi';
-import { inventoryItems } from '../../utils/mockdata/inventoryItemsData';
 import {
-  purchaseRequests,
-  type PurchaseRequest,
-} from '../../utils/mockdata/purchaseRequestsData';
+  fetchInventoryCounts,
+  fetchInventoryItems,
+  type WarehouseInventoryRow,
+} from '../../utils/api/inventoryApi';
 
 type DraftItemRow = {
   sku: string;
@@ -28,6 +24,13 @@ type CreatedMeta = {
   date: string;
 };
 
+type ItemOption = {
+  sku: string;
+  itemName: string;
+  unit: string;
+  unitPrice: number;
+};
+
 function formatToday() {
   const now = new Date();
   const year = now.getFullYear();
@@ -36,25 +39,24 @@ function formatToday() {
   return `${year}-${month}-${day}`;
 }
 
-function getNextPrId(existingRows: PurchaseRequest[]) {
-  const currentYear = new Date().getFullYear();
-  const maxSequence = existingRows.reduce((maxValue, row) => {
-    const match = row.id.match(/PR-(\d{4})-(\d+)$/);
-    if (!match) {
-      return maxValue;
-    }
+function mapWarehouseRowsToOptions(
+  rows: WarehouseInventoryRow[]
+): ItemOption[] {
+  return rows.map((row, index) => ({
+    sku: row.itemId || `ITEM-${String(index + 1).padStart(3, '0')}`,
+    itemName: row.itemName,
+    unit: row.unit || 'pcs',
+    unitPrice: row.unitPrice || 0,
+  }));
+}
 
-    const year = Number(match[1]);
-    const sequence = Number(match[2]);
-
-    if (year !== currentYear || Number.isNaN(sequence)) {
-      return maxValue;
-    }
-
-    return Math.max(maxValue, sequence);
-  }, 100);
-
-  return `PR-${currentYear}-${String(maxSequence + 1).padStart(3, '0')}`;
+function mapCountsToOptions(counts: Record<string, number>) {
+  return Object.keys(counts).map((itemName, index) => ({
+    sku: `ITEM-${String(index + 1).padStart(3, '0')}`,
+    itemName,
+    unit: 'pcs',
+    unitPrice: 0,
+  }));
 }
 
 export default function CreatePrPage() {
@@ -64,6 +66,8 @@ export default function CreatePrPage() {
   const [lineQuantity, setLineQuantity] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [draftItems, setDraftItems] = useState<DraftItemRow[]>([]);
+  const [itemCatalog, setItemCatalog] = useState<ItemOption[]>([]);
+  const [itemLoadError, setItemLoadError] = useState('');
   const [formError, setFormError] = useState('');
   const [createdMeta, setCreatedMeta] = useState<CreatedMeta | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,7 +75,7 @@ export default function CreatePrPage() {
   const itemOptions = useMemo(() => {
     const normalized = itemQuery.trim().toLowerCase();
 
-    return inventoryItems.filter((item) => {
+    return itemCatalog.filter((item) => {
       if (!normalized) {
         return true;
       }
@@ -81,10 +85,10 @@ export default function CreatePrPage() {
         item.sku.toLowerCase().includes(normalized)
       );
     });
-  }, [itemQuery]);
+  }, [itemCatalog, itemQuery]);
 
   const selectedItem =
-    inventoryItems.find((item) => item.sku === selectedSku) || null;
+    itemCatalog.find((item) => item.sku === selectedSku) || null;
 
   const totalAmount = draftItems.reduce(
     (sum, row) => sum + row.quantity * row.unitPrice,
@@ -109,8 +113,44 @@ export default function CreatePrPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadItemCatalog() {
+      try {
+        const rows = await fetchInventoryItems();
+        if (isMounted && rows.length) {
+          setItemCatalog(mapWarehouseRowsToOptions(rows));
+          setItemLoadError('');
+          return;
+        }
+
+        const counts = await fetchInventoryCounts();
+        if (isMounted) {
+          setItemCatalog(mapCountsToOptions(counts));
+          setItemLoadError('');
+        }
+      } catch (error) {
+        if (isMounted) {
+          setItemCatalog([]);
+          setItemLoadError(
+            error instanceof ApiError
+              ? error.message
+              : 'Unable to load item catalog from API.'
+          );
+        }
+      }
+    }
+
+    void loadItemCatalog();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   function selectItem(sku: string) {
-    const nextItem = inventoryItems.find((item) => item.sku === sku);
+    const nextItem = itemCatalog.find((item) => item.sku === sku);
     if (!nextItem) {
       return;
     }
@@ -203,40 +243,9 @@ export default function CreatePrPage() {
       });
 
       const createdDate = formatToday();
-      const existingRows = [
-        ...getCreatedPurchaseRequests(),
-        ...purchaseRequests,
-      ];
-      const generatedId = getNextPrId(existingRows);
+      const generatedId = `PR-${Date.now()}`;
       const apiPrId = String((apiResponse.pr_id as string) || '').trim();
       const nextId = apiPrId || generatedId;
-      const firstItemName = draftItems[0]?.itemName || 'Requested item';
-
-      const newRequest: PurchaseRequest = {
-        id: nextId,
-        title:
-          draftItems.length > 1
-            ? `${firstItemName} and ${draftItems.length - 1} more item(s)`
-            : `${firstItemName} procurement request`,
-        department: 'Operations',
-        requester: sessionUser.name || 'Guest User',
-        vendor: 'TBD',
-        amount: totalAmount,
-        status: 'Pending Approval',
-        updatedAt: createdDate,
-        description: draftItems
-          .map(
-            (row, index) =>
-              `${index + 1}. ${row.itemName} (${
-                row.sku
-              }) - ${row.quantity.toLocaleString()} ${
-                row.unit
-              } x RM ${row.unitPrice.toLocaleString()}`
-          )
-          .join(' | '),
-      };
-
-      saveCreatedPurchaseRequest(newRequest);
       setCreatedMeta({ id: nextId, date: createdDate });
       setDraftItems([]);
       setSelectedSku('');
@@ -319,6 +328,11 @@ export default function CreatePrPage() {
                       </p>
                     )}
                   </div>
+                ) : null}
+                {itemLoadError ? (
+                  <p className="mt-2 text-xs font-semibold text-brand-red">
+                    {itemLoadError}
+                  </p>
                 ) : null}
               </div>
             </div>

@@ -4,16 +4,15 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
 import { ApiError } from '../../utils/api/apiClient';
-import {
-  getCreatedPurchaseRequests,
-  getUserSession,
-} from '../../utils/localStorage';
+import { getUserSession } from '../../utils/localStorage';
 import { listPrByUser } from '../../utils/api/prApi';
+
+type PrRow = Awaited<ReturnType<typeof listPrByUser>>[number];
 
 export default function PrPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [requests, setRequests] = useState<PurchaseRequest[]>([]);
+  const [requests, setRequests] = useState<PrRow[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -22,7 +21,6 @@ export default function PrPage() {
 
     async function loadRequests() {
       const sessionUser = getUserSession();
-      const createdRows = getCreatedPurchaseRequests();
 
       setIsLoading(true);
       setErrorMessage('');
@@ -30,29 +28,19 @@ export default function PrPage() {
       try {
         const apiRows = sessionUser?.user_id
           ? await listPrByUser(sessionUser.user_id)
-          : fallbackRequests;
-
-        const baseRows = (apiRows.length ? apiRows : fallbackRequests).filter(
-          (baseRow) =>
-            !createdRows.some((createdRow) => createdRow.id === baseRow.id)
-        );
+          : [];
 
         if (isMounted) {
-          setRequests([...createdRows, ...baseRows]);
+          setRequests(apiRows);
         }
       } catch (error) {
-        const baseRows = fallbackRequests.filter(
-          (baseRow) =>
-            !createdRows.some((createdRow) => createdRow.id === baseRow.id)
-        );
-
         if (isMounted) {
           setErrorMessage(
             error instanceof ApiError
               ? error.message
               : 'Unable to load purchase requests from the API.'
           );
-          setRequests([...createdRows, ...baseRows]);
+          setRequests([]);
         }
       } finally {
         if (isMounted) {

@@ -108,9 +108,11 @@ export default function PrPage() {
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
               Create Purchase Request
             </p>
-            <Button variant="primary" className="mt-4" href="/pr/create">
+            <a href = "/pr/create">
+            <Button variant="primary" className="mt-4">
               Create New
             </Button>
+            </a>
           </Card>
         </div>
         {errorMessage ? (

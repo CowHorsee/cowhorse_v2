@@ -460,43 +460,34 @@ export default function UsersPage() {
                           variant="ghost"
                           disabled={isSubmitting}
                           onClick={() => void confirmEditingRow()}
-                          className="h-9 w-9 rounded-lg border border-emerald-300 bg-emerald-50 p-0 text-emerald-700 hover:bg-emerald-100"
+                          className="rounded-lg border border-emerald-300 bg-emerald-50 p-0 text-emerald-700 hover:bg-emerald-100"
                           aria-label={`Confirm edits for ${user.name}`}
                           title="Confirm"
                         >
-                          <svg
-                            viewBox="0 0 24 24"
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M20 6L9 17l-5-5" />
-                          </svg>
+                          <img
+                            src="/tick-circle.svg"
+                            alt="Confirm Update"
+                            width="15"
+                            height="15"
+                            className={`transition-transform duration-300`}
+                          />
                         </Button>
                       ) : (
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => startEditingRow(user)}
-                          className="h-9 w-9 rounded-lg border-slate-300 p-0 text-brand-blue hover:border-brand-blue hover:bg-slate-50"
+                          className="rounded-lg border-slate-300 p-0 text-brand-blue hover:border-brand-blue hover:bg-slate-50"
                           aria-label={`Edit ${user.name}`}
                           title="Edit role"
                         >
-                          <svg
-                            viewBox="0 0 24 24"
-                            className="h-4 w-4"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
-                          </svg>
+                          <img
+                            src="/edit-2.svg"
+                            alt="Edit User Role"
+                            width="15"
+                            height="15"
+                            className={`transition-transform duration-300`}
+                          />
                         </Button>
                       )}
                     </td>

@@ -19,6 +19,12 @@ export type InventoryOverviewPoint = {
 
 type InventoryOverviewChartProps = {
   data: InventoryOverviewPoint[];
+  itemOptions: string[];
+  selectedItemName: string;
+  onSelectedItemChange: (itemName: string) => void;
+  yearOptions: number[];
+  selectedYear: number;
+  onSelectedYearChange: (year: number) => void;
 };
 
 type SeriesKey = keyof Omit<InventoryOverviewPoint, 'label' | 'itemName'>;
@@ -46,19 +52,17 @@ const chartSeries: SeriesConfig[] = [
   },
   {
     key: 'actualSales',
-    label: 'Actual Sales (RM)',
+    label: 'Actual Sales (Units)',
     color: '#34D399',
     backgroundClassName: 'bg-emerald-400',
   },
   {
     key: 'predictedSales',
-    label: 'Predicted Sales (RM)',
+    label: 'Predicted Sales (Units)',
     color: '#F59E0B',
     backgroundClassName: 'bg-amber-400',
   },
 ];
-
-const allItemsOption = 'Items Filter -All items';
 
 function aggregateByLabel(data: InventoryOverviewPoint[]): AggregatedPoint[] {
   const grouped = new Map<string, AggregatedPoint>();
@@ -86,9 +90,13 @@ function aggregateByLabel(data: InventoryOverviewPoint[]): AggregatedPoint[] {
 
 export default function InventoryOverviewChart({
   data,
+  itemOptions,
+  selectedItemName,
+  onSelectedItemChange,
+  yearOptions,
+  selectedYear,
+  onSelectedYearChange,
 }: InventoryOverviewChartProps) {
-  const [selectedItemName, setSelectedItemName] =
-    useState<string>(allItemsOption);
   const [activeIndex, setActiveIndex] = useState(0);
   const [visibleSeries, setVisibleSeries] = useState<
     Record<SeriesKey, boolean>
@@ -98,24 +106,7 @@ export default function InventoryOverviewChart({
     predictedSales: true,
   });
 
-  const itemOptions = useMemo(() => {
-    const names = Array.from(
-      new Set(data.map((point) => point.itemName))
-    ).sort();
-    return [allItemsOption, ...names];
-  }, [data]);
-
-  useEffect(() => {
-    if (!itemOptions.includes(selectedItemName)) {
-      setSelectedItemName(allItemsOption);
-    }
-  }, [itemOptions, selectedItemName]);
-
   const filteredData = useMemo(() => {
-    if (selectedItemName === allItemsOption) {
-      return aggregateByLabel(data);
-    }
-
     return data
       .filter((point) => point.itemName === selectedItemName)
       .map((point) => ({
@@ -126,13 +117,16 @@ export default function InventoryOverviewChart({
       }));
   }, [data, selectedItemName]);
 
+  const allItemsData = useMemo(() => aggregateByLabel(data), [data]);
+  const renderData = filteredData.length ? filteredData : allItemsData;
+
   useEffect(() => {
-    setActiveIndex(Math.max(filteredData.length - 1, 0));
-  }, [filteredData]);
+    setActiveIndex(Math.max(renderData.length - 1, 0));
+  }, [renderData]);
 
-  const activePoint = filteredData[activeIndex];
+  const activePoint = renderData[activeIndex];
 
-  if (!filteredData.length) {
+  if (!renderData.length) {
     return (
       <div className="rounded-[28px] border border-slate-200 bg-white p-4 text-slate-900 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-5">
         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
@@ -166,11 +160,11 @@ export default function InventoryOverviewChart({
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
         <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-            <span>Monthly range</span>
-            <span>{activePoint.label}</span>
+            <span>Yearly range</span>
+            <span>{selectedYear}</span>
           </div>
 
-          <div className="px-2 pb-2 pt-3">
+          <div className="px-2 pb-2 pt-5">
             <div
               className="h-[300px] w-full"
               role="img"
@@ -178,7 +172,7 @@ export default function InventoryOverviewChart({
             >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={filteredData}
+                  data={renderData}
                   margin={{ top: 12, right: 12, bottom: 4, left: 0 }}
                   onMouseMove={(state) => {
                     if (
@@ -251,12 +245,32 @@ export default function InventoryOverviewChart({
         <aside className="space-y-4 rounded-[24px] border border-slate-200 bg-white p-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+              Year filter
+            </p>
+            <select
+              id="inventory-year-filter"
+              value={selectedYear}
+              onChange={(event) =>
+                onSelectedYearChange(Number(event.target.value))
+              }
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-sky-300"
+            >
+              {yearOptions.map((year) => (
+                <option key={year} value={year} className="text-slate-900">
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
               Item filter
             </p>
             <select
               id="inventory-item-filter"
               value={selectedItemName}
-              onChange={(event) => setSelectedItemName(event.target.value)}
+              onChange={(event) => onSelectedItemChange(event.target.value)}
               className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-sky-300"
             >
               {itemOptions.map((itemName) => (
@@ -307,7 +321,7 @@ export default function InventoryOverviewChart({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          {/* <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
               Overview (Unit)
             </p>
@@ -333,7 +347,7 @@ export default function InventoryOverviewChart({
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </aside>
       </div>
     </div>

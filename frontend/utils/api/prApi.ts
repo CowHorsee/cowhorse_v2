@@ -306,7 +306,8 @@ export const modifyPr = modifyPurchaseRequest;
 
 export async function reviewPurchaseRequest(payload: {
   pr_id: string;
-  decision: string;
+  decision: 'Approve' | 'Reject';
+  justification: string;
   manager_id: string;
 }) {
   return apiRequest<unknown>('/api/pr/review_pr', {

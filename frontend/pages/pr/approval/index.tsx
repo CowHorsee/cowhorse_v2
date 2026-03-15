@@ -60,7 +60,6 @@ export default function PrApprovalListPage() {
 
       return (
         request.id.toLowerCase().includes(normalizedSearch) ||
-        request.title.toLowerCase().includes(normalizedSearch) ||
         request.requester.toLowerCase().includes(normalizedSearch) ||
         request.status.toLowerCase().includes(normalizedSearch)
       );
@@ -71,10 +70,7 @@ export default function PrApprovalListPage() {
     key: request.id,
     values: {
       id: request.id,
-      title: request.title,
       requester: request.requester,
-      department: request.department,
-      amount: `RM ${request.amount.toLocaleString()}`,
       status: (
         <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
           {request.status}
@@ -123,14 +119,14 @@ export default function PrApprovalListPage() {
             htmlFor="approval-search"
             className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500"
           >
-            Search by id / title / requester / status
+            Search by id / requester / status
           </label>
           <input
             id="approval-search"
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Type id, title, requester, or status"
+            placeholder="Type id, requester, or status"
             className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand-blue"
           />
         </div>
@@ -138,14 +134,7 @@ export default function PrApprovalListPage() {
         <DataTableWithTotal
           columns={[
             { key: 'id', label: 'PR ID' },
-            { key: 'title', label: 'Title' },
             { key: 'requester', label: 'Requester' },
-            {
-              key: 'department',
-              label: 'Department',
-              cellClassName: 'text-slate-600',
-            },
-            { key: 'amount', label: 'Amount' },
             { key: 'status', label: 'Status' },
             { key: 'action', label: 'Action' },
           ]}

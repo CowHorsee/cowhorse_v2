@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Breadcrumb from '../../components/atoms/Breadcrumb';
-import Button from '../../components/atoms/Button';
 import Card from '../../components/atoms/Card';
 import StatusProgressIndicator from '../../components/atoms/StatusProgressIndicator';
 import DataTableWithTotal from '../../components/molecules/DataTableWithTotal';
@@ -11,7 +10,6 @@ import { ApiError } from '../../utils/api/apiClient';
 import {
   normalizePrApprovalStage,
   PR_APPROVAL_STAGES,
-  USER_ROLES,
 } from '../../utils/constants';
 import { getUserSession } from '../../utils/localStorage';
 import {
@@ -19,7 +17,6 @@ import {
   normalizePrDetailHeader,
   normalizePrDetailItems,
   normalizePurchaseRequest,
-  reviewPurchaseRequest,
   type PrDetailHeader,
   type PrDetailItem,
   type PurchaseRequest,
@@ -142,7 +139,6 @@ export default function PrDetailsPage() {
   >([]);
   const [apiHeader, setApiHeader] = useState<PrDetailHeader | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
 
   const itemRows = useMemo(() => {
     if (detailItems.length) {
@@ -186,59 +182,6 @@ export default function PrDetailsPage() {
       normalizePrApprovalStage(apiHeader?.statusName || currentRequest?.status),
     [apiHeader?.statusName, currentRequest?.status]
   );
-
-  async function handleDecision(decision: 'approve' | 'reject') {
-    const user = getUserSession();
-    if (!currentRequest?.id || !user?.user_id) {
-      showToast({
-        title: 'Unable to submit decision',
-        description:
-          'User session required before reviewing this purchase request.',
-        variant: 'error',
-      });
-      return;
-    }
-
-    setIsSubmittingDecision(true);
-
-    try {
-      await reviewPurchaseRequest({
-        pr_id: currentRequest.id,
-        decision,
-        manager_id: user.user_id,
-      });
-
-      showToast({
-        title: 'Decision submitted',
-        description:
-          decision === 'approve'
-            ? 'Purchase request approved successfully.'
-            : 'Purchase request rejected successfully.',
-        variant: 'success',
-      });
-
-      await router.push('/pr/approval');
-    } catch (error) {
-      showToast({
-        title: 'Unable to submit decision',
-        description:
-          error instanceof ApiError
-            ? error.message
-            : 'Unable to submit review decision right now.',
-        variant: 'error',
-      });
-    } finally {
-      setIsSubmittingDecision(false);
-    }
-  }
-
-  useEffect(() => {
-    const user = getUserSession();
-
-    if (user?.role === USER_ROLES.MANAGER && prId) {
-      void router.replace(`/pr/approval/${prId}`);
-    }
-  }, [prId, router]);
 
   useEffect(() => {
     if (!prId) {
@@ -437,17 +380,6 @@ export default function PrDetailsPage() {
           totalLabel="Total Amount"
           totalValue={`RM ${currentRequest.amount.toLocaleString()}`}
         />
-
-        <div className="mt-6 flex flex-wrap justify-center gap-3 border-slate-200 pt-4">
-          <Button
-            type="button"
-            disabled={isSubmittingDecision}
-            onClick={() => void handleDecision('approve')}
-            className="bg-brand-blue text-white hover:bg-[#1f1b4b]"
-          >
-            {isSubmittingDecision ? 'Submitting...' : 'Submit for Approval'}
-          </Button>
-        </div>
       </Card>
     </div>
   );

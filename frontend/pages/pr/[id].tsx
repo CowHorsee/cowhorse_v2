@@ -297,7 +297,6 @@ export default function PrDetailsPage() {
           setCurrentRequest((current) => {
             if (!current) {
               return normalizePurchaseRequest({
-                ...payload,
                 pr_id: header.prId,
                 justification: header.justification,
               });

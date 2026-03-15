@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
-import { buttonClassName } from '../../components/atoms/Button';
-import Card, { CardHeader } from '../../components/atoms/Card';
+import Button from '../../components/atoms/Button';
+import Card from '../../components/atoms/Card';
 import { useToast } from '../../components/ToastProvider';
 import { ApiError } from '../../utils/api/apiClient';
 import { USER_ROLES } from '../../utils/constants';
@@ -12,6 +12,7 @@ import {
   normalizePrDetailHeader,
   normalizePrDetailItems,
   normalizePurchaseRequest,
+  reviewPurchaseRequest,
   type PrDetailHeader,
   type PrDetailItem,
   type PurchaseRequest,
@@ -134,31 +135,85 @@ export default function PrDetailsPage() {
   >([]);
   const [apiHeader, setApiHeader] = useState<PrDetailHeader | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
+
+  const statusStages = [
+    'Pending Approval',
+    'In Review',
+    'Approved',
+    'Rejected',
+  ];
+  const currentStatusIndex = statusStages.findIndex(
+    (stage) => stage === currentRequest?.status
+  );
 
   const itemRows = useMemo(() => {
     if (detailItems.length) {
       return detailItems.map((item, index) => ({
         key: `${item.itemId}-${index}`,
-        itemName: item.itemName || item.itemId,
-        reference: item.docId || '-',
+        itemDescription: item.itemName || item.itemId,
         quantity: item.quantity,
-        unit: '-',
-        unitPrice:
+        unitPrice: typeof item.unitPrice === 'number' ? item.unitPrice : null,
+        totalCost:
           typeof item.unitPrice === 'number'
-            ? `RM ${item.unitPrice.toLocaleString()}`
-            : '-',
+            ? item.quantity * item.unitPrice
+            : null,
       }));
     }
 
     return createdItems.map((item, index) => ({
       key: `${item.sku}-${index}`,
-      itemName: item.itemName,
-      reference: item.sku,
+      itemDescription: `${item.itemName} (${item.sku})`,
       quantity: item.quantity,
-      unit: item.unit,
-      unitPrice: `RM ${item.unitPrice.toLocaleString()}`,
+      unitPrice: item.unitPrice,
+      totalCost: item.quantity * item.unitPrice,
     }));
   }, [createdItems, detailItems]);
+
+  async function handleDecision(decision: 'approve' | 'reject') {
+    const user = getUserSession();
+    if (!currentRequest?.id || !user?.user_id) {
+      showToast({
+        title: 'Unable to submit decision',
+        description:
+          'User session required before reviewing this purchase request.',
+        variant: 'error',
+      });
+      return;
+    }
+
+    setIsSubmittingDecision(true);
+
+    try {
+      await reviewPurchaseRequest({
+        pr_id: currentRequest.id,
+        decision,
+        manager_id: user.user_id,
+      });
+
+      showToast({
+        title: 'Decision submitted',
+        description:
+          decision === 'approve'
+            ? 'Purchase request approved successfully.'
+            : 'Purchase request rejected successfully.',
+        variant: 'success',
+      });
+
+      await router.push('/pr/approval');
+    } catch (error) {
+      showToast({
+        title: 'Unable to submit decision',
+        description:
+          error instanceof ApiError
+            ? error.message
+            : 'Unable to submit review decision right now.',
+        variant: 'error',
+      });
+    } finally {
+      setIsSubmittingDecision(false);
+    }
+  }
 
   useEffect(() => {
     const user = getUserSession();
@@ -322,55 +377,83 @@ export default function PrDetailsPage() {
           </div>
         </div>
 
-        <CardHeader
-          title={currentRequest.id || prId}
-          className="mb-1"
-          titleClassName="text-lg"
-        />
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between"></div>
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Requester</p>
-          <strong className="font-semibold text-brand-blue">
-            {apiHeader?.createdBy || currentRequest.requester}
-          </strong>
-        </div>
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Status</p>
-          <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
-            {currentRequest.status}
-          </span>
-        </div>
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-slate-600">Total Amount (RM)</p>
-          <strong className="font-semibold text-brand-blue">
-            {currentRequest.amount.toLocaleString()}
-          </strong>
-        </div>
-        <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-start md:justify-between md:gap-4">
-          <p className="text-sm text-slate-600">Justification</p>
-          <strong className="text-right font-semibold text-brand-blue md:max-w-[70%]">
-            {apiHeader?.justification || currentRequest.description || '-'}
-          </strong>
-        </div>
-        {apiHeader ? (
-          <>
-            <div className="flex flex-col border-b border-slate-200 py-3 md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-slate-600">Created At</p>
-              <strong className="font-semibold text-brand-blue">
-                {apiHeader.createdAt || '-'}
-              </strong>
+        <h1 className="text-3xl font-bold tracking-tight text-brand-blue">
+          {currentRequest.id || prId}
+        </h1>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 md:col-span-2 gap-3 flex flex-col">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                Requester
+              </p>
+              <p className="mt-1 text-sm font-semibold text-slate-800">
+                {apiHeader?.createdBy || currentRequest.requester}
+              </p>
             </div>
-          </>
-        ) : null}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                Created At
+              </p>
+              <p className="mt-1 text-sm font-semibold text-slate-800">
+                {apiHeader?.createdAt || currentRequest.updatedAt || '-'}
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+              Approval Stage
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              {statusStages.map((stage, index) => {
+                const isActive = index === currentStatusIndex;
+                const isCompleted =
+                  currentStatusIndex > -1 &&
+                  index < currentStatusIndex &&
+                  currentRequest.status !== 'Rejected';
+
+                return (
+                  <div key={stage} className="flex items-center gap-2">
+                    <span
+                      className={`h-3.5 w-3.5 rounded-full border ${
+                        isActive
+                          ? 'border-brand-red bg-brand-red'
+                          : isCompleted
+                          ? 'border-brand-blue bg-brand-blue'
+                          : 'border-slate-300 bg-white'
+                      }`}
+                    />
+                    {index < statusStages.length - 1 ? (
+                      <span className="h-[2px] w-4 bg-slate-300" />
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-sm font-semibold text-brand-blue">
+              {currentRequest.status}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+            Justification
+          </p>
+          <p className="mt-2 text-sm font-semibold text-slate-800">
+            {apiHeader?.justification || currentRequest.description || '-'}
+          </p>
+        </div>
+
         <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50">
               <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">Item</th>
-                <th className="px-4 py-3">Reference</th>
+                <th className="px-4 py-3">Item Description</th>
                 <th className="px-4 py-3">Quantity</th>
-                <th className="px-4 py-3">Unit</th>
                 <th className="px-4 py-3">Unit Price</th>
+                <th className="px-4 py-3">Total Cost</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
@@ -378,24 +461,27 @@ export default function PrDetailsPage() {
                 itemRows.map((row) => (
                   <tr key={row.key}>
                     <td className="px-4 py-3 font-semibold text-brand-blue">
-                      {row.itemName}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {row.reference}
+                      {row.itemDescription}
                     </td>
                     <td className="px-4 py-3 text-slate-700">
                       {row.quantity.toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{row.unit}</td>
                     <td className="px-4 py-3 text-slate-700">
-                      {row.unitPrice}
+                      {typeof row.unitPrice === 'number'
+                        ? `RM ${row.unitPrice.toLocaleString()}`
+                        : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {typeof row.totalCost === 'number'
+                        ? `RM ${row.totalCost.toLocaleString()}`
+                        : '-'}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={4}
                     className="px-4 py-8 text-center text-slate-500"
                   >
                     No item rows returned by API.
@@ -403,15 +489,31 @@ export default function PrDetailsPage() {
                 </tr>
               )}
             </tbody>
+            <tfoot className="border-t border-slate-200">
+              <tr>
+                <td
+                  colSpan={3}
+                  className="px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.12em] text-slate-600"
+                >
+                  Total Amount
+                </td>
+                <td className="px-4 py-3 text-xs font-bold text-brand-blue">
+                  RM {currentRequest.amount.toLocaleString()}
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
-        <div className="mt-5 flex flex-wrap justify-center gap-3">
-          <Link href={`/pr/split/${currentRequest.id}`}>
-            <a className={buttonClassName({ variant: 'primary' })}>
-              Send For Approval
-            </a>
-          </Link>
+        <div className="mt-6 flex flex-wrap justify-center gap-3 border-slate-200 pt-4">
+          <Button
+            type="button"
+            disabled={isSubmittingDecision}
+            onClick={() => void handleDecision('approve')}
+            className="bg-brand-blue text-white hover:bg-[#1f1b4b]"
+          >
+            {isSubmittingDecision ? 'Submitting...' : 'Submit for Approval'}
+          </Button>
         </div>
       </Card>
     </div>

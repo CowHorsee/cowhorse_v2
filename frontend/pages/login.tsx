@@ -29,6 +29,7 @@ export default function LoginPage() {
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [forgotUserId, setForgotUserId] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
@@ -268,14 +269,6 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-10 rounded-[28px] border border-slate-200 bg-[#FBFBFD] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-              <div className="rounded-[24px] border border-brand-blue/10 bg-white p-5">
-                <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-brand-blue/45">
-                  Workspace Access
-                </p>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  Use the secure entry point below to continue to the dashboard.
-                </p>
-
                 <form className="mt-4 space-y-3" onSubmit={handleLoginSubmit}>
                   <input
                     type="email"
@@ -307,6 +300,50 @@ export default function LoginPage() {
                     <span>{isSubmitting ? 'Signing In...' : 'Log In'}</span>
                   </Button>
                 </form>
+                
+                              <div className="mt-3 rounded-[20px] border border-slate-200 bg-white px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => setIsForgotPasswordOpen(true)}
+                  className="text-sm font-semibold text-brand-blue transition hover:underline"
+                >
+                  Forgot password?
+                </button>
+
+                {isForgotPasswordOpen ? (
+                  <div className="mt-3">
+                    <p className="mt-1 text-sm text-slate-600">
+                      Enter your user ID to request a password reset.
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                      <input
+                        type="text"
+                        value={forgotUserId}
+                        onChange={(event) =>
+                          setForgotUserId(event.target.value)
+                        }
+                        placeholder="e.g. U001"
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={handleForgotPassword}
+                        disabled={isResettingPassword}
+                        className="whitespace-nowrap"
+                      >
+                        {isResettingPassword ? 'Submitting...' : 'Reset'}
+                      </Button>
+                    </div>
+                    <div className="mt-2 flex justify-end">
+                      <Button
+                        variant="ghost"
+                        onClick={() => setIsForgotPasswordOpen(false)}
+                      >
+                        Close
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <div className="mt-5 rounded-[20px] bg-brand-blue/[0.03] px-4 py-3">
@@ -317,32 +354,6 @@ export default function LoginPage() {
                   <p className="mt-1 text-sm font-semibold text-brand-blue">
                     Contact your admin to be added from User Management.
                   </p>
-                </div>
-              </div>
-
-              <div className="mt-3 rounded-[20px] border border-slate-200 bg-white px-4 py-3">
-                <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-blue/45">
-                  Forgot Password
-                </p>
-                <p className="mt-1 text-sm text-slate-600">
-                  Enter your user ID to request a password reset.
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <input
-                    type="text"
-                    value={forgotUserId}
-                    onChange={(event) => setForgotUserId(event.target.value)}
-                    placeholder="e.g. U001"
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={handleForgotPassword}
-                    disabled={isResettingPassword}
-                    className="whitespace-nowrap"
-                  >
-                    {isResettingPassword ? 'Submitting...' : 'Reset'}
-                  </Button>
                 </div>
               </div>
             </div>

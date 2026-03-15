@@ -8,7 +8,11 @@ import StatusProgressIndicator from '../../components/atoms/StatusProgressIndica
 import DataTableWithTotal from '../../components/molecules/DataTableWithTotal';
 import { useToast } from '../../components/ToastProvider';
 import { ApiError } from '../../utils/api/apiClient';
-import { USER_ROLES } from '../../utils/constants';
+import {
+  normalizePrApprovalStage,
+  PR_APPROVAL_STAGES,
+  USER_ROLES,
+} from '../../utils/constants';
 import { getUserSession } from '../../utils/localStorage';
 import {
   getPrDetailsPayload,
@@ -177,12 +181,12 @@ export default function PrDetailsPage() {
     { key: 'totalCost', label: 'Total Cost' },
   ];
 
-  const statusStages = [
-    'Pending Approval',
-    'In Review',
-    'Approved',
-    'Rejected',
-  ];
+  const currentStatusStage = useMemo(
+    () =>
+      normalizePrApprovalStage(apiHeader?.statusName || currentRequest?.status),
+    [apiHeader?.statusName, currentRequest?.status]
+  );
+
   async function handleDecision(decision: 'approve' | 'reject') {
     const user = getUserSession();
     if (!currentRequest?.id || !user?.user_id) {
@@ -411,9 +415,9 @@ export default function PrDetailsPage() {
           </div>
 
           <StatusProgressIndicator
-            title="Approval Stage"
-            stages={statusStages}
-            currentStatus={currentRequest.status}
+            title="PR Status"
+            stages={PR_APPROVAL_STAGES}
+            currentStatus={currentStatusStage}
           />
         </div>
 

@@ -1,6 +1,6 @@
 type StatusProgressIndicatorProps = {
   title?: string;
-  stages: string[];
+  stages: readonly string[];
   currentStatus: string;
 };
 

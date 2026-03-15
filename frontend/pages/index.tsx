@@ -6,6 +6,7 @@ import DashboardMetricCard from '../components/molecules/DashboardMetricCard';
 import DashboardChart, {
   type InventoryOverviewPoint,
 } from '../components/organisms/DashboardChart';
+import { fetchInventoryCounts } from '../utils/api/inventoryApi';
 import { USER_ROLES } from '../utils/constants';
 import type { AuthUser } from '../utils/api/authApi';
 import { getUserSession } from '../utils/localStorage';
@@ -140,9 +141,32 @@ const inventoryOverviewData: InventoryOverviewPoint[] = [
   },
 ];
 
+function mapCountsToOverviewData(
+  counts: Record<string, number>
+): InventoryOverviewPoint[] {
+  const entries = Object.entries(counts);
+  if (!entries.length) {
+    return [];
+  }
+
+  return entries.map(([itemName, quantity]) => ({
+    label: 'Current',
+    itemName,
+    actualSkuInventory: Number(quantity) || 0,
+    actualSales: 0,
+    predictedSales: 0,
+  }));
+}
+
 const Home = () => {
   const router = useRouter();
   const [sessionUser, setSessionUser] = useState<AuthUser | null>(null);
+  const [inventoryChartData, setInventoryChartData] = useState<
+    InventoryOverviewPoint[]
+  >(inventoryOverviewData);
+  const [inventoryCounts, setInventoryCounts] = useState<
+    Record<string, number>
+  >({});
 
   useEffect(() => {
     const user = getUserSession();
@@ -153,6 +177,35 @@ const Home = () => {
 
     setSessionUser(user);
   }, [router]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInventoryCounts() {
+      try {
+        const counts = await fetchInventoryCounts();
+        if (!isMounted) {
+          return;
+        }
+
+        setInventoryCounts(counts);
+        const apiChartData = mapCountsToOverviewData(counts);
+        if (apiChartData.length) {
+          setInventoryChartData(apiChartData);
+        }
+      } catch {
+        if (isMounted) {
+          setInventoryCounts({});
+        }
+      }
+    }
+
+    void loadInventoryCounts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const personalRequests = useMemo(() => {
     if (!sessionUser?.name) {
@@ -178,12 +231,16 @@ const Home = () => {
   const waitingApprovalCount = purchaseRequests.filter(
     (item) => item.status === 'Pending Approval'
   ).length;
+  const totalInventoryUnits = Object.values(inventoryCounts).reduce(
+    (sum, quantity) => sum + quantity,
+    0
+  );
 
   const isManager = sessionUser?.role === USER_ROLES.MANAGER;
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-7xl flex-col gap-4">
-      <DashboardChart data={inventoryOverviewData} />
+      <DashboardChart data={inventoryChartData} />
 
       <section className="grid flex-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_760px]">
         <Card
@@ -202,6 +259,11 @@ const Home = () => {
             <DashboardMetricCard
               label="Pending / Review"
               value={personalPendingCount + inReviewCount}
+            />
+            <DashboardMetricCard
+              label="Inventory (Units)"
+              value={totalInventoryUnits}
+              description="From warehouse count_inventory endpoint."
             />
           </div>
         </Card>

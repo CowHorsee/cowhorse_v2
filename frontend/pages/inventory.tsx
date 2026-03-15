@@ -163,15 +163,9 @@ export default function InventoryPage() {
   }
 
   function handleCsvExport() {
-    const headers = ['sku', 'itemName', 'currentStock', 'unit', 'lastUpdated'];
+    const headers = ['item_id', 'item_name', 'quantity', 'unit'];
     const csvBody = items.map((item) =>
-      toCsvRow([
-        item.sku,
-        item.itemName,
-        item.currentStock,
-        item.unit,
-        item.lastUpdated,
-      ])
+      toCsvRow([item.sku, item.itemName, item.currentStock, item.unit])
     );
     const csvContent = [toCsvRow(headers), ...csvBody].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

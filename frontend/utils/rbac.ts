@@ -25,11 +25,18 @@ export const appRouteConfig: AppRouteConfig[] = [
     matchMode: 'exact',
   },
   {
-    href: '/pr/approval',
+    href: '/approval',
     label: 'PR Approvals',
     iconPath: '/clipboard-text.svg',
     allowedRoles: [USER_ROLES.MANAGER],
     showInSidebar: true,
+    matchMode: 'prefix',
+  },
+  {
+    href: '/pr/approval',
+    label: 'PR Approvals Legacy',
+    allowedRoles: [USER_ROLES.MANAGER],
+    showInSidebar: false,
     matchMode: 'prefix',
   },
   {

@@ -222,7 +222,7 @@ export default function ManagerApprovalPage() {
           : current
       );
 
-      await router.push('/pr/approval');
+      await router.push('/approval');
       return;
     } catch (error) {
       const message =
@@ -256,7 +256,7 @@ export default function ManagerApprovalPage() {
           <p className="text-sm font-medium text-brand-red">
             Purchase request not found.
           </p>
-          <Link href="/pr/approval">
+          <Link href="/approval">
             <a className="mt-4 inline-flex text-sm font-bold text-brand-blue hover:text-brand-red">
               Back to PR Approvals
             </a>

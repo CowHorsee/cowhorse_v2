@@ -77,7 +77,7 @@ export default function PrApprovalListPage() {
         </span>
       ),
       action: (
-        <Link href={`/pr/approval/${request.id}`}>
+        <Link href={`/approval/${request.id}`}>
           <a className="text-sm font-bold text-brand-blue transition hover:text-brand-red">
             Review
           </a>

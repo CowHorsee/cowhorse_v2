@@ -134,18 +134,18 @@ export default function ProfilePage() {
             className="mb-0"
             titleClassName="text-lg"
           />
-          <p className="mt-3 text-sm text-slate-700">
+          <p className="mt-7 text-sm text-slate-700">
             Name: {user?.name || 'Not available'}
           </p>
-          <p className="mt-2 text-sm text-slate-700">
+          <p className="mt-4 text-sm text-slate-700">
             Email: {user?.email || 'Not available'}
           </p>
-          <p className="mt-2 text-sm text-slate-700">
+          <p className="mt-4 text-sm text-slate-700">
             Role: {formatRoleLabel(user?.role)}
           </p>
 
           <div className="mt-6 flex justify-center align-items-end">
-            <Button variant="outline" onClick={handleSignOut}>
+            <Button variant="primary" onClick={handleSignOut}>
               Sign Out
             </Button>
           </div>

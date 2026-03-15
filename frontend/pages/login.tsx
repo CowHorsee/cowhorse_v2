@@ -269,39 +269,37 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-10 rounded-[28px] border border-slate-200 bg-[#FBFBFD] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-                <form className="mt-4 space-y-3" onSubmit={handleLoginSubmit}>
-                  <input
-                    type="email"
-                    value={formValues.email}
-                    onChange={(event) =>
-                      updateField('email', event.target.value)
-                    }
-                    placeholder="you@company.com"
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
-                  />
-                  <input
-                    type="password"
-                    value={formValues.password}
-                    onChange={(event) =>
-                      updateField('password', event.target.value)
-                    }
-                    placeholder="Password"
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
-                  />
+              <form className="mt-4 space-y-3" onSubmit={handleLoginSubmit}>
+                <input
+                  type="email"
+                  value={formValues.email}
+                  onChange={(event) => updateField('email', event.target.value)}
+                  placeholder="you@company.com"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
+                />
+                <input
+                  type="password"
+                  value={formValues.password}
+                  onChange={(event) =>
+                    updateField('password', event.target.value)
+                  }
+                  placeholder="Password"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
+                />
 
-                  <Button
-                    type="submit"
-                    variant="secondary"
-                    disabled={isSubmitting}
-                    fullWidth
-                    className="mt-6 rounded-[20px] px-5 py-4 font-bold shadow-[0_20px_45px_rgba(39,36,92,0.28)] duration-200 hover:-translate-y-0.5 hover:bg-[#1f1b4b]"
-                  >
-                    {isSubmitting ? <LoadingSpinner /> : null}
-                    <span>{isSubmitting ? 'Signing In...' : 'Log In'}</span>
-                  </Button>
-                </form>
-                
-                              <div className="mt-3 rounded-[20px] border border-slate-200 bg-white px-4 py-3">
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  disabled={isSubmitting}
+                  fullWidth
+                  className="mt-6 rounded-[20px] px-5 py-4 font-bold shadow-[0_20px_45px_rgba(39,36,92,0.28)] duration-200 hover:-translate-y-0.5 hover:bg-[#1f1b4b]"
+                >
+                  {isSubmitting ? <LoadingSpinner /> : null}
+                  <span>{isSubmitting ? 'Signing In...' : 'Log In'}</span>
+                </Button>
+              </form>
+
+              <div className="mt-3 rounded-[20px] border border-slate-200 bg-white px-4 py-3">
                 <button
                   type="button"
                   onClick={() => setIsForgotPasswordOpen(true)}

@@ -506,7 +506,7 @@ export default function CreatePrPage() {
             </Card>
           ) : null}
 
-          <div className="mt-5 flex flex-wrap gap-3 flex-justify-content-center">
+          <div className="mt-5 flex flex-wrap gap-3 justify-center">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Create & Submit for Approval'}
             </Button>

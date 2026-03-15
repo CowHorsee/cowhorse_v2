@@ -6,7 +6,6 @@ import DashboardMetricCard from '../components/molecules/DashboardMetricCard';
 import DashboardChart, {
   type InventoryOverviewPoint,
 } from '../components/organisms/DashboardChart';
-import RecentPurchaseRequestsPanel from '../components/organisms/RecentPurchaseRequestsPanel';
 import { USER_ROLES } from '../utils/constants';
 import type { AuthUser } from '../utils/api/authApi';
 import { getUserSession } from '../utils/localStorage';

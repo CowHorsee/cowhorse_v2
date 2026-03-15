@@ -1,8 +1,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
+import Breadcrumb from '../../components/atoms/Breadcrumb';
 import Button from '../../components/atoms/Button';
 import Card from '../../components/atoms/Card';
+import StatusProgressIndicator from '../../components/atoms/StatusProgressIndicator';
+import DataTableWithTotal from '../../components/molecules/DataTableWithTotal';
 import { useToast } from '../../components/ToastProvider';
 import { ApiError } from '../../utils/api/apiClient';
 import { USER_ROLES } from '../../utils/constants';
@@ -137,39 +140,49 @@ export default function PrDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
 
+  const itemRows = useMemo(() => {
+    if (detailItems.length) {
+      return detailItems.map((item, index) => ({
+        key: `${item.itemId}-${index}`,
+        values: {
+          itemDescription: item.itemName || item.itemId,
+          quantity: item.quantity.toLocaleString(),
+          unitPrice:
+            typeof item.unitPrice === 'number'
+              ? `RM ${item.unitPrice.toLocaleString()}`
+              : '-',
+          totalCost:
+            typeof item.unitPrice === 'number'
+              ? `RM ${(item.quantity * item.unitPrice).toLocaleString()}`
+              : '-',
+        },
+      }));
+    }
+
+    return createdItems.map((item, index) => ({
+      key: `${item.sku}-${index}`,
+      values: {
+        itemDescription: `${item.itemName} (${item.sku})`,
+        quantity: item.quantity.toLocaleString(),
+        unitPrice: `RM ${item.unitPrice.toLocaleString()}`,
+        totalCost: `RM ${(item.quantity * item.unitPrice).toLocaleString()}`,
+      },
+    }));
+  }, [createdItems, detailItems]);
+
+  const itemColumns = [
+    { key: 'itemDescription', label: 'Item Description' },
+    { key: 'quantity', label: 'Quantity' },
+    { key: 'unitPrice', label: 'Unit Price' },
+    { key: 'totalCost', label: 'Total Cost' },
+  ];
+
   const statusStages = [
     'Pending Approval',
     'In Review',
     'Approved',
     'Rejected',
   ];
-  const currentStatusIndex = statusStages.findIndex(
-    (stage) => stage === currentRequest?.status
-  );
-
-  const itemRows = useMemo(() => {
-    if (detailItems.length) {
-      return detailItems.map((item, index) => ({
-        key: `${item.itemId}-${index}`,
-        itemDescription: item.itemName || item.itemId,
-        quantity: item.quantity,
-        unitPrice: typeof item.unitPrice === 'number' ? item.unitPrice : null,
-        totalCost:
-          typeof item.unitPrice === 'number'
-            ? item.quantity * item.unitPrice
-            : null,
-      }));
-    }
-
-    return createdItems.map((item, index) => ({
-      key: `${item.sku}-${index}`,
-      itemDescription: `${item.itemName} (${item.sku})`,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      totalCost: item.quantity * item.unitPrice,
-    }));
-  }, [createdItems, detailItems]);
-
   async function handleDecision(decision: 'approve' | 'reject') {
     const user = getUserSession();
     if (!currentRequest?.id || !user?.user_id) {
@@ -367,15 +380,12 @@ export default function PrDetailsPage() {
   return (
     <div className="mx-auto w-full max-w-7xl">
       <Card variant="surface" padding="lg">
-        <div className="mb-3 flex items-center">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
-            <Link href="/pr">
-              <a className="transition hover:text-brand-blue">PR Board</a>
-            </Link>
-            <span className="mx-1.5 text-slate-400">/</span>
-            <span className="text-brand-blue">{currentRequest.id || prId}</span>
-          </div>
-        </div>
+        <Breadcrumb
+          items={[
+            { label: 'PR Board', href: '/pr' },
+            { label: currentRequest.id || prId },
+          ]}
+        />
 
         <h1 className="text-3xl font-bold tracking-tight text-brand-blue">
           {currentRequest.id || prId}
@@ -401,40 +411,11 @@ export default function PrDetailsPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-              Approval Stage
-            </p>
-            <div className="mt-3 flex items-center gap-2">
-              {statusStages.map((stage, index) => {
-                const isActive = index === currentStatusIndex;
-                const isCompleted =
-                  currentStatusIndex > -1 &&
-                  index < currentStatusIndex &&
-                  currentRequest.status !== 'Rejected';
-
-                return (
-                  <div key={stage} className="flex items-center gap-2">
-                    <span
-                      className={`h-3.5 w-3.5 rounded-full border ${
-                        isActive
-                          ? 'border-brand-red bg-brand-red'
-                          : isCompleted
-                          ? 'border-brand-blue bg-brand-blue'
-                          : 'border-slate-300 bg-white'
-                      }`}
-                    />
-                    {index < statusStages.length - 1 ? (
-                      <span className="h-[2px] w-4 bg-slate-300" />
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-            <p className="mt-3 text-sm font-semibold text-brand-blue">
-              {currentRequest.status}
-            </p>
-          </div>
+          <StatusProgressIndicator
+            title="Approval Stage"
+            stages={statusStages}
+            currentStatus={currentRequest.status}
+          />
         </div>
 
         <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -446,64 +427,13 @@ export default function PrDetailsPage() {
           </p>
         </div>
 
-        <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">Item Description</th>
-                <th className="px-4 py-3">Quantity</th>
-                <th className="px-4 py-3">Unit Price</th>
-                <th className="px-4 py-3">Total Cost</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {itemRows.length ? (
-                itemRows.map((row) => (
-                  <tr key={row.key}>
-                    <td className="px-4 py-3 font-semibold text-brand-blue">
-                      {row.itemDescription}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {row.quantity.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {typeof row.unitPrice === 'number'
-                        ? `RM ${row.unitPrice.toLocaleString()}`
-                        : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {typeof row.totalCost === 'number'
-                        ? `RM ${row.totalCost.toLocaleString()}`
-                        : '-'}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    No item rows returned by API.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            <tfoot className="border-t border-slate-200">
-              <tr>
-                <td
-                  colSpan={3}
-                  className="px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.12em] text-slate-600"
-                >
-                  Total Amount
-                </td>
-                <td className="px-4 py-3 text-xs font-bold text-brand-blue">
-                  RM {currentRequest.amount.toLocaleString()}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+        <DataTableWithTotal
+          columns={itemColumns}
+          rows={itemRows}
+          emptyLabel="No item rows returned by API."
+          totalLabel="Total Amount"
+          totalValue={`RM ${currentRequest.amount.toLocaleString()}`}
+        />
 
         <div className="mt-6 flex flex-wrap justify-center gap-3 border-slate-200 pt-4">
           <Button

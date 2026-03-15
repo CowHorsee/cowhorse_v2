@@ -1,11 +1,13 @@
 import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
 import Button, { buttonClassName } from '../components/atoms/Button';
+import { useToast } from '../components/ToastProvider';
 import { ApiError } from '../utils/api/apiClient';
 import {
   fetchInventoryCounts,
   fetchInventoryItems,
   type WarehouseInventoryRow,
+  updateInventory,
 } from '../utils/api/inventoryApi';
 
 type InventoryItem = {
@@ -17,141 +19,6 @@ type InventoryItem = {
   unitPrice: number;
   lastUpdated: string;
 };
-
-type CsvParseResult = {
-  rows: InventoryItem[];
-  skippedRows: number;
-};
-
-function parseCsvLine(line: string): string[] {
-  const values: string[] = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let index = 0; index < line.length; index += 1) {
-    const char = line[index];
-
-    if (char === '"') {
-      const nextChar = line[index + 1];
-      if (inQuotes && nextChar === '"') {
-        current += '"';
-        index += 1;
-      } else {
-        inQuotes = !inQuotes;
-      }
-      continue;
-    }
-
-    if (char === ',' && !inQuotes) {
-      values.push(current.trim());
-      current = '';
-      continue;
-    }
-
-    current += char;
-  }
-
-  values.push(current.trim());
-  return values;
-}
-
-function normalizeHeader(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[_\s-]+/g, '');
-}
-
-function getValueByAliases(
-  row: Record<string, string>,
-  aliases: string[]
-): string {
-  for (const alias of aliases) {
-    const normalizedAlias = normalizeHeader(alias);
-    if (normalizedAlias in row) {
-      return row[normalizedAlias] || '';
-    }
-  }
-  return '';
-}
-
-function parseInventoryCsv(content: string): CsvParseResult {
-  const lines = content
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  if (lines.length < 2) {
-    throw new Error('CSV must include a header row and at least one data row.');
-  }
-
-  const headerCells = parseCsvLine(lines[0]);
-  const normalizedHeaders = headerCells.map((header) =>
-    normalizeHeader(header)
-  );
-
-  const requiredGroups = [
-    ['sku', 'itemsku'],
-    ['itemname', 'item', 'name'],
-    ['currentstock', 'stock', 'quantity'],
-  ];
-
-  requiredGroups.forEach((group) => {
-    if (!group.some((key) => normalizedHeaders.includes(key))) {
-      throw new Error(
-        `Missing required column. Accepted: ${group.join(' / ')}`
-      );
-    }
-  });
-
-  const rows: InventoryItem[] = [];
-  let skippedRows = 0;
-
-  lines.slice(1).forEach((line) => {
-    const cells = parseCsvLine(line);
-    const row: Record<string, string> = {};
-
-    normalizedHeaders.forEach((header, cellIndex) => {
-      row[header] = (cells[cellIndex] || '').trim();
-    });
-
-    const sku = getValueByAliases(row, ['sku', 'itemsku']);
-    const itemName = getValueByAliases(row, ['itemname', 'item', 'name']);
-    const location =
-      getValueByAliases(row, ['location', 'warehouse', 'zone']) || 'Unassigned';
-    const unit = getValueByAliases(row, ['unit', 'uom']) || 'pcs';
-    const unitPrice =
-      Number(getValueByAliases(row, ['unitprice', 'price'])) || 0;
-    const lastUpdated =
-      getValueByAliases(row, ['lastupdated', 'updatedat', 'updated']) ||
-      new Date().toISOString().slice(0, 16).replace('T', ' ');
-
-    const currentStock = Number(
-      getValueByAliases(row, ['currentstock', 'stock', 'quantity'])
-    );
-
-    if (!sku || !itemName || Number.isNaN(currentStock)) {
-      skippedRows += 1;
-      return;
-    }
-
-    rows.push({
-      sku,
-      itemName,
-      location,
-      currentStock,
-      unit,
-      unitPrice,
-      lastUpdated,
-    });
-  });
-
-  if (!rows.length) {
-    throw new Error('No valid inventory rows found in CSV.');
-  }
-
-  return { rows, skippedRows };
-}
 
 function toCsvRow(values: Array<string | number>): string {
   return values
@@ -192,6 +59,7 @@ function mapWarehouseRowsToInventoryItems(rows: WarehouseInventoryRow[]) {
 }
 
 export default function InventoryPage() {
+  const { showToast } = useToast();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadMessage, setUploadMessage] = useState('');
@@ -258,20 +126,32 @@ export default function InventoryPage() {
 
     try {
       const content = await file.text();
-      const { rows, skippedRows } = parseInventoryCsv(content);
 
-      setItems(rows);
-      setUploadMessage(
-        `Uploaded ${rows.length} rows from ${file.name}.${
-          skippedRows ? ` Skipped ${skippedRows} invalid row(s).` : ''
-        }`
-      );
+      const response = await updateInventory(content);
+
+      const warehouseRows = await fetchInventoryItems();
+      const nextRows = warehouseRows.length
+        ? mapWarehouseRowsToInventoryItems(warehouseRows)
+        : mapInventoryCountsToRows(await fetchInventoryCounts());
+      setItems(nextRows);
+
+      setUploadMessage(`${response.message} (${file.name})`);
+      showToast({
+        title: 'Inventory updated',
+        description: response.message,
+        variant: 'success',
+      });
     } catch (error) {
-      setUploadError(
+      const message =
         error instanceof Error
           ? error.message
-          : 'Unable to parse CSV. Please check the file format.'
-      );
+          : 'Unable to parse CSV. Please check the file format.';
+      setUploadError(message);
+      showToast({
+        title: 'Upload failed',
+        description: message,
+        variant: 'error',
+      });
     } finally {
       event.target.value = '';
     }

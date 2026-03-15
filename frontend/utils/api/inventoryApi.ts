@@ -92,9 +92,17 @@ export async function fetchInventoryCounts(itemName?: string) {
   return {};
 }
 
-export function updateInventory(incomingCsvPath: string) {
-  return apiRequest<unknown>('/api/warehouse/update_inventory', {
+export async function updateInventory(csvContent: string) {
+  const response = await apiRequest<unknown>('/api/warehouse/update_inventory', {
     method: 'POST',
-    body: JSON.stringify({ incoming_csv_path: incomingCsvPath }),
+    body: JSON.stringify({ csv_content: csvContent }),
   });
+
+  const envelope = readApiEnvelope<unknown>(response);
+  return {
+    message:
+      envelope?.message ||
+      (typeof envelope?.data === 'string' ? envelope.data : '') ||
+      'Inventory updated successfully.',
+  };
 }

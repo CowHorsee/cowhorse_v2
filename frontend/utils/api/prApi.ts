@@ -137,9 +137,42 @@ function normalizePurchaseRequestDetails(value: unknown) {
 
 export type PrDetailItem = {
   itemId: string;
+  itemName: string;
   quantity: number;
+  unitPrice: number | null;
   docId: string;
 };
+
+export type PrDetailHeader = {
+  prId: string;
+  statusId: string;
+  statusName: string;
+  createdAt: string;
+  createdBy: string;
+  lastModifiedAt: string;
+  reviewedAt: string;
+  justification: string;
+};
+
+export function normalizePrDetailHeader(value: unknown): PrDetailHeader | null {
+  const envelope = readApiEnvelope<unknown>(value);
+  const payload = readRecord(envelope?.data) || readRecord(value);
+  const header = readRecord(payload?.header) || payload;
+  if (!header) {
+    return null;
+  }
+
+  return {
+    prId: String(header.pr_id || '').trim(),
+    statusId: String(header.status_id || '').trim(),
+    statusName: String(header.status_name || '').trim(),
+    createdAt: String(header.created_at || '').trim(),
+    createdBy: String(header.created_by || '').trim(),
+    lastModifiedAt: String(header.last_modified_at || '').trim(),
+    reviewedAt: String(header.reviewed_at || '').trim(),
+    justification: String(header.justification || '').trim(),
+  };
+}
 
 export function normalizePrDetailItems(value: unknown): PrDetailItem[] {
   const envelope = readApiEnvelope<unknown>(value);
@@ -151,7 +184,12 @@ export function normalizePrDetailItems(value: unknown): PrDetailItem[] {
       const record = readRecord(row);
       return {
         itemId: String(record?.item_id || '').trim(),
+        itemName: String(record?.item_name || '').trim(),
         quantity: Number(record?.quantity || 0),
+        unitPrice:
+          record?.unit_price === null || record?.unit_price === undefined
+            ? null
+            : Number(record?.unit_price || 0),
         docId: String(record?.doc_id || '').trim(),
       };
     })
@@ -227,7 +265,7 @@ export async function getPrDetailsPayload(
 
 export async function createPurchaseRequest(payload: {
   user_id: string;
-  proc_item: Record<string, number>;
+  proc_item: Record<string, number> | Array<Record<string, number>>;
   justification: string;
 }) {
   const response = await apiRequest<unknown>('/api/pr/create_pr', {

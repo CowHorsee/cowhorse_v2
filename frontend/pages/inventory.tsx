@@ -62,9 +62,6 @@ export default function InventoryPage() {
   const { showToast } = useToast();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [uploadMessage, setUploadMessage] = useState('');
-  const [uploadError, setUploadError] = useState('');
-  const [apiMessage, setApiMessage] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -78,15 +75,17 @@ export default function InventoryPage() {
 
         if (isMounted && rows.length) {
           setItems(rows);
-          setApiMessage('Inventory counts loaded from the live warehouse API.');
         }
       } catch (error) {
         if (isMounted) {
-          setApiMessage(
-            error instanceof ApiError
-              ? error.message
-              : 'Unable to load inventory from API.'
-          );
+          showToast({
+            title: 'Unable to load inventory',
+            description:
+              error instanceof ApiError
+                ? error.message
+                : 'Unable to load inventory from API.',
+            variant: 'error',
+          });
           setItems([]);
         }
       }
@@ -97,7 +96,7 @@ export default function InventoryPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [showToast]);
 
   const filteredItems = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -121,9 +120,6 @@ export default function InventoryPage() {
       return;
     }
 
-    setUploadError('');
-    setUploadMessage('');
-
     try {
       const content = await file.text();
 
@@ -135,7 +131,6 @@ export default function InventoryPage() {
         : mapInventoryCountsToRows(await fetchInventoryCounts());
       setItems(nextRows);
 
-      setUploadMessage(`${response.message} (${file.name})`);
       showToast({
         title: 'Inventory updated',
         description: response.message,
@@ -146,7 +141,6 @@ export default function InventoryPage() {
         error instanceof Error
           ? error.message
           : 'Unable to parse CSV. Please check the file format.';
-      setUploadError(message);
       showToast({
         title: 'Upload failed',
         description: message,
@@ -226,21 +220,6 @@ export default function InventoryPage() {
               onChange={handleCsvUpload}
               className="sr-only"
             />
-            {apiMessage ? (
-              <p className="mt-2 text-xs font-semibold text-brand-blue">
-                {apiMessage}
-              </p>
-            ) : null}
-            {uploadMessage ? (
-              <p className="mt-2 text-xs font-semibold text-emerald-700">
-                {uploadMessage}
-              </p>
-            ) : null}
-            {uploadError ? (
-              <p className="mt-2 text-xs font-semibold text-rose-700">
-                {uploadError}
-              </p>
-            ) : null}
           </Card>
         </div>
       </Card>

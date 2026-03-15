@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
+import { useToast } from '../../../components/ToastProvider';
 import { ApiError } from '../../../utils/api/apiClient';
 import { USER_ROLES } from '../../../utils/constants';
 import { getUserSession } from '../../../utils/localStorage';
@@ -16,6 +17,7 @@ type ApprovalDecision = 'APPROVED' | 'REJECTED' | null;
 
 export default function ManagerApprovalPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const prId = useMemo(() => {
     const rawId = router.query.id;
     return typeof rawId === 'string' ? rawId : '';
@@ -25,10 +27,8 @@ export default function ManagerApprovalPage() {
   );
   const [decision, setDecision] = useState<ApprovalDecision>(null);
   const [managerComment, setManagerComment] = useState('');
-  const [decisionMessage, setDecisionMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const user = getUserSession();
@@ -52,15 +52,16 @@ export default function ManagerApprovalPage() {
       const user = getUserSession();
       if (!user?.user_id) {
         setCurrentRequest(null);
-        setErrorMessage(
-          'User session required to review this purchase request.'
-        );
+        showToast({
+          title: 'Unable to load approval details',
+          description: 'User session required to review this purchase request.',
+          variant: 'error',
+        });
         setIsLoading(false);
         return;
       }
 
       setIsLoading(true);
-      setErrorMessage('');
 
       try {
         const details = await getPrDetails(user.user_id, prId);
@@ -70,11 +71,14 @@ export default function ManagerApprovalPage() {
       } catch (error) {
         if (isMounted) {
           setCurrentRequest(null);
-          setErrorMessage(
-            error instanceof ApiError
-              ? error.message
-              : 'Unable to load this purchase request.'
-          );
+          showToast({
+            title: 'Unable to load approval details',
+            description:
+              error instanceof ApiError
+                ? error.message
+                : 'Unable to load this purchase request.',
+            variant: 'error',
+          });
         }
       } finally {
         if (isMounted) {
@@ -88,17 +92,20 @@ export default function ManagerApprovalPage() {
     return () => {
       isMounted = false;
     };
-  }, [prId]);
+  }, [prId, showToast]);
 
   async function handleDecision(nextDecision: 'approve' | 'reject') {
     const user = getUserSession();
     if (!user?.user_id || !currentRequest) {
-      setDecisionMessage('User session is required to submit approval.');
+      showToast({
+        title: 'Unable to submit decision',
+        description: 'User session is required to submit approval.',
+        variant: 'error',
+      });
       return;
     }
 
     setIsSubmitting(true);
-    setDecisionMessage('');
 
     try {
       await reviewPurchaseRequest({
@@ -107,13 +114,21 @@ export default function ManagerApprovalPage() {
         manager_id: user.user_id,
       });
       setDecision(nextDecision === 'approve' ? 'APPROVED' : 'REJECTED');
-      setDecisionMessage('Decision submitted.');
+      showToast({
+        title: 'Decision submitted',
+        description: 'The PR review decision was submitted successfully.',
+        variant: 'success',
+      });
     } catch (error) {
       const message =
         error instanceof ApiError
           ? error.message
           : 'Unable to submit review right now.';
-      setDecisionMessage(message);
+      showToast({
+        title: 'Unable to submit decision',
+        description: message,
+        variant: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -134,7 +149,7 @@ export default function ManagerApprovalPage() {
       <div className="mx-auto w-full max-w-7xl">
         <Card variant="surface" padding="lg">
           <p className="text-sm font-medium text-brand-red">
-            {errorMessage || 'Purchase request not found.'}
+            Purchase request not found.
           </p>
           <Link href="/pr/approval">
             <a className="mt-4 inline-flex text-sm font-bold text-brand-blue hover:text-brand-red">
@@ -280,9 +295,6 @@ export default function ManagerApprovalPage() {
             Manager decision recorded: {decision}
             {managerComment.trim() ? ` - ${managerComment.trim()}` : '.'}
           </p>
-        ) : null}
-        {decisionMessage ? (
-          <p className="mt-2 text-sm text-slate-600">{decisionMessage}</p>
         ) : null}
       </Card>
     </div>

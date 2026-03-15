@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Button, { buttonClassName } from '../../components/atoms/Button';
 import Card, { CardHeader } from '../../components/atoms/Card';
+import { useToast } from '../../components/ToastProvider';
 import { ApiError } from '../../utils/api/apiClient';
 import { getUserSession } from '../../utils/localStorage';
 import { createPurchaseRequest } from '../../utils/api/prApi';
@@ -60,10 +62,13 @@ function mapCountsToOptions(counts: Record<string, number>) {
 }
 
 export default function CreatePrPage() {
+  const router = useRouter();
+  const { showToast } = useToast();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [itemQuery, setItemQuery] = useState('');
   const [selectedSku, setSelectedSku] = useState('');
   const [lineQuantity, setLineQuantity] = useState('');
+  const [justification, setJustification] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [draftItems, setDraftItems] = useState<DraftItemRow[]>([]);
   const [itemCatalog, setItemCatalog] = useState<ItemOption[]>([]);
@@ -219,44 +224,88 @@ export default function CreatePrPage() {
     setIsSubmitting(true);
 
     try {
-      const procItemPayload = draftItems.reduce<Record<string, number>>(
-        (acc, row) => {
-          acc[row.itemName] = (acc[row.itemName] || 0) + row.quantity;
-          return acc;
-        },
-        {}
-      );
+      const procItemPayload = draftItems.map((row) => ({
+        [row.itemName]: row.quantity,
+      }));
 
       const apiResponse = await createPurchaseRequest({
         user_id: sessionUser.user_id,
         proc_item: procItemPayload,
-        justification: draftItems
-          .map(
-            (row, index) =>
-              `${index + 1}. ${row.itemName} (${
-                row.sku
-              }) - ${row.quantity.toLocaleString()} ${
-                row.unit
-              } x RM ${row.unitPrice.toLocaleString()}`
-          )
-          .join(' | '),
+        justification:
+          justification.trim() ||
+          draftItems
+            .map(
+              (row, index) =>
+                `${index + 1}. ${row.itemName} (${
+                  row.sku
+                }) - ${row.quantity.toLocaleString()} ${
+                  row.unit
+                } x RM ${row.unitPrice.toLocaleString()}`
+            )
+            .join(' | '),
       });
 
       const createdDate = formatToday();
       const generatedId = `PR-${Date.now()}`;
       const apiPrId = String((apiResponse.pr_id as string) || '').trim();
       const nextId = apiPrId || generatedId;
+
+      if (typeof window !== 'undefined') {
+        const key = `created-pr-items:${nextId}`;
+        const justificationText =
+          justification.trim() ||
+          draftItems
+            .map(
+              (row, index) =>
+                `${index + 1}. ${row.itemName} (${
+                  row.sku
+                }) - ${row.quantity.toLocaleString()} ${
+                  row.unit
+                } x RM ${row.unitPrice.toLocaleString()}`
+            )
+            .join(' | ');
+        const value = JSON.stringify(
+          draftItems.map((row) => ({
+            itemName: row.itemName,
+            sku: row.sku,
+            quantity: row.quantity,
+            unit: row.unit,
+            unitPrice: row.unitPrice,
+          }))
+        );
+        window.sessionStorage.setItem(key, value);
+        window.sessionStorage.setItem(
+          `created-pr-justification:${nextId}`,
+          justificationText
+        );
+      }
+
       setCreatedMeta({ id: nextId, date: createdDate });
+      showToast({
+        title: 'PR created',
+        description: `Purchase request ${nextId} created successfully.`,
+        variant: 'success',
+      });
       setDraftItems([]);
       setSelectedSku('');
       setItemQuery('');
       setLineQuantity('');
+      setJustification('');
+      await router.push(`/pr/${encodeURIComponent(nextId)}`);
     } catch (error) {
       setFormError(
         error instanceof ApiError
           ? error.message
           : 'Unable to create the purchase request right now.'
       );
+      showToast({
+        title: 'Create PR failed',
+        description:
+          error instanceof ApiError
+            ? error.message
+            : 'Unable to create the purchase request right now.',
+        variant: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -267,10 +316,6 @@ export default function CreatePrPage() {
       <Card variant="surface" padding="lg">
         <div className="mb-3 flex items-center">
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
-            <Link href="/pr">
-              <a className="transition hover:text-brand-blue">PR Board</a>
-            </Link>
-            <span className="mx-1.5 text-slate-400">/</span>
             <span className="text-brand-blue">Create PR</span>
           </div>
         </div>
@@ -418,6 +463,23 @@ export default function CreatePrPage() {
             </table>
           </div>
 
+          <div className="mt-4">
+            <label
+              htmlFor="pr-justification"
+              className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500"
+            >
+              Justification
+            </label>
+            <textarea
+              id="pr-justification"
+              value={justification}
+              onChange={(event) => setJustification(event.target.value)}
+              rows={4}
+              placeholder="Provide business reason for this request"
+              className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-brand-blue"
+            />
+          </div>
+
           {formError ? (
             <p className="mt-3 text-sm font-semibold text-brand-red">
               {formError}
@@ -444,15 +506,10 @@ export default function CreatePrPage() {
             </Card>
           ) : null}
 
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-5 flex flex-wrap gap-3 flex-justify-content-center">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit PR'}
+              {isSubmitting ? 'Submitting...' : 'Create & Submit for Approval'}
             </Button>
-            <Link href="/pr">
-              <a className={buttonClassName({ variant: 'outline' })}>
-                Back to PR Board
-              </a>
-            </Link>
           </div>
         </form>
       </Card>

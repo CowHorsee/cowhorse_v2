@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Button, { buttonClassName } from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
+import { useToast } from '../../../components/ToastProvider';
 import { ApiError } from '../../../utils/api/apiClient';
 import { getUserSession } from '../../../utils/localStorage';
 import { getPrDetails, type PurchaseRequest } from '../../../utils/api/prApi';
@@ -20,6 +21,7 @@ function formatCurrency(value: number) {
 
 export default function PrSplitPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const prId = useMemo(() => {
     const rawId = router.query.id;
     return typeof rawId === 'string' ? rawId : '';
@@ -28,7 +30,6 @@ export default function PrSplitPage() {
   const [currentRequest, setCurrentRequest] = useState<PurchaseRequest | null>(
     null
   );
-  const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [splitLines, setSplitLines] = useState<SplitLine[]>([]);
 
@@ -53,9 +54,12 @@ export default function PrSplitPage() {
 
       const user = getUserSession();
       if (!user?.user_id) {
-        setErrorMessage(
-          'User session required before loading this purchase request.'
-        );
+        showToast({
+          title: 'Unable to load PR split',
+          description:
+            'User session required before loading this purchase request.',
+          variant: 'error',
+        });
         setCurrentRequest(null);
         setSplitLines([]);
         setIsLoading(false);
@@ -63,7 +67,6 @@ export default function PrSplitPage() {
       }
 
       setIsLoading(true);
-      setErrorMessage('');
 
       try {
         const details = await getPrDetails(user.user_id, prId);
@@ -93,11 +96,14 @@ export default function PrSplitPage() {
 
         setCurrentRequest(null);
         setSplitLines([]);
-        setErrorMessage(
-          error instanceof ApiError
-            ? error.message
-            : 'Unable to load latest PR details from API.'
-        );
+        showToast({
+          title: 'Unable to load PR split',
+          description:
+            error instanceof ApiError
+              ? error.message
+              : 'Unable to load latest PR details from API.',
+          variant: 'error',
+        });
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -110,7 +116,7 @@ export default function PrSplitPage() {
     return () => {
       isMounted = false;
     };
-  }, [prId]);
+  }, [prId, showToast]);
 
   function updateLine(lineId: string, field: keyof SplitLine, value: string) {
     setSplitLines((currentLines) =>
@@ -163,7 +169,7 @@ export default function PrSplitPage() {
       <div className="mx-auto w-full max-w-7xl">
         <Card variant="surface" padding="lg">
           <p className="text-sm font-medium text-brand-red">
-            {errorMessage || 'Purchase request not found.'}
+            Purchase request not found.
           </p>
           <Link href="/pr">
             <a className="mt-4 inline-flex text-sm font-bold text-brand-blue hover:text-brand-red">
@@ -178,19 +184,7 @@ export default function PrSplitPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4">
       <Card variant="surface" padding="lg">
-        <CardHeader
-          subtitle="Split PR into purchase orders"
-          title={currentRequest.id}
-          subtitleClassName="text-brand-red"
-          titleClassName="text-brand-blue"
-          action={
-            <span className="inline-flex rounded-full bg-brand-blue/10 px-3 py-1 text-xs font-bold text-brand-blue">
-              Split Workspace
-            </span>
-          }
-        />
-
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
+        <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
           <Link href="/pr">
             <a className="transition hover:text-brand-blue">PR Board</a>
           </Link>
@@ -203,11 +197,13 @@ export default function PrSplitPage() {
           <span className="mx-1.5 text-slate-400">/</span>
           <span className="text-brand-blue">PO Split</span>
         </div>
-        {errorMessage ? (
-          <p className="mt-3 text-sm font-medium text-brand-red">
-            {errorMessage}
-          </p>
-        ) : null}
+
+        <CardHeader
+          subtitle=""
+          title={currentRequest.id}
+          subtitleClassName="text-brand-red"
+          titleClassName="text-brand-blue"
+        />
       </Card>
 
       <div className="grid gap-4 xl:grid-cols-12">

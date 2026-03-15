@@ -7,6 +7,18 @@ import { ApiError } from '../utils/api/apiClient';
 import { changePassword, type AuthUser } from '../utils/api/authApi';
 import { clearUserSession, getUserSession } from '../utils/localStorage';
 
+function formatRoleLabel(role?: string) {
+  if (!role) {
+    return 'Not available';
+  }
+
+  return role
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -115,8 +127,8 @@ export default function ProfilePage() {
         </h1>
       </section>
 
-      <section className="grid gap-4">
-        <Card as="article" variant="base" padding="lg">
+      <section className="grid gap-4 md:grid-cols-2">
+        <Card as="article" variant="base" padding="lg" className="h-full">
           <CardHeader
             title="Account"
             className="mb-0"
@@ -129,17 +141,17 @@ export default function ProfilePage() {
             Email: {user?.email || 'Not available'}
           </p>
           <p className="mt-2 text-sm text-slate-700">
-            Role: {user?.role || 'Not available'}
+            Role: {formatRoleLabel(user?.role)}
           </p>
 
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex justify-center align-items-end">
             <Button variant="outline" onClick={handleSignOut}>
               Sign Out
             </Button>
           </div>
         </Card>
 
-        <Card as="article" variant="base" padding="lg">
+        <Card as="article" variant="base" padding="lg" className="h-full">
           <CardHeader
             title="Change Password"
             className="mb-0"
@@ -175,7 +187,7 @@ export default function ProfilePage() {
               className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
             />
 
-            <div className="mt-1">
+            <div className="mt-1 justify-center flex">
               <Button
                 variant="secondary"
                 onClick={handleChangePassword}

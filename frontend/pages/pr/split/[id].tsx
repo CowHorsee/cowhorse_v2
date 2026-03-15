@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
+import Breadcrumb from '../../../components/atoms/Breadcrumb';
 import Button, { buttonClassName } from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
 import { useToast } from '../../../components/ToastProvider';
@@ -184,19 +185,13 @@ export default function PrSplitPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4">
       <Card variant="surface" padding="lg">
-        <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
-          <Link href="/pr">
-            <a className="transition hover:text-brand-blue">PR Board</a>
-          </Link>
-          <span className="mx-1.5 text-slate-400">/</span>
-          <Link href={`/pr/${currentRequest.id}`}>
-            <a className="transition hover:text-brand-blue">
-              {currentRequest.id}
-            </a>
-          </Link>
-          <span className="mx-1.5 text-slate-400">/</span>
-          <span className="text-brand-blue">PO Split</span>
-        </div>
+        <Breadcrumb
+          items={[
+            { label: 'PR Board', href: '/pr' },
+            { label: currentRequest.id, href: `/pr/${currentRequest.id}` },
+            { label: 'PO Split' },
+          ]}
+        />
 
         <CardHeader
           subtitle=""

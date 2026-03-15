@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
+import Breadcrumb from '../../components/atoms/Breadcrumb';
 import Card, { CardHeader } from '../../components/atoms/Card';
+import DataTableWithTotal from '../../components/molecules/DataTableWithTotal';
 import { ApiError } from '../../utils/api/apiClient';
 import { USER_ROLES } from '../../utils/constants';
 import { getUserSession } from '../../utils/localStorage';
@@ -107,18 +109,46 @@ export default function PrDetailsPage() {
     );
   }
 
+  const detailRows = [
+    { key: 'title', values: { field: 'Title', value: purchaseRequest.title } },
+    {
+      key: 'department',
+      values: { field: 'Department', value: purchaseRequest.department },
+    },
+    {
+      key: 'requester',
+      values: { field: 'Requester', value: purchaseRequest.requester },
+    },
+    {
+      key: 'vendor',
+      values: { field: 'Vendor', value: purchaseRequest.vendor },
+    },
+    {
+      key: 'amount',
+      values: {
+        field: 'Amount',
+        value: `RM ${purchaseRequest.amount.toLocaleString()}`,
+      },
+    },
+    {
+      key: 'updatedAt',
+      values: { field: 'Last Update', value: purchaseRequest.updatedAt },
+    },
+    {
+      key: 'description',
+      values: { field: 'Description', value: purchaseRequest.description },
+    },
+  ];
+
   return (
     <div className="mx-auto w-full max-w-7xl">
       <Card variant="surface" padding="lg">
-        <div className="mb-3 flex items-center">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
-            <Link href="/pr">
-              <a className="transition hover:text-brand-blue">PR Board</a>
-            </Link>
-            <span className="mx-1.5 text-slate-400">/</span>
-            <span className="text-brand-blue">{purchaseRequest.id}</span>
-          </div>
-        </div>
+        <Breadcrumb
+          items={[
+            { label: 'PR Board', href: '/pr' },
+            { label: purchaseRequest.id },
+          ]}
+        />
 
         <CardHeader
           subtitle="Purchase request details"
@@ -136,74 +166,14 @@ export default function PrDetailsPage() {
             {errorMessage}
           </p>
         ) : null}
-        <div className="overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">Field</th>
-                <th className="px-4 py-3">Value</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Title
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.title}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Department
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.department}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Requester
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.requester}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Vendor
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.vendor}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Amount
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  RM {purchaseRequest.amount.toLocaleString()}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Last Update
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.updatedAt}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Description
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {purchaseRequest.description}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <DataTableWithTotal
+          columns={[
+            { key: 'field', label: 'Field' },
+            { key: 'value', label: 'Value' },
+          ]}
+          rows={detailRows}
+          emptyLabel="No purchase request details available."
+        />
 
         <div className="mt-5 flex flex-wrap gap-3">
           <Link href={`/pr/split?id=${encodeURIComponent(purchaseRequest.id)}`}>

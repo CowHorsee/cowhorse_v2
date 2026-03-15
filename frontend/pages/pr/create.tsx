@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Button, { buttonClassName } from '../../components/atoms/Button';
 import Card, { CardHeader } from '../../components/atoms/Card';
+import DataTableWithTotal from '../../components/molecules/DataTableWithTotal';
 import { useToast } from '../../components/ToastProvider';
 import { ApiError } from '../../utils/api/apiClient';
 import { getUserSession } from '../../utils/localStorage';
@@ -99,6 +99,22 @@ export default function CreatePrPage() {
     (sum, row) => sum + row.quantity * row.unitPrice,
     0
   );
+
+  const draftTableRows = draftItems.map((row, index) => ({
+    key: `${row.sku}-${index}`,
+    values: {
+      line: `Item ${index + 1}`,
+      item: `${row.itemName} (${row.sku})`,
+      quantity: `${row.quantity.toLocaleString()} ${row.unit}`,
+      unitPrice: `RM ${row.unitPrice.toLocaleString()} / ${row.unit}`,
+      lineTotal: `RM ${(row.quantity * row.unitPrice).toLocaleString()}`,
+      action: (
+        <Button variant="danger" size="link" onClick={() => removeItem(index)}>
+          Remove
+        </Button>
+      ),
+    },
+  }));
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -406,62 +422,20 @@ export default function CreatePrPage() {
             </Button>
           </div>
 
-          <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {draftItems.length ? (
-                  draftItems.map((row, index) => (
-                    <tr key={`${row.sku}-${index}`}>
-                      <td className="px-4 py-3 text-slate-600">
-                        Item {index + 1}
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-brand-blue">
-                        {row.itemName} ({row.sku})
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {row.quantity.toLocaleString()} {row.unit}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        RM {row.unitPrice.toLocaleString()} / {row.unit}
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-brand-blue">
-                        RM {(row.quantity * row.unitPrice).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Button
-                          variant="danger"
-                          size="link"
-                          onClick={() => removeItem(index)}
-                        >
-                          Remove
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-8 text-center text-slate-500"
-                    >
-                      No items added yet.
-                    </td>
-                  </tr>
-                )}
-                <tr>
-                  <td className="px-4 py-3 text-slate-600">
-                    Total Amount (RM)
-                  </td>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-3 font-semibold text-brand-blue"
-                  >
-                    {totalAmount.toLocaleString()}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <DataTableWithTotal
+            columns={[
+              { key: 'line', label: 'Line', cellClassName: 'text-slate-600' },
+              { key: 'item', label: 'Item' },
+              { key: 'quantity', label: 'Quantity' },
+              { key: 'unitPrice', label: 'Unit Price' },
+              { key: 'lineTotal', label: 'Line Total' },
+              { key: 'action', label: 'Action', cellClassName: 'text-right' },
+            ]}
+            rows={draftTableRows}
+            emptyLabel="No items added yet."
+            totalLabel="Total Amount (RM)"
+            totalValue={totalAmount.toLocaleString()}
+          />
 
           <div className="mt-4">
             <label

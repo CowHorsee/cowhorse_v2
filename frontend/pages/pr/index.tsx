@@ -3,6 +3,7 @@ import Button, { ButtonAnchor } from '../../components/atoms/Button';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
+import DataTableWithTotal from '../../components/molecules/DataTableWithTotal';
 import { ApiError } from '../../utils/api/apiClient';
 import { getUserSession } from '../../utils/localStorage';
 import { listPrByUser } from '../../utils/api/prApi';
@@ -77,6 +78,30 @@ export default function PrPage() {
     (request) => request.status === 'Pending Approval'
   ).length;
 
+  const tableRows = filteredRequests.map((request) => ({
+    key: request.id,
+    values: {
+      id: request.id,
+      title: request.title,
+      status: (
+        <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
+          {request.status}
+        </span>
+      ),
+      details: (
+        <Link href={`/pr/${request.id}`}>
+          <a className="text-sm font-bold text-brand-blue transition hover:text-brand-red">
+            View
+          </a>
+        </Link>
+      ),
+    },
+  }));
+
+  const emptyTableLabel = isLoading
+    ? 'Loading purchase requests...'
+    : 'No purchase requests match the current search.';
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4">
       <Card variant="surface" padding="lg">
@@ -140,62 +165,16 @@ export default function PrPage() {
           />
         </div>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">PR ID</th>
-                <th className="px-4 py-3">Title / Justification</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Details</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    Loading purchase requests...
-                  </td>
-                </tr>
-              ) : filteredRequests.length ? (
-                filteredRequests.map((request) => (
-                  <tr key={request.id}>
-                    <td className="px-4 py-3 font-semibold text-brand-blue">
-                      {request.id}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {request.title}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
-                        {request.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link href={`/pr/${request.id}`}>
-                        <a className="text-sm font-bold text-brand-blue transition hover:text-brand-red">
-                          View
-                        </a>
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    No purchase requests match the current search.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTableWithTotal
+          columns={[
+            { key: 'id', label: 'PR ID' },
+            { key: 'title', label: 'Title / Justification' },
+            { key: 'status', label: 'Status' },
+            { key: 'details', label: 'Details' },
+          ]}
+          rows={isLoading ? [] : tableRows}
+          emptyLabel={emptyTableLabel}
+        />
       </Card>
     </div>
   );

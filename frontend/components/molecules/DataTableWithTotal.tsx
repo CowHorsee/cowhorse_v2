@@ -1,11 +1,15 @@
+import type { ReactNode } from 'react';
+
 export type DataTableColumn = {
   key: string;
   label: string;
+  headerClassName?: string;
+  cellClassName?: string;
 };
 
 export type DataTableRow = {
   key: string;
-  values: Record<string, string>;
+  values: Record<string, ReactNode>;
 };
 
 type DataTableWithTotalProps = {
@@ -14,6 +18,7 @@ type DataTableWithTotalProps = {
   emptyLabel: string;
   totalLabel?: string;
   totalValue?: string;
+  firstColumnEmphasis?: boolean;
 };
 
 export default function DataTableWithTotal({
@@ -22,6 +27,7 @@ export default function DataTableWithTotal({
   emptyLabel,
   totalLabel,
   totalValue,
+  firstColumnEmphasis = true,
 }: DataTableWithTotalProps) {
   const shouldShowTotalRow = Boolean(totalLabel && totalValue);
 
@@ -31,7 +37,10 @@ export default function DataTableWithTotal({
         <thead className="bg-slate-50">
           <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
             {columns.map((column) => (
-              <th key={column.key} className="px-4 py-3">
+              <th
+                key={column.key}
+                className={`px-4 py-3 ${column.headerClassName || ''}`}
+              >
                 {column.label}
               </th>
             ))}
@@ -45,10 +54,10 @@ export default function DataTableWithTotal({
                   <td
                     key={`${row.key}-${column.key}`}
                     className={`px-4 py-3 ${
-                      index === 0
+                      firstColumnEmphasis && index === 0
                         ? 'font-semibold text-brand-blue'
                         : 'text-slate-700'
-                    }`}
+                    } ${column.cellClassName || ''}`}
                   >
                     {row.values[column.key] ?? '-'}
                   </td>

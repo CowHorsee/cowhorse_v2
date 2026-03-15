@@ -1,6 +1,7 @@
 import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../components/atoms/Card';
 import Button, { buttonClassName } from '../components/atoms/Button';
+import DataTableWithTotal from '../components/molecules/DataTableWithTotal';
 import { useToast } from '../components/ToastProvider';
 import { ApiError } from '../utils/api/apiClient';
 import {
@@ -112,6 +113,16 @@ export default function InventoryPage() {
       );
     });
   }, [items, searchTerm]);
+
+  const tableRows = filteredItems.map((item) => ({
+    key: item.sku,
+    values: {
+      sku: item.sku,
+      item: item.itemName,
+      currentStock: `${item.currentStock.toLocaleString()} ${item.unit}`,
+      updated: item.lastUpdated,
+    },
+  }));
 
   async function handleCsvUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -242,47 +253,20 @@ export default function InventoryPage() {
           />
         </div>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">SKU</th>
-                <th className="px-4 py-3">Item</th>
-                <th className="px-4 py-3">Current Stock (Unit)</th>
-                <th className="px-4 py-3">Updated</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredItems.length ? (
-                filteredItems.map((item) => (
-                  <tr key={item.sku}>
-                    <td className="px-4 py-3 font-semibold text-brand-blue">
-                      {item.sku}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {item.itemName}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {item.currentStock.toLocaleString()} {item.unit}
-                    </td>
-                    <td className="px-4 py-3 text-slate-500">
-                      {item.lastUpdated}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    No items match the selected filters.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTableWithTotal
+          columns={[
+            { key: 'sku', label: 'SKU' },
+            { key: 'item', label: 'Item' },
+            { key: 'currentStock', label: 'Current Stock (Unit)' },
+            {
+              key: 'updated',
+              label: 'Updated',
+              cellClassName: 'text-slate-500',
+            },
+          ]}
+          rows={tableRows}
+          emptyLabel="No items match the selected filters."
+        />
       </Card>
     </div>
   );

@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../components/atoms/Button';
 import Card, { CardHeader } from '../components/atoms/Card';
+import DataTableWithTotal from '../components/molecules/DataTableWithTotal';
 import { useToast } from '../components/ToastProvider';
 import { ApiError } from '../utils/api/apiClient';
 import type { UserRole } from '../utils/api/authApi';
@@ -191,6 +191,65 @@ export default function UsersPage() {
       );
     });
   }, [errorMessage, searchTerm, users]);
+
+  const tableRows = filteredUsers.map((user) => ({
+    key: user.user_id,
+    values: {
+      userId: user.user_id,
+      name: user.name,
+      email: user.email,
+      role:
+        editingUserId === user.user_id && editDraft ? (
+          <RoleDropdown
+            value={editDraft.role}
+            onChange={(role) => setEditDraft({ role })}
+          />
+        ) : (
+          formatRoleLabel(user.role)
+        ),
+      action:
+        editingUserId === user.user_id ? (
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={isSubmitting}
+            onClick={() => void confirmEditingRow()}
+            className="rounded-lg border border-emerald-300 bg-emerald-50 p-0 text-emerald-700 hover:bg-emerald-100"
+            aria-label={`Confirm edits for ${user.name}`}
+            title="Confirm"
+          >
+            <img
+              src="/tick-circle.svg"
+              alt="Confirm Update"
+              width="15"
+              height="15"
+              className="transition-transform duration-300"
+            />
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => startEditingRow(user)}
+            className="rounded-lg border-slate-300 p-0 text-brand-blue hover:border-brand-blue hover:bg-slate-50"
+            aria-label={`Edit ${user.name}`}
+            title="Edit role"
+          >
+            <img
+              src="/edit-2.svg"
+              alt="Edit User Role"
+              width="15"
+              height="15"
+              className="transition-transform duration-300"
+            />
+          </Button>
+        ),
+    },
+  }));
+
+  const emptyTableLabel = isLoading
+    ? 'Loading users...'
+    : 'No users match the current search.';
 
   function startEditingRow(user: ManagedUser) {
     setEditingUserId(user.user_id);
@@ -418,98 +477,17 @@ export default function UsersPage() {
           />
         </div>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">User ID</th>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    Loading users...
-                  </td>
-                </tr>
-              ) : filteredUsers.length ? (
-                filteredUsers.map((user) => (
-                  <tr key={user.user_id}>
-                    <td className="px-4 py-3 font-semibold text-brand-blue">
-                      {user.user_id}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">{user.name}</td>
-                    <td className="px-4 py-3 text-slate-700">{user.email}</td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {editingUserId === user.user_id && editDraft ? (
-                        <RoleDropdown
-                          value={editDraft.role}
-                          onChange={(role) => setEditDraft({ role })}
-                        />
-                      ) : (
-                        formatRoleLabel(user.role)
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {editingUserId === user.user_id ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          disabled={isSubmitting}
-                          onClick={() => void confirmEditingRow()}
-                          className="rounded-lg border border-emerald-300 bg-emerald-50 p-0 text-emerald-700 hover:bg-emerald-100"
-                          aria-label={`Confirm edits for ${user.name}`}
-                          title="Confirm"
-                        >
-                          <img
-                            src="/tick-circle.svg"
-                            alt="Confirm Update"
-                            width="15"
-                            height="15"
-                            className={`transition-transform duration-300`}
-                          />
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => startEditingRow(user)}
-                          className="rounded-lg border-slate-300 p-0 text-brand-blue hover:border-brand-blue hover:bg-slate-50"
-                          aria-label={`Edit ${user.name}`}
-                          title="Edit role"
-                        >
-                          <img
-                            src="/edit-2.svg"
-                            alt="Edit User Role"
-                            width="15"
-                            height="15"
-                            className={`transition-transform duration-300`}
-                          />
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    No users match the current search.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTableWithTotal
+          columns={[
+            { key: 'userId', label: 'User ID' },
+            { key: 'name', label: 'Name' },
+            { key: 'email', label: 'Email' },
+            { key: 'role', label: 'Role' },
+            { key: 'action', label: 'Action' },
+          ]}
+          rows={isLoading ? [] : tableRows}
+          emptyLabel={emptyTableLabel}
+        />
       </Card>
     </div>
   );

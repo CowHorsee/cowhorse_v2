@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../../components/atoms/Card';
+import DataTableWithTotal from '../../../components/molecules/DataTableWithTotal';
 import { ApiError } from '../../../utils/api/apiClient';
 import { getUserSession } from '../../../utils/localStorage';
 import { getPrTickets, type PurchaseRequest } from '../../../utils/api/prApi';
@@ -66,6 +67,29 @@ export default function PrApprovalListPage() {
     });
   }, [approvals, searchTerm]);
 
+  const tableRows = filteredApprovals.map((request) => ({
+    key: request.id,
+    values: {
+      id: request.id,
+      title: request.title,
+      requester: request.requester,
+      department: request.department,
+      amount: `RM ${request.amount.toLocaleString()}`,
+      status: (
+        <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
+          {request.status}
+        </span>
+      ),
+      action: (
+        <Link href={`/pr/approval/${request.id}`}>
+          <a className="text-sm font-bold text-brand-blue transition hover:text-brand-red">
+            Review
+          </a>
+        </Link>
+      ),
+    },
+  }));
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4">
       <Card variant="surface" padding="lg">
@@ -111,65 +135,23 @@ export default function PrApprovalListPage() {
           />
         </div>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-[0.12em] text-slate-500">
-                <th className="px-4 py-3">PR ID</th>
-                <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Requester</th>
-                <th className="px-4 py-3">Department</th>
-                <th className="px-4 py-3">Amount</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredApprovals.length ? (
-                filteredApprovals.map((request) => (
-                  <tr key={request.id}>
-                    <td className="px-4 py-3 font-semibold text-brand-blue">
-                      {request.id}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {request.title}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      {request.requester}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {request.department}
-                    </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      RM {request.amount.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
-                        {request.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link href={`/pr/approval/${request.id}`}>
-                        <a className="text-sm font-bold text-brand-blue transition hover:text-brand-red">
-                          Review
-                        </a>
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    No approvals match the current search.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTableWithTotal
+          columns={[
+            { key: 'id', label: 'PR ID' },
+            { key: 'title', label: 'Title' },
+            { key: 'requester', label: 'Requester' },
+            {
+              key: 'department',
+              label: 'Department',
+              cellClassName: 'text-slate-600',
+            },
+            { key: 'amount', label: 'Amount' },
+            { key: 'status', label: 'Status' },
+            { key: 'action', label: 'Action' },
+          ]}
+          rows={tableRows}
+          emptyLabel="No approvals match the current search."
+        />
       </Card>
     </div>
   );

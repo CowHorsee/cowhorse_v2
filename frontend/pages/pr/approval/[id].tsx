@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
+import Breadcrumb from '../../../components/atoms/Breadcrumb';
 import Button from '../../../components/atoms/Button';
 import Card, { CardHeader } from '../../../components/atoms/Card';
+import DataTableWithTotal from '../../../components/molecules/DataTableWithTotal';
 import { useToast } from '../../../components/ToastProvider';
 import { ApiError } from '../../../utils/api/apiClient';
 import { USER_ROLES } from '../../../utils/constants';
@@ -161,22 +163,46 @@ export default function ManagerApprovalPage() {
     );
   }
 
+  const detailRows = [
+    { key: 'title', values: { field: 'Title', value: currentRequest.title } },
+    {
+      key: 'department',
+      values: { field: 'Department', value: currentRequest.department },
+    },
+    {
+      key: 'requester',
+      values: { field: 'Requester', value: currentRequest.requester },
+    },
+    {
+      key: 'vendor',
+      values: { field: 'Vendor', value: currentRequest.vendor },
+    },
+    {
+      key: 'amount',
+      values: {
+        field: 'Amount',
+        value: `RM ${currentRequest.amount.toLocaleString()}`,
+      },
+    },
+    {
+      key: 'updatedAt',
+      values: { field: 'Last Update', value: currentRequest.updatedAt },
+    },
+    {
+      key: 'description',
+      values: { field: 'Description', value: currentRequest.description },
+    },
+  ];
+
   return (
     <div className="mx-auto w-full max-w-7xl">
       <Card variant="surface" padding="lg">
-        <div className="mb-3 flex items-center">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
-            <Link href="/pr">
-              <a className="transition hover:text-brand-blue">PR Board</a>
-            </Link>
-            <span className="mx-1.5 text-slate-400">/</span>
-            <Link href={`/pr/${currentRequest.id}`}>
-              <a className="transition hover:text-brand-blue">
-                {currentRequest.id}
-              </a>
-            </Link>
-          </div>
-        </div>
+        <Breadcrumb
+          items={[
+            { label: 'PR Board', href: '/pr' },
+            { label: currentRequest.id, href: `/pr/${currentRequest.id}` },
+          ]}
+        />
 
         <CardHeader
           subtitle="Purchase request details"
@@ -190,68 +216,14 @@ export default function ManagerApprovalPage() {
           titleClassName="text-brand-blue"
         />
 
-        <div className="overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <tbody className="divide-y divide-slate-100 bg-white">
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Title
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.title}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Department
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.department}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Requester
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.requester}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Vendor
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.vendor}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Amount
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  RM {currentRequest.amount.toLocaleString()}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Last Update
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.updatedAt}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-semibold text-brand-blue">
-                  Description
-                </td>
-                <td className="px-4 py-3 text-slate-700">
-                  {currentRequest.description}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <DataTableWithTotal
+          columns={[
+            { key: 'field', label: 'Field' },
+            { key: 'value', label: 'Value' },
+          ]}
+          rows={detailRows}
+          emptyLabel="No purchase request details available."
+        />
 
         <div className="mt-5">
           <label

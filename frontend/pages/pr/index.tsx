@@ -3,12 +3,31 @@ import Button, { ButtonAnchor } from '../../components/atoms/Button';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Card, { CardHeader } from '../../components/atoms/Card';
+import StatusPill from '../../components/atoms/StatusPill';
 import DataTableWithTotal from '../../components/molecules/DataTableWithTotal';
 import { ApiError } from '../../utils/api/apiClient';
 import { getUserSession } from '../../utils/localStorage';
 import { listPrByUser } from '../../utils/api/prApi';
 
 type PrRow = Awaited<ReturnType<typeof listPrByUser>>[number];
+
+function getStatusTone(status: string) {
+  const normalized = status.trim().toLowerCase();
+
+  if (normalized === 'approved') {
+    return 'success' as const;
+  }
+
+  if (normalized === 'rejected') {
+    return 'danger' as const;
+  }
+
+  if (normalized.includes('pending') || normalized.includes('review')) {
+    return 'warning' as const;
+  }
+
+  return 'info' as const;
+}
 
 export default function PrPage() {
   const router = useRouter();
@@ -84,9 +103,10 @@ export default function PrPage() {
       id: request.id,
       title: request.title,
       status: (
-        <span className="inline-flex rounded-full bg-brand-red/10 px-2.5 py-1 text-xs font-bold text-brand-red">
-          {request.status}
-        </span>
+        <StatusPill
+          label={request.status}
+          tone={getStatusTone(request.status)}
+        />
       ),
       details: (
         <Link href={`/pr/${request.id}`}>

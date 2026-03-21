@@ -318,6 +318,24 @@ export async function reviewPurchaseRequest(payload: {
 
 export const reviewPr = reviewPurchaseRequest;
 
+export async function resubmitPurchaseRequest(payload: {
+  user_id: string;
+  pr_id: string;
+  proc_item: Record<string, number> | Array<Record<string, number>>;
+  justification: string;
+}) {
+  const response = await apiRequest<unknown>('/api/pr/resubmit_pr', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  const envelope = readApiEnvelope<unknown>(response);
+  const data = readRecord(envelope?.data);
+  return (data || {}) as Record<string, unknown>;
+}
+
+export const resubmitPr = resubmitPurchaseRequest;
+
 export function mapTicketToPurchaseRequest(
   ticket: unknown,
   fallback?: PurchaseRequest,

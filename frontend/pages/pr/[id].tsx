@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 import Breadcrumb from '../../components/atoms/Breadcrumb';
 import Card from '../../components/atoms/Card';
-import Button from '../../components/atoms/Button';
 import StatusProgressIndicator from '../../components/atoms/StatusProgressIndicator';
 import DataTableWithTotal from '../../components/molecules/DataTableWithTotal';
 import { useToast } from '../../components/ToastProvider';
@@ -11,6 +10,7 @@ import { ApiError } from '../../utils/api/apiClient';
 import {
   normalizePrApprovalStage,
   PR_APPROVAL_STAGES,
+  USER_ROLES,
 } from '../../utils/constants';
 import { getUserSession } from '../../utils/localStorage';
 import {
@@ -183,6 +183,7 @@ export default function PrDetailsPage() {
       normalizePrApprovalStage(apiHeader?.statusName || currentRequest?.status),
     [apiHeader?.statusName, currentRequest?.status]
   );
+  const currentUserRole = useMemo(() => getUserSession()?.role, []);
 
   useEffect(() => {
     if (!prId) {
@@ -384,20 +385,22 @@ export default function PrDetailsPage() {
 
         {currentStatusStage === 'Approved' ? (
           <div className="mt-5 flex justify-center">
-            <Button
-              variant="outline"
-              onClick={() => {
-                showToast({
-                  title: 'Split to PO',
-                  description: 'This will create a new PO based on this PR.',
-                });
-              }}
-            >
-              Split to PO
-            </Button>
             <Link href={`/pr/split/${currentRequest.id || prId}`}>
               <a className="inline-flex items-center rounded-xl bg-brand-blue px-4 py-2 text-sm font-bold text-white transition hover:bg-[#1f1b4b]">
                 Split to PO
+              </a>
+            </Link>
+          </div>
+        ) : currentStatusStage === 'Rejected' &&
+          currentUserRole === USER_ROLES.EMPLOYEE ? (
+          <div className="mt-5 flex justify-center">
+            <Link
+              href={`/pr/create?resubmit_pr_id=${encodeURIComponent(
+                currentRequest.id || prId
+              )}`}
+            >
+              <a className="inline-flex items-center rounded-xl bg-brand-blue px-4 py-2 text-sm font-bold text-white transition hover:bg-[#1f1b4b]">
+                Edit & Resubmit PR
               </a>
             </Link>
           </div>

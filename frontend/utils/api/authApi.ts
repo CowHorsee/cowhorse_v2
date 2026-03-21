@@ -41,7 +41,7 @@ export type LoginPayload = {
 };
 
 export type ForgotPasswordPayload = {
-  user_id: string;
+  email: string;
 };
 
 export type ChangePasswordPayload = {
@@ -97,7 +97,7 @@ export function mapUserRoleToBackendRoleName(role: UserRole): BackendRoleName {
 }
 
 function normalizeRegisterRoleName(
-  roleName: BackendRoleName | UserRole,
+  roleName: BackendRoleName | UserRole
 ): BackendRoleName {
   if (
     roleName === 'Admin' ||
@@ -174,7 +174,11 @@ export async function loginUser(payload: LoginPayload) {
   const envelope = readApiEnvelope<unknown>(response);
   const normalizedStatus = envelope?.status?.trim().toLowerCase();
 
-  if (normalizedStatus && normalizedStatus !== 'success' && normalizedStatus !== 'ok') {
+  if (
+    normalizedStatus &&
+    normalizedStatus !== 'success' &&
+    normalizedStatus !== 'ok'
+  ) {
     throw new ApiError(envelope?.message || 'Login failed.', 400, null);
   }
 
@@ -197,13 +201,23 @@ export async function loginUser(payload: LoginPayload) {
 export async function forgotPassword(payload: ForgotPasswordPayload) {
   const response = await apiRequest<unknown>('/api/user/forget_password', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      email: payload.email.trim().toLowerCase(),
+    }),
   });
 
   const envelope = readApiEnvelope<unknown>(response);
   const normalizedStatus = envelope?.status?.trim().toLowerCase();
-  if (normalizedStatus && normalizedStatus !== 'success' && normalizedStatus !== 'ok') {
-    throw new ApiError(envelope?.message || 'Unable to reset password.', 400, null);
+  if (
+    normalizedStatus &&
+    normalizedStatus !== 'success' &&
+    normalizedStatus !== 'ok'
+  ) {
+    throw new ApiError(
+      envelope?.message || 'Unable to reset password.',
+      400,
+      null
+    );
   }
 
   return {
@@ -222,8 +236,16 @@ export async function changePassword(payload: ChangePasswordPayload) {
 
   const envelope = readApiEnvelope<unknown>(response);
   const normalizedStatus = envelope?.status?.trim().toLowerCase();
-  if (normalizedStatus && normalizedStatus !== 'success' && normalizedStatus !== 'ok') {
-    throw new ApiError(envelope?.message || 'Unable to change password.', 400, null);
+  if (
+    normalizedStatus &&
+    normalizedStatus !== 'success' &&
+    normalizedStatus !== 'ok'
+  ) {
+    throw new ApiError(
+      envelope?.message || 'Unable to change password.',
+      400,
+      null
+    );
   }
 
   return {

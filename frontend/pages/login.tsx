@@ -31,7 +31,7 @@ export default function LoginPage() {
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [loginError, setLoginError] = useState('');
-  const [forgotUserId, setForgotUserId] = useState('');
+  const [forgotEmail, setForgotEmail] = useState('');
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [typedPhrase, setTypedPhrase] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -164,11 +164,11 @@ export default function LoginPage() {
   }
 
   async function handleForgotPassword() {
-    const normalizedUserId = forgotUserId.trim();
-    if (!normalizedUserId) {
+    const normalizedEmail = forgotEmail.trim().toLowerCase();
+    if (!normalizedEmail) {
       showToast({
         title: 'Reset failed',
-        description: 'User ID is required to reset password.',
+        description: 'Email address is required to reset password.',
         variant: 'error',
       });
       return;
@@ -177,13 +177,13 @@ export default function LoginPage() {
     setIsResettingPassword(true);
 
     try {
-      const response = await forgotPassword({ user_id: normalizedUserId });
+      const response = await forgotPassword({ email: normalizedEmail });
       showToast({
-        title: 'Password reset sent',
+        title: 'Password reset email sent',
         description: response.message,
         variant: 'success',
       });
-      setForgotUserId('');
+      setForgotEmail('');
     } catch (error) {
       const message =
         error instanceof ApiError
@@ -309,18 +309,35 @@ export default function LoginPage() {
                 </button>
 
                 {isForgotPasswordOpen ? (
-                  <div className="mt-3">
-                    <p className="mt-1 text-sm text-slate-600">
-                      Enter your user ID to request a password reset.
+                  <div className="relative mt-3 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotPasswordOpen(false)}
+                      className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-white hover:text-brand-blue"
+                      aria-label="Close forgot password form"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M18 6L6 18" />
+                        <path d="M6 6l12 12" />
+                      </svg>
+                    </button>
+                    <p className="mt-1 pr-10 text-sm text-slate-600">
+                      Enter your email address to request a password reset.
                     </p>
                     <div className="mt-3 flex gap-2">
                       <input
-                        type="text"
-                        value={forgotUserId}
-                        onChange={(event) =>
-                          setForgotUserId(event.target.value)
-                        }
-                        placeholder="e.g. U001"
+                        type="email"
+                        value={forgotEmail}
+                        onChange={(event) => setForgotEmail(event.target.value)}
+                        placeholder="you@company.com"
                         className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-blue"
                       />
                       <Button
@@ -330,14 +347,6 @@ export default function LoginPage() {
                         className="whitespace-nowrap"
                       >
                         {isResettingPassword ? 'Submitting...' : 'Reset'}
-                      </Button>
-                    </div>
-                    <div className="mt-2 flex justify-end">
-                      <Button
-                        variant="ghost"
-                        onClick={() => setIsForgotPasswordOpen(false)}
-                      >
-                        Close
                       </Button>
                     </div>
                   </div>

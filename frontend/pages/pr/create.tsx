@@ -6,7 +6,13 @@ import DataTableWithTotal from '../../components/molecules/DataTableWithTotal';
 import { useToast } from '../../components/ToastProvider';
 import { ApiError } from '../../utils/api/apiClient';
 import { getUserSession } from '../../utils/localStorage';
-import { createPurchaseRequest } from '../../utils/api/prApi';
+import {
+  createPurchaseRequest,
+  getPrDetailsPayload,
+  normalizePrDetailHeader,
+  normalizePrDetailItems,
+  resubmitPurchaseRequest,
+} from '../../utils/api/prApi';
 import {
   fetchInventoryCounts,
   fetchInventoryItems,
@@ -64,6 +70,11 @@ function mapCountsToOptions(counts: Record<string, number>) {
 export default function CreatePrPage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const resubmitPrId = useMemo(() => {
+    const raw = router.query.resubmit_pr_id;
+    return typeof raw === 'string' ? raw.trim() : '';
+  }, [router.query.resubmit_pr_id]);
+  const isResubmitMode = Boolean(resubmitPrId);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [itemQuery, setItemQuery] = useState('');
   const [selectedSku, setSelectedSku] = useState('');
@@ -76,6 +87,7 @@ export default function CreatePrPage() {
   const [formError, setFormError] = useState('');
   const [createdMeta, setCreatedMeta] = useState<CreatedMeta | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasPrefilledResubmit, setHasPrefilledResubmit] = useState(false);
 
   const itemOptions = useMemo(() => {
     const normalized = itemQuery.trim().toLowerCase();
@@ -133,6 +145,70 @@ export default function CreatePrPage() {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, []);
+
+  useEffect(() => {
+    setHasPrefilledResubmit(false);
+  }, [resubmitPrId]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function prefillResubmitDraft() {
+      if (!isResubmitMode || !resubmitPrId || hasPrefilledResubmit) {
+        return;
+      }
+
+      const sessionUser = getUserSession();
+      if (!sessionUser?.user_id) {
+        return;
+      }
+
+      try {
+        const payload = await getPrDetailsPayload(
+          sessionUser.user_id,
+          resubmitPrId
+        );
+        if (!isMounted) {
+          return;
+        }
+
+        const detailItems = normalizePrDetailItems(payload);
+        const header = normalizePrDetailHeader(payload);
+
+        setDraftItems(
+          detailItems.map((item, index) => ({
+            sku: item.itemId || `ITEM-${String(index + 1).padStart(3, '0')}`,
+            itemName: item.itemName || item.itemId,
+            unit: 'pcs',
+            unitPrice: typeof item.unitPrice === 'number' ? item.unitPrice : 0,
+            quantity: item.quantity,
+          }))
+        );
+        setJustification((current) => current || header?.justification || '');
+        setHasPrefilledResubmit(true);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        setHasPrefilledResubmit(true);
+        showToast({
+          title: 'Unable to prefill rejected PR',
+          description:
+            error instanceof ApiError
+              ? error.message
+              : 'Unable to load rejected PR details for editing.',
+          variant: 'error',
+        });
+      }
+    }
+
+    void prefillResubmitDraft();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hasPrefilledResubmit, isResubmitMode, resubmitPrId, showToast]);
 
   useEffect(() => {
     let isMounted = true;
@@ -240,26 +316,35 @@ export default function CreatePrPage() {
     setIsSubmitting(true);
 
     try {
+      const justificationText =
+        justification.trim() ||
+        draftItems
+          .map(
+            (row, index) =>
+              `${index + 1}. ${row.itemName} (${
+                row.sku
+              }) - ${row.quantity.toLocaleString()} ${
+                row.unit
+              } x RM ${row.unitPrice.toLocaleString()}`
+          )
+          .join(' | ');
+
       const procItemPayload = draftItems.map((row) => ({
         [row.itemName]: row.quantity,
       }));
 
-      const apiResponse = await createPurchaseRequest({
-        user_id: sessionUser.user_id,
-        proc_item: procItemPayload,
-        justification:
-          justification.trim() ||
-          draftItems
-            .map(
-              (row, index) =>
-                `${index + 1}. ${row.itemName} (${
-                  row.sku
-                }) - ${row.quantity.toLocaleString()} ${
-                  row.unit
-                } x RM ${row.unitPrice.toLocaleString()}`
-            )
-            .join(' | '),
-      });
+      const apiResponse = isResubmitMode
+        ? await resubmitPurchaseRequest({
+            user_id: sessionUser.user_id,
+            pr_id: resubmitPrId,
+            proc_item: procItemPayload,
+            justification: justificationText,
+          })
+        : await createPurchaseRequest({
+            user_id: sessionUser.user_id,
+            proc_item: procItemPayload,
+            justification: justificationText,
+          });
 
       const createdDate = formatToday();
       const generatedId = `PR-${Date.now()}`;
@@ -268,18 +353,6 @@ export default function CreatePrPage() {
 
       if (typeof window !== 'undefined') {
         const key = `created-pr-items:${nextId}`;
-        const justificationText =
-          justification.trim() ||
-          draftItems
-            .map(
-              (row, index) =>
-                `${index + 1}. ${row.itemName} (${
-                  row.sku
-                }) - ${row.quantity.toLocaleString()} ${
-                  row.unit
-                } x RM ${row.unitPrice.toLocaleString()}`
-            )
-            .join(' | ');
         const value = JSON.stringify(
           draftItems.map((row) => ({
             itemName: row.itemName,
@@ -298,8 +371,10 @@ export default function CreatePrPage() {
 
       setCreatedMeta({ id: nextId, date: createdDate });
       showToast({
-        title: 'PR created',
-        description: `Purchase request ${nextId} created successfully.`,
+        title: isResubmitMode ? 'PR resubmitted' : 'PR created',
+        description: isResubmitMode
+          ? `Purchase request ${nextId} resubmitted successfully.`
+          : `Purchase request ${nextId} created successfully.`,
         variant: 'success',
       });
       setDraftItems([]);
@@ -332,13 +407,15 @@ export default function CreatePrPage() {
       <Card variant="surface" padding="lg">
         <div className="mb-3 flex items-center">
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
-            <span className="text-brand-blue">Create PR</span>
+            <span className="text-brand-blue">
+              {isResubmitMode ? 'Edit & Resubmit PR' : 'Create PR'}
+            </span>
           </div>
         </div>
 
         <CardHeader
           subtitle="Purchase requests"
-          title="Create PR"
+          title={isResubmitMode ? 'Edit & Resubmit PR' : 'Create PR'}
           className="mb-1"
           titleClassName="text-lg"
         />
@@ -482,7 +559,11 @@ export default function CreatePrPage() {
 
           <div className="mt-5 flex flex-wrap gap-3 justify-center">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Create & Submit for Approval'}
+              {isSubmitting
+                ? 'Submitting...'
+                : isResubmitMode
+                ? 'Resubmit PR'
+                : 'Create & Submit for Approval'}
             </Button>
           </div>
         </form>

@@ -46,17 +46,51 @@ function formatStatus(value: unknown): PurchaseRequestStatus {
   }
 }
 
-function formatUpdatedAt(value: unknown) {
+function normalizeApiDateTimeValue(value: string) {
+  const trimmedValue = value.trim();
+
+  if (/([zZ]|[+-]\d{2}:?\d{2})$/.test(trimmedValue)) {
+    return trimmedValue;
+  }
+
+  const isoLikeValue = trimmedValue.replace(' ', 'T');
+  return `${isoLikeValue}+08:00`;
+}
+
+export function formatPrDateTime(value: unknown) {
   if (typeof value !== 'string' || !value.trim()) {
     return 'Recently updated';
   }
 
-  const parsed = new Date(value);
+  const parsed = new Date(normalizeApiDateTimeValue(value));
   if (Number.isNaN(parsed.getTime())) {
     return value;
   }
 
-  return parsed.toLocaleString();
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kuala_Lumpur',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+
+  const parts = formatter
+    .formatToParts(parsed)
+    .reduce<Record<string, string>>((accumulator, part) => {
+      if (part.type !== 'literal') {
+        accumulator[part.type] = part.value;
+      }
+
+      return accumulator;
+    }, {});
+
+  return `${parts.day} ${parts.month} ${parts.year} ${parts.hour}:${
+    parts.minute
+  }:${parts.second} ${parts.dayPeriod?.toLowerCase() || ''}`.trim();
 }
 
 function toStringValue(value: unknown, fallback: string) {
@@ -66,7 +100,7 @@ function toStringValue(value: unknown, fallback: string) {
 export function normalizePurchaseRequest(value: unknown): PurchaseRequest {
   const record = readRecord(value);
   const amountValue = Number(
-    record?.total_amount || record?.amount || record?.total || 0,
+    record?.total_amount || record?.amount || record?.total || 0
   );
 
   return {
@@ -76,30 +110,28 @@ export function normalizePurchaseRequest(value: unknown): PurchaseRequest {
         record?.name ||
         record?.request_title ||
         record?.justification ||
-        'Purchase Request',
+        'Purchase Request'
     ).trim(),
     department: String(record?.department || 'General').trim(),
     requester: String(
       record?.requester ||
         record?.created_by ||
         record?.user_id ||
-        'Unknown User',
+        'Unknown User'
     ).trim(),
     vendor: String(record?.vendor || record?.supplier || 'TBD').trim(),
     amount: Number.isFinite(amountValue) ? amountValue : 0,
     status: formatStatus(
-      record?.status || record?.status_name || record?.status_id,
+      record?.status || record?.status_name || record?.status_id
     ),
-    updatedAt: formatUpdatedAt(
+    updatedAt: formatPrDateTime(
       record?.updated_at ||
         record?.updatedAt ||
         record?.last_modified_at ||
-        record?.created_at,
+        record?.created_at
     ),
     description: String(
-      record?.description ||
-        record?.justification ||
-        'No description provided.',
+      record?.description || record?.justification || 'No description provided.'
     ).trim(),
   };
 }
@@ -109,8 +141,8 @@ function normalizePurchaseRequestsResponse(value: unknown) {
   const rows = Array.isArray(envelope?.data)
     ? envelope.data
     : Array.isArray(value)
-      ? value
-      : [];
+    ? value
+    : [];
 
   if (!rows.length) {
     return [];
@@ -130,7 +162,7 @@ function normalizePurchaseRequestDetails(value: unknown) {
   }
 
   const nested = readRecord(
-    record.data || record.pr || record.purchase_request || record.header,
+    record.data || record.pr || record.purchase_request || record.header
   );
   return normalizePurchaseRequest(nested || record);
 }
@@ -166,10 +198,10 @@ export function normalizePrDetailHeader(value: unknown): PrDetailHeader | null {
     prId: String(header.pr_id || '').trim(),
     statusId: String(header.status_id || '').trim(),
     statusName: String(header.status_name || '').trim(),
-    createdAt: String(header.created_at || '').trim(),
+    createdAt: formatPrDateTime(header.created_at),
     createdBy: String(header.created_by || '').trim(),
-    lastModifiedAt: String(header.last_modified_at || '').trim(),
-    reviewedAt: String(header.reviewed_at || '').trim(),
+    lastModifiedAt: formatPrDateTime(header.last_modified_at),
+    reviewedAt: formatPrDateTime(header.reviewed_at),
     justification: String(header.justification || '').trim(),
   };
 }
@@ -200,7 +232,7 @@ export async function getPrTickets(
   userIdOrParams:
     | string
     | { user_id?: string; pr_id?: string; status?: string | number },
-  status?: string,
+  status?: string
 ) {
   const query =
     typeof userIdOrParams === 'string'
@@ -233,7 +265,7 @@ export async function listPrByUser(userId: string) {
 
 export async function getPrDetails(
   userIdOrParams: string | { user_id: string; pr_id: string },
-  prId?: string,
+  prId?: string
 ) {
   const query =
     typeof userIdOrParams === 'string'
@@ -250,7 +282,7 @@ export async function getPrDetails(
 
 export async function getPrDetailsPayload(
   userIdOrParams: string | { user_id: string; pr_id: string },
-  prId?: string,
+  prId?: string
 ) {
   const query =
     typeof userIdOrParams === 'string'
@@ -338,7 +370,7 @@ export const resubmitPr = resubmitPurchaseRequest;
 
 export function mapTicketToPurchaseRequest(
   ticket: unknown,
-  fallback?: PurchaseRequest,
+  fallback?: PurchaseRequest
 ): PurchaseRequest {
   const normalized = normalizePurchaseRequest(ticket);
 
@@ -357,7 +389,7 @@ export function mapTicketToPurchaseRequest(
 
 export function mergeDetailsIntoPurchaseRequest(
   base: PurchaseRequest,
-  details: unknown,
+  details: unknown
 ): PurchaseRequest {
   const merged = normalizePurchaseRequestDetails(details);
   if (!merged) {

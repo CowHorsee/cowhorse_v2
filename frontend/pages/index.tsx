@@ -29,6 +29,8 @@ function mapCountsToOverviewData(
     actualSkuInventory: Number(quantity) || 0,
     actualSales: 0,
     predictedSales: 0,
+    actualSalesMissing: true,
+    predictedSalesMissing: true,
   }));
 }
 
@@ -43,6 +45,8 @@ function mapCountToOverviewPoint(
       actualSkuInventory: Number(counts[itemName]) || 0,
       actualSales: 0,
       predictedSales: 0,
+      actualSalesMissing: true,
+      predictedSalesMissing: true,
     },
   ];
 }
@@ -190,16 +194,10 @@ const Home = () => {
   const inReviewCount = personalRequests.filter(
     (item) => item.status === 'In Review'
   ).length;
-  const approvedCount = personalRequests.filter(
-    (item) => item.status === 'Approved'
-  ).length;
-  const waitingApprovalCount = personalPendingCount;
   const totalInventoryUnits = Object.values(inventoryCounts).reduce(
     (sum, quantity) => sum + quantity,
     0
   );
-
-  const isManager = sessionUser?.role === USER_ROLES.MANAGER;
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-7xl flex-col gap-4">

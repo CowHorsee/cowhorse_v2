@@ -15,6 +15,8 @@ export type InventoryOverviewPoint = {
   actualSkuInventory: number;
   actualSales: number;
   predictedSales: number;
+  actualSalesMissing?: boolean;
+  predictedSalesMissing?: boolean;
 };
 
 type InventoryOverviewChartProps = {
@@ -27,7 +29,10 @@ type InventoryOverviewChartProps = {
   onSelectedYearChange: (year: number) => void;
 };
 
-type SeriesKey = keyof Omit<InventoryOverviewPoint, 'label' | 'itemName'>;
+type SeriesKey = keyof Omit<
+  InventoryOverviewPoint,
+  'label' | 'itemName' | 'actualSalesMissing' | 'predictedSalesMissing'
+>;
 
 type SeriesConfig = {
   key: SeriesKey;
@@ -41,7 +46,13 @@ type AggregatedPoint = {
   actualSkuInventory: number;
   actualSales: number;
   predictedSales: number;
+  actualSalesMissing?: boolean;
+  predictedSalesMissing?: boolean;
 };
+
+function formatSeriesValue(value: number, isMissing?: boolean) {
+  return isMissing ? 'N/A' : value.toLocaleString();
+}
 
 const chartSeries: SeriesConfig[] = [
   {
@@ -74,6 +85,12 @@ function aggregateByLabel(data: InventoryOverviewPoint[]): AggregatedPoint[] {
       current.actualSkuInventory += point.actualSkuInventory;
       current.actualSales += point.actualSales;
       current.predictedSales += point.predictedSales;
+      current.actualSalesMissing = Boolean(
+        current.actualSalesMissing || point.actualSalesMissing
+      );
+      current.predictedSalesMissing = Boolean(
+        current.predictedSalesMissing || point.predictedSalesMissing
+      );
       return;
     }
 
@@ -82,6 +99,8 @@ function aggregateByLabel(data: InventoryOverviewPoint[]): AggregatedPoint[] {
       actualSkuInventory: point.actualSkuInventory,
       actualSales: point.actualSales,
       predictedSales: point.predictedSales,
+      actualSalesMissing: point.actualSalesMissing,
+      predictedSalesMissing: point.predictedSalesMissing,
     });
   });
 
@@ -114,6 +133,8 @@ export default function InventoryOverviewChart({
         actualSkuInventory: point.actualSkuInventory,
         actualSales: point.actualSales,
         predictedSales: point.predictedSales,
+        actualSalesMissing: point.actualSalesMissing,
+        predictedSalesMissing: point.predictedSalesMissing,
       }));
   }, [data, selectedItemName]);
 
@@ -124,9 +145,10 @@ export default function InventoryOverviewChart({
     setActiveIndex(Math.max(renderData.length - 1, 0));
   }, [renderData]);
 
-  const activePoint = renderData[activeIndex];
-
   if (!renderData.length) {
+    {
+      /* Clickable row for one chart series. */
+    }
     return (
       <div className="rounded-[28px] border border-slate-200 bg-white p-4 text-slate-900 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-5">
         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
@@ -146,6 +168,9 @@ export default function InventoryOverviewChart({
     );
   }
 
+  {
+    /* Clickable row for one chart series. */
+  }
   return (
     <div className="rounded-[28px] border border-slate-200 bg-white p-4 text-slate-900 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-5">
       <div className="border-b border-slate-200 pb-3">
@@ -209,10 +234,24 @@ export default function InventoryOverviewChart({
                       background: 'rgba(255, 255, 255, 0.97)',
                     }}
                     labelStyle={{ color: 'rgba(30, 41, 59, 0.95)' }}
-                    formatter={(value: number, name: string) => [
-                      value.toLocaleString(),
-                      name,
-                    ]}
+                    formatter={(
+                      value: number,
+                      name: string,
+                      item: {
+                        dataKey?: string;
+                        payload?: Record<string, unknown>;
+                      }
+                    ) => {
+                      const dataKey = item.dataKey;
+                      const isMissing =
+                        dataKey === 'actualSales'
+                          ? Boolean(item.payload?.actualSalesMissing)
+                          : dataKey === 'predictedSales'
+                          ? Boolean(item.payload?.predictedSalesMissing)
+                          : false;
+
+                      return [formatSeriesValue(value, isMissing), name];
+                    }}
                   />
                   {chartSeries
                     .filter((series) => visibleSeries[series.key])
@@ -286,68 +325,61 @@ export default function InventoryOverviewChart({
           </div>
 
           <div>
+            {/* Series visibility controls for the chart lines. */}
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
               Toggle series
             </p>
+            {/* List of available chart series that can be toggled on or off. */}
             <div className="mt-2 space-y-2">
               {chartSeries.map((series) => {
                 const isVisible = visibleSeries[series.key];
 
+                {
+                  /* Clickable row for one chart series. */
+                }
                 return (
                   <button
                     key={series.key}
                     type="button"
+                    role="switch"
+                    aria-checked={isVisible}
                     onClick={() =>
                       setVisibleSeries((current) => ({
                         ...current,
                         [series.key]: !current[series.key],
                       }))
                     }
-                    className={`w-full rounded-2xl border px-3 py-2 text-left transition ${
+                    className={`flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left transition ${
                       isVisible
-                        ? 'border-slate-200 bg-slate-50'
-                        : 'border-slate-200 bg-white opacity-60'
+                        ? 'border-brand-blue/20 bg-brand-blue/5'
+                        : 'border-slate-200 bg-white'
                     }`}
                   >
-                    <span className="flex items-center gap-2 text-sm text-slate-600">
+                    {/* Left side groups the colored switch and series label. */}
+                    <span className="flex items-center gap-3 text-sm text-slate-700">
+                      {/* The switch itself now carries the series color. */}
                       <span
-                        className={`h-2.5 w-2.5 rounded-full ${series.backgroundClassName}`}
-                      />
-                      {series.label}
+                        className={`relative inline-flex h-4 w-10 items-center rounded-full transition ${
+                          isVisible
+                            ? `${series.backgroundClassName} `
+                            : 'bg-slate-300'
+                        }`}
+                      >
+                        {/* Sliding knob inside the switch track. */}
+                        <span
+                          className={`inline-block h-3 w-3 rounded-full bg-white transition ${
+                            isVisible ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </span>
+                      {/* User-facing name of the chart series. */}
+                      <span className="font-medium">{series.label}</span>
                     </span>
                   </button>
                 );
               })}
             </div>
           </div>
-
-          {/* <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-              Overview (Unit)
-            </p>
-            <div className="mt-3 space-y-2.5">
-              {chartSeries.map((series) => (
-                <div
-                  key={series.key}
-                  className={`flex items-center justify-between gap-3 ${
-                    visibleSeries[series.key] ? 'opacity-100' : 'opacity-40'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${series.backgroundClassName}`}
-                    />
-                    <span className="text-sm text-slate-600">
-                      {series.label}
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-slate-900">
-                    {activePoint[series.key].toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div> */}
         </aside>
       </div>
     </div>

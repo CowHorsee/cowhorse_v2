@@ -14,6 +14,8 @@ export type InventoryGraphDatapoint = {
   actualSkuInventory: number;
   actualSales: number;
   predictedSales: number;
+  actualSalesMissing?: boolean;
+  predictedSalesMissing?: boolean;
 };
 
 function readRecord(value: unknown) {
@@ -43,20 +45,30 @@ function readGraphValue(record: Record<string, unknown>, keys: string[]) {
   return undefined;
 }
 
-function normalizeWarehouseRow(value: unknown, index: number): WarehouseInventoryRow {
+function normalizeWarehouseRow(
+  value: unknown,
+  index: number
+): WarehouseInventoryRow {
   const record = readRecord(value);
   const itemId = String(
     record?.item_id || record?.sku || record?.id || `ITEM-${index + 1}`
   ).trim();
   const itemName = String(
-    record?.item_name || record?.name || record?.item || itemId || `Item ${index + 1}`
+    record?.item_name ||
+      record?.name ||
+      record?.item ||
+      itemId ||
+      `Item ${index + 1}`
   ).trim();
 
   return {
     itemId,
     itemName,
     currentStock: toNumber(
-      record?.current_stock || record?.stock || record?.quantity || record?.count
+      record?.current_stock ||
+        record?.stock ||
+        record?.quantity ||
+        record?.count
     ),
     unitPrice: toNumber(record?.unit_price || record?.price),
     unit: String(record?.unit || record?.uom || 'pcs'),
@@ -173,21 +185,40 @@ function normalizeGraphPoint(
     readGraphValue(record, ['item_name', 'itemName']) || itemName
   ).trim();
   const inventoryValue = toNumber(
-    readGraphValue(record, ['inventory_count', 'current_stock', 'quantity', 'count'])
+    readGraphValue(record, [
+      'inventory_count',
+      'current_stock',
+      'quantity',
+      'count',
+    ])
   );
-  const actualSalesValue = toNumber(
-    readGraphValue(record, ['actual_sales', 'sales_actual', 'sales'])
-  );
-  const predictedSalesValue = toNumber(
-    readGraphValue(record, ['predicted_demand', 'predicted_sales', 'forecast_sales'])
-  );
+  const actualSalesRawValue = readGraphValue(record, [
+    'actual_sales',
+    'sales_actual',
+    'sales',
+  ]);
+  const predictedSalesRawValue = readGraphValue(record, [
+    'predicted_demand',
+    'predicted_sales',
+    'forecast_sales',
+  ]);
 
   return {
-    label: formatGraphLabel(readGraphValue(record, ['month', 'month_name', 'label'])),
+    label: formatGraphLabel(
+      readGraphValue(record, ['month', 'month_name', 'label'])
+    ),
     itemName: resolvedItemName,
     actualSkuInventory: inventoryValue || counts[itemName] || 0,
-    actualSales: actualSalesValue,
-    predictedSales: predictedSalesValue,
+    actualSales: toNumber(actualSalesRawValue),
+    predictedSales: toNumber(predictedSalesRawValue),
+    actualSalesMissing:
+      actualSalesRawValue === null ||
+      actualSalesRawValue === undefined ||
+      actualSalesRawValue === '',
+    predictedSalesMissing:
+      predictedSalesRawValue === null ||
+      predictedSalesRawValue === undefined ||
+      predictedSalesRawValue === '',
   } as InventoryGraphDatapoint;
 }
 
@@ -241,10 +272,13 @@ export async function fetchInventoryGraphData(
   const now = new Date();
   const selectedYear = Math.max(options.year || now.getFullYear(), 2026);
   const requests = itemNames.map(async (itemName) => {
-    const response = await apiRequest<unknown>('/api/warehouse/graph_datapoint', {
-      method: 'GET',
-      query: { item_name: itemName, year: selectedYear },
-    });
+    const response = await apiRequest<unknown>(
+      '/api/warehouse/graph_datapoint',
+      {
+        method: 'GET',
+        query: { item_name: itemName, year: selectedYear },
+      }
+    );
 
     return normalizeGraphResponse(response, itemName, counts);
   });
@@ -252,19 +286,20 @@ export async function fetchInventoryGraphData(
   const settled = await Promise.allSettled(requests);
   return settled
     .filter(
-      (
-        result
-      ): result is PromiseFulfilledResult<InventoryGraphDatapoint[]> =>
-      result.status === 'fulfilled'
+      (result): result is PromiseFulfilledResult<InventoryGraphDatapoint[]> =>
+        result.status === 'fulfilled'
     )
     .flatMap((result) => result.value);
 }
 
 export async function updateInventory(csvContent: string) {
-  const response = await apiRequest<unknown>('/api/warehouse/update_inventory', {
-    method: 'POST',
-    body: JSON.stringify({ csv_content: csvContent }),
-  });
+  const response = await apiRequest<unknown>(
+    '/api/warehouse/update_inventory',
+    {
+      method: 'POST',
+      body: JSON.stringify({ csv_content: csvContent }),
+    }
+  );
 
   const envelope = readApiEnvelope<unknown>(response);
   return {
